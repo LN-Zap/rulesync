@@ -1,76 +1,12 @@
-"use strict";
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// src/index.ts
-var index_exports = {};
-__export(index_exports, {
-  ALL_FEATURES: () => ALL_FEATURES,
-  ALL_TOOL_TARGETS: () => ALL_TOOL_TARGETS,
-  generate: () => generate2,
-  importFromTool: () => importFromTool2
-});
-module.exports = __toCommonJS(index_exports);
-
-// src/config/config-resolver.ts
-var import_jsonc_parser = require("jsonc-parser");
-var import_node_path3 = require("path");
-
-// src/constants/rulesync-paths.ts
-var import_node_path = require("path");
-var RULESYNC_CONFIG_RELATIVE_FILE_PATH = "rulesync.jsonc";
-var RULESYNC_LOCAL_CONFIG_RELATIVE_FILE_PATH = "rulesync.local.jsonc";
-var RULESYNC_RELATIVE_DIR_PATH = ".rulesync";
-var RULESYNC_RULES_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "rules");
-var RULESYNC_COMMANDS_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "commands");
-var RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "subagents");
-var RULESYNC_MCP_RELATIVE_FILE_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "mcp.json");
-var RULESYNC_HOOKS_RELATIVE_FILE_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "hooks.json");
-var RULESYNC_AIIGNORE_FILE_NAME = ".aiignore";
-var RULESYNC_AIIGNORE_RELATIVE_FILE_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, ".aiignore");
-var RULESYNC_IGNORE_RELATIVE_FILE_PATH = ".rulesyncignore";
-var RULESYNC_OVERVIEW_FILE_NAME = "overview.md";
-var RULESYNC_SKILLS_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "skills");
-var RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH = (0, import_node_path.join)(
-  RULESYNC_SKILLS_RELATIVE_DIR_PATH,
-  ".curated"
-);
-var MAX_FILE_SIZE = 10 * 1024 * 1024;
-
 // src/utils/error.ts
-var import_zod = require("zod");
+import { ZodError } from "zod";
 function isZodErrorLike(error) {
   return error !== null && typeof error === "object" && "issues" in error && Array.isArray(error.issues) && error.issues.every(
     (issue) => issue !== null && typeof issue === "object" && "path" in issue && Array.isArray(issue.path) && "message" in issue && typeof issue.message === "string"
   );
 }
 function formatError(error) {
-  if (error instanceof import_zod.ZodError || isZodErrorLike(error)) {
+  if (error instanceof ZodError || isZodErrorLike(error)) {
     return `Zod raw error: ${JSON.stringify(error.issues)}`;
   }
   if (error instanceof Error) {
@@ -79,15 +15,8 @@ function formatError(error) {
   return String(error);
 }
 
-// src/utils/file.ts
-var import_es_toolkit = require("es-toolkit");
-var import_globby = require("globby");
-var import_promises = require("fs/promises");
-var import_node_os = __toESM(require("os"), 1);
-var import_node_path2 = require("path");
-
 // src/utils/logger.ts
-var import_consola = require("consola");
+import { consola } from "consola";
 
 // src/utils/vitest.ts
 var isEnvTest = process.env.NODE_ENV === "test";
@@ -96,7 +25,7 @@ var isEnvTest = process.env.NODE_ENV === "test";
 var Logger = class {
   _verbose = false;
   _silent = false;
-  console = import_consola.consola.withDefaults({
+  console = consola.withDefaults({
     tag: "rulesync"
   });
   /**
@@ -148,146 +77,8 @@ var Logger = class {
 };
 var logger = new Logger();
 
-// src/utils/file.ts
-async function ensureDir(dirPath) {
-  try {
-    await (0, import_promises.stat)(dirPath);
-  } catch {
-    await (0, import_promises.mkdir)(dirPath, { recursive: true });
-  }
-}
-async function readOrInitializeFileContent(filePath, initialContent = "") {
-  if (await fileExists(filePath)) {
-    return await readFileContent(filePath);
-  } else {
-    await ensureDir((0, import_node_path2.dirname)(filePath));
-    await writeFileContent(filePath, initialContent);
-    return initialContent;
-  }
-}
-function checkPathTraversal({
-  relativePath,
-  intendedRootDir
-}) {
-  const segments = relativePath.split(/[/\\]/);
-  if (segments.includes("..")) {
-    throw new Error(`Path traversal detected: ${relativePath}`);
-  }
-  const resolved = (0, import_node_path2.resolve)(intendedRootDir, relativePath);
-  const rel = (0, import_node_path2.relative)(intendedRootDir, resolved);
-  if (rel.startsWith("..") || (0, import_node_path2.resolve)(resolved) !== resolved) {
-    throw new Error(`Path traversal detected: ${relativePath}`);
-  }
-}
-function resolvePath(relativePath, baseDir) {
-  if (!baseDir) return relativePath;
-  checkPathTraversal({ relativePath, intendedRootDir: baseDir });
-  return (0, import_node_path2.resolve)(baseDir, relativePath);
-}
-async function directoryExists(dirPath) {
-  try {
-    const stats = await (0, import_promises.stat)(dirPath);
-    return stats.isDirectory();
-  } catch {
-    return false;
-  }
-}
-async function readFileContent(filepath) {
-  logger.debug(`Reading file: ${filepath}`);
-  return (0, import_promises.readFile)(filepath, "utf-8");
-}
-async function readFileContentOrNull(filepath) {
-  if (await fileExists(filepath)) {
-    return readFileContent(filepath);
-  }
-  return null;
-}
-async function readFileBuffer(filepath) {
-  logger.debug(`Reading file buffer: ${filepath}`);
-  return (0, import_promises.readFile)(filepath);
-}
-function addTrailingNewline(content) {
-  if (!content) {
-    return "\n";
-  }
-  return content.trimEnd() + "\n";
-}
-async function writeFileContent(filepath, content) {
-  logger.debug(`Writing file: ${filepath}`);
-  await ensureDir((0, import_node_path2.dirname)(filepath));
-  await (0, import_promises.writeFile)(filepath, content, "utf-8");
-}
-async function fileExists(filepath) {
-  try {
-    await (0, import_promises.stat)(filepath);
-    return true;
-  } catch {
-    return false;
-  }
-}
-async function listDirectoryFiles(dir) {
-  try {
-    return await (0, import_promises.readdir)(dir);
-  } catch {
-    return [];
-  }
-}
-async function findFilesByGlobs(globs, options = {}) {
-  const { type = "all" } = options;
-  const globbyOptions = type === "file" ? { onlyFiles: true, onlyDirectories: false } : type === "dir" ? { onlyFiles: false, onlyDirectories: true } : { onlyFiles: false, onlyDirectories: false };
-  const normalizedGlobs = Array.isArray(globs) ? globs.map((g) => g.replaceAll("\\", "/")) : globs.replaceAll("\\", "/");
-  const results = (0, import_globby.globbySync)(normalizedGlobs, { absolute: true, ...globbyOptions });
-  return results.toSorted();
-}
-async function removeDirectory(dirPath) {
-  const dangerousPaths = [".", "/", "~", "src", "node_modules"];
-  if (dangerousPaths.includes(dirPath) || dirPath === "") {
-    logger.warn(`Skipping deletion of dangerous path: ${dirPath}`);
-    return;
-  }
-  try {
-    if (await fileExists(dirPath)) {
-      await (0, import_promises.rm)(dirPath, { recursive: true, force: true });
-    }
-  } catch (error) {
-    logger.warn(`Failed to remove directory ${dirPath}:`, error);
-  }
-}
-async function removeFile(filepath) {
-  logger.debug(`Removing file: ${filepath}`);
-  try {
-    if (await fileExists(filepath)) {
-      await (0, import_promises.rm)(filepath);
-    }
-  } catch (error) {
-    logger.warn(`Failed to remove file ${filepath}:`, error);
-  }
-}
-function getHomeDirectory() {
-  if (isEnvTest) {
-    throw new Error("getHomeDirectory() must be mocked in test environment");
-  }
-  return import_node_os.default.homedir();
-}
-function validateBaseDir(baseDir) {
-  if (baseDir.trim() === "") {
-    throw new Error("baseDir cannot be an empty string");
-  }
-  checkPathTraversal({ relativePath: baseDir, intendedRootDir: process.cwd() });
-}
-function toKebabCaseFilename(filename) {
-  const lastDotIndex = filename.lastIndexOf(".");
-  const extension = lastDotIndex > 0 ? filename.slice(lastDotIndex) : "";
-  const nameWithoutExt = lastDotIndex > 0 ? filename.slice(0, lastDotIndex) : filename;
-  const kebabName = (0, import_es_toolkit.kebabCase)(nameWithoutExt);
-  return kebabName + extension;
-}
-
-// src/config/config.ts
-var import_mini3 = require("zod/mini");
-
 // src/types/features.ts
-var import_mini = require("zod/mini");
+import { z } from "zod/mini";
 var ALL_FEATURES = [
   "rules",
   "ignore",
@@ -298,15 +89,15 @@ var ALL_FEATURES = [
   "hooks"
 ];
 var ALL_FEATURES_WITH_WILDCARD = [...ALL_FEATURES, "*"];
-var FeatureSchema = import_mini.z.enum(ALL_FEATURES);
-var FeaturesSchema = import_mini.z.array(FeatureSchema);
-var RulesyncFeaturesSchema = import_mini.z.union([
-  import_mini.z.array(import_mini.z.enum(ALL_FEATURES_WITH_WILDCARD)),
-  import_mini.z.record(import_mini.z.string(), import_mini.z.array(import_mini.z.enum(ALL_FEATURES_WITH_WILDCARD)))
+var FeatureSchema = z.enum(ALL_FEATURES);
+var FeaturesSchema = z.array(FeatureSchema);
+var RulesyncFeaturesSchema = z.union([
+  z.array(z.enum(ALL_FEATURES_WITH_WILDCARD)),
+  z.record(z.string(), z.array(z.enum(ALL_FEATURES_WITH_WILDCARD)))
 ]);
 
 // src/types/tool-targets.ts
-var import_mini2 = require("zod/mini");
+import { z as z2 } from "zod/mini";
 var ALL_TOOL_TARGETS = [
   "agentsmd",
   "agentsskills",
@@ -333,38 +124,219 @@ var ALL_TOOL_TARGETS = [
   "zed"
 ];
 var ALL_TOOL_TARGETS_WITH_WILDCARD = [...ALL_TOOL_TARGETS, "*"];
-var ToolTargetSchema = import_mini2.z.enum(ALL_TOOL_TARGETS);
-var ToolTargetsSchema = import_mini2.z.array(ToolTargetSchema);
-var RulesyncTargetsSchema = import_mini2.z.array(import_mini2.z.enum(ALL_TOOL_TARGETS_WITH_WILDCARD));
+var ToolTargetSchema = z2.enum(ALL_TOOL_TARGETS);
+var ToolTargetsSchema = z2.array(ToolTargetSchema);
+var RulesyncTargetsSchema = z2.array(z2.enum(ALL_TOOL_TARGETS_WITH_WILDCARD));
+
+// src/config/config-resolver.ts
+import { parse as parseJsonc } from "jsonc-parser";
+import { dirname as dirname2, join as join3, resolve as resolve2 } from "path";
+
+// src/constants/rulesync-paths.ts
+import { join } from "path";
+var RULESYNC_CONFIG_RELATIVE_FILE_PATH = "rulesync.jsonc";
+var RULESYNC_LOCAL_CONFIG_RELATIVE_FILE_PATH = "rulesync.local.jsonc";
+var RULESYNC_RELATIVE_DIR_PATH = ".rulesync";
+var RULESYNC_RULES_RELATIVE_DIR_PATH = join(RULESYNC_RELATIVE_DIR_PATH, "rules");
+var RULESYNC_COMMANDS_RELATIVE_DIR_PATH = join(RULESYNC_RELATIVE_DIR_PATH, "commands");
+var RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH = join(RULESYNC_RELATIVE_DIR_PATH, "subagents");
+var RULESYNC_MCP_RELATIVE_FILE_PATH = join(RULESYNC_RELATIVE_DIR_PATH, "mcp.json");
+var RULESYNC_HOOKS_RELATIVE_FILE_PATH = join(RULESYNC_RELATIVE_DIR_PATH, "hooks.json");
+var RULESYNC_AIIGNORE_FILE_NAME = ".aiignore";
+var RULESYNC_AIIGNORE_RELATIVE_FILE_PATH = join(RULESYNC_RELATIVE_DIR_PATH, ".aiignore");
+var RULESYNC_IGNORE_RELATIVE_FILE_PATH = ".rulesyncignore";
+var RULESYNC_OVERVIEW_FILE_NAME = "overview.md";
+var RULESYNC_SKILLS_RELATIVE_DIR_PATH = join(RULESYNC_RELATIVE_DIR_PATH, "skills");
+var RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH = join(
+  RULESYNC_SKILLS_RELATIVE_DIR_PATH,
+  ".curated"
+);
+var RULESYNC_SOURCES_LOCK_RELATIVE_FILE_PATH = "rulesync.lock";
+var RULESYNC_MCP_FILE_NAME = "mcp.json";
+var RULESYNC_HOOKS_FILE_NAME = "hooks.json";
+var MAX_FILE_SIZE = 10 * 1024 * 1024;
+var FETCH_CONCURRENCY_LIMIT = 10;
+
+// src/utils/file.ts
+import { kebabCase } from "es-toolkit";
+import { globbySync } from "globby";
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "fs/promises";
+import os from "os";
+import { dirname, join as join2, relative, resolve } from "path";
+async function ensureDir(dirPath) {
+  try {
+    await stat(dirPath);
+  } catch {
+    await mkdir(dirPath, { recursive: true });
+  }
+}
+async function readOrInitializeFileContent(filePath, initialContent = "") {
+  if (await fileExists(filePath)) {
+    return await readFileContent(filePath);
+  } else {
+    await ensureDir(dirname(filePath));
+    await writeFileContent(filePath, initialContent);
+    return initialContent;
+  }
+}
+function checkPathTraversal({
+  relativePath,
+  intendedRootDir
+}) {
+  const segments = relativePath.split(/[/\\]/);
+  if (segments.includes("..")) {
+    throw new Error(`Path traversal detected: ${relativePath}`);
+  }
+  const resolved = resolve(intendedRootDir, relativePath);
+  const rel = relative(intendedRootDir, resolved);
+  if (rel.startsWith("..") || resolve(resolved) !== resolved) {
+    throw new Error(`Path traversal detected: ${relativePath}`);
+  }
+}
+function resolvePath(relativePath, baseDir) {
+  if (!baseDir) return relativePath;
+  checkPathTraversal({ relativePath, intendedRootDir: baseDir });
+  return resolve(baseDir, relativePath);
+}
+async function directoryExists(dirPath) {
+  try {
+    const stats = await stat(dirPath);
+    return stats.isDirectory();
+  } catch {
+    return false;
+  }
+}
+async function readFileContent(filepath) {
+  logger.debug(`Reading file: ${filepath}`);
+  return readFile(filepath, "utf-8");
+}
+async function readFileContentOrNull(filepath) {
+  if (await fileExists(filepath)) {
+    return readFileContent(filepath);
+  }
+  return null;
+}
+async function readFileBuffer(filepath) {
+  logger.debug(`Reading file buffer: ${filepath}`);
+  return readFile(filepath);
+}
+function addTrailingNewline(content) {
+  if (!content) {
+    return "\n";
+  }
+  return content.trimEnd() + "\n";
+}
+async function writeFileContent(filepath, content) {
+  logger.debug(`Writing file: ${filepath}`);
+  await ensureDir(dirname(filepath));
+  await writeFile(filepath, content, "utf-8");
+}
+async function fileExists(filepath) {
+  try {
+    await stat(filepath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function listDirectoryFiles(dir) {
+  try {
+    return await readdir(dir);
+  } catch {
+    return [];
+  }
+}
+async function findFilesByGlobs(globs, options = {}) {
+  const { type = "all" } = options;
+  const globbyOptions = type === "file" ? { onlyFiles: true, onlyDirectories: false } : type === "dir" ? { onlyFiles: false, onlyDirectories: true } : { onlyFiles: false, onlyDirectories: false };
+  const normalizedGlobs = Array.isArray(globs) ? globs.map((g) => g.replaceAll("\\", "/")) : globs.replaceAll("\\", "/");
+  const results = globbySync(normalizedGlobs, { absolute: true, ...globbyOptions });
+  return results.toSorted();
+}
+async function removeDirectory(dirPath) {
+  const dangerousPaths = [".", "/", "~", "src", "node_modules"];
+  if (dangerousPaths.includes(dirPath) || dirPath === "") {
+    logger.warn(`Skipping deletion of dangerous path: ${dirPath}`);
+    return;
+  }
+  try {
+    if (await fileExists(dirPath)) {
+      await rm(dirPath, { recursive: true, force: true });
+    }
+  } catch (error) {
+    logger.warn(`Failed to remove directory ${dirPath}:`, error);
+  }
+}
+async function removeFile(filepath) {
+  logger.debug(`Removing file: ${filepath}`);
+  try {
+    if (await fileExists(filepath)) {
+      await rm(filepath);
+    }
+  } catch (error) {
+    logger.warn(`Failed to remove file ${filepath}:`, error);
+  }
+}
+function getHomeDirectory() {
+  if (isEnvTest) {
+    throw new Error("getHomeDirectory() must be mocked in test environment");
+  }
+  return os.homedir();
+}
+function validateBaseDir(baseDir) {
+  if (baseDir.trim() === "") {
+    throw new Error("baseDir cannot be an empty string");
+  }
+  checkPathTraversal({ relativePath: baseDir, intendedRootDir: process.cwd() });
+}
+function toKebabCaseFilename(filename) {
+  const lastDotIndex = filename.lastIndexOf(".");
+  const extension = lastDotIndex > 0 ? filename.slice(lastDotIndex) : "";
+  const nameWithoutExt = lastDotIndex > 0 ? filename.slice(0, lastDotIndex) : filename;
+  const kebabName = kebabCase(nameWithoutExt);
+  return kebabName + extension;
+}
+async function createTempDirectory(prefix = "rulesync-fetch-") {
+  return mkdtemp(join2(os.tmpdir(), prefix));
+}
+async function removeTempDirectory(tempDir) {
+  try {
+    await rm(tempDir, { recursive: true, force: true });
+    logger.debug(`Removed temp directory: ${tempDir}`);
+  } catch {
+    logger.debug(`Failed to clean up temp directory: ${tempDir}`);
+  }
+}
 
 // src/config/config.ts
-var SourceEntrySchema = import_mini3.z.object({
-  source: import_mini3.z.string().check((0, import_mini3.minLength)(1, "source must be a non-empty string")),
-  skills: (0, import_mini3.optional)(import_mini3.z.array(import_mini3.z.string()))
+import { minLength, optional, z as z3 } from "zod/mini";
+var SourceEntrySchema = z3.object({
+  source: z3.string().check(minLength(1, "source must be a non-empty string")),
+  skills: optional(z3.array(z3.string()))
 });
-var ConfigParamsSchema = import_mini3.z.object({
-  baseDirs: import_mini3.z.array(import_mini3.z.string()),
+var ConfigParamsSchema = z3.object({
+  baseDirs: z3.array(z3.string()),
   targets: RulesyncTargetsSchema,
   features: RulesyncFeaturesSchema,
-  verbose: import_mini3.z.boolean(),
-  delete: import_mini3.z.boolean(),
+  verbose: z3.boolean(),
+  delete: z3.boolean(),
   // New non-experimental options
-  global: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  silent: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  simulateCommands: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  simulateSubagents: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  simulateSkills: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  dryRun: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  check: (0, import_mini3.optional)(import_mini3.z.boolean()),
+  global: optional(z3.boolean()),
+  silent: optional(z3.boolean()),
+  simulateCommands: optional(z3.boolean()),
+  simulateSubagents: optional(z3.boolean()),
+  simulateSkills: optional(z3.boolean()),
+  dryRun: optional(z3.boolean()),
+  check: optional(z3.boolean()),
   // Declarative skill sources
-  sources: (0, import_mini3.optional)(import_mini3.z.array(SourceEntrySchema))
+  sources: optional(z3.array(SourceEntrySchema))
 });
-var PartialConfigParamsSchema = import_mini3.z.partial(ConfigParamsSchema);
-var ConfigFileSchema = import_mini3.z.object({
-  $schema: (0, import_mini3.optional)(import_mini3.z.string()),
-  ...import_mini3.z.partial(ConfigParamsSchema).shape
+var PartialConfigParamsSchema = z3.partial(ConfigParamsSchema);
+var ConfigFileSchema = z3.object({
+  $schema: optional(z3.string()),
+  ...z3.partial(ConfigParamsSchema).shape
 });
-var RequiredConfigParamsSchema = import_mini3.z.required(ConfigParamsSchema);
+var RequiredConfigParamsSchema = z3.required(ConfigParamsSchema);
 var CONFLICTING_TARGET_PAIRS = [
   ["augmentcode", "augmentcode-legacy"],
   ["claudecode", "claudecode-legacy"]
@@ -541,7 +513,7 @@ var loadConfigFromFile = async (filePath) => {
   }
   try {
     const fileContent = await readFileContent(filePath);
-    const jsonData = (0, import_jsonc_parser.parse)(fileContent);
+    const jsonData = parseJsonc(fileContent);
     const parsed = ConfigFileSchema.parse(jsonData);
     const { $schema: _schema, ...configParams } = parsed;
     return configParams;
@@ -585,8 +557,8 @@ var ConfigResolver = class {
   }) {
     const validatedConfigPath = resolvePath(configPath, process.cwd());
     const baseConfig = await loadConfigFromFile(validatedConfigPath);
-    const configDir = (0, import_node_path3.dirname)(validatedConfigPath);
-    const localConfigPath = (0, import_node_path3.join)(configDir, RULESYNC_LOCAL_CONFIG_RELATIVE_FILE_PATH);
+    const configDir = dirname2(validatedConfigPath);
+    const localConfigPath = join3(configDir, RULESYNC_LOCAL_CONFIG_RELATIVE_FILE_PATH);
     const localConfig = await loadConfigFromFile(localConfigPath);
     const configByFile = mergeConfigs(baseConfig, localConfig);
     const resolvedGlobal = global ?? configByFile.global ?? getDefaults().global;
@@ -621,7 +593,7 @@ function getBaseDirsInLightOfGlobal({
   if (global) {
     return [getHomeDirectory()];
   }
-  const resolvedBaseDirs = baseDirs.map((baseDir) => (0, import_node_path3.resolve)(baseDir));
+  const resolvedBaseDirs = baseDirs.map((baseDir) => resolve2(baseDir));
   resolvedBaseDirs.forEach((baseDir) => {
     validateBaseDir(baseDir);
   });
@@ -629,12 +601,12 @@ function getBaseDirsInLightOfGlobal({
 }
 
 // src/lib/generate.ts
-var import_es_toolkit4 = require("es-toolkit");
-var import_node_path110 = require("path");
+import { intersection } from "es-toolkit";
+import { join as join109 } from "path";
 
 // src/features/commands/commands-processor.ts
-var import_node_path20 = require("path");
-var import_mini12 = require("zod/mini");
+import { basename as basename16, join as join19 } from "path";
+import { z as z12 } from "zod/mini";
 
 // src/types/feature-processor.ts
 var FeatureProcessor = class {
@@ -699,10 +671,10 @@ var FeatureProcessor = class {
 };
 
 // src/features/commands/agentsmd-command.ts
-var import_node_path6 = require("path");
+import { basename as basename2, join as join5 } from "path";
 
 // src/utils/frontmatter.ts
-var import_gray_matter = __toESM(require("gray-matter"), 1);
+import matter from "gray-matter";
 function isPlainObject(value) {
   if (value === null || typeof value !== "object") return false;
   const prototype = Object.getPrototypeOf(value);
@@ -743,20 +715,20 @@ function deepRemoveNullishObject(obj) {
 }
 function stringifyFrontmatter(body, frontmatter) {
   const cleanFrontmatter = deepRemoveNullishObject(frontmatter);
-  return import_gray_matter.default.stringify(body, cleanFrontmatter);
+  return matter.stringify(body, cleanFrontmatter);
 }
 function parseFrontmatter(content) {
-  const { data: frontmatter, content: body } = (0, import_gray_matter.default)(content);
+  const { data: frontmatter, content: body } = matter(content);
   const cleanFrontmatter = deepRemoveNullishObject(frontmatter);
   return { frontmatter: cleanFrontmatter, body };
 }
 
 // src/features/commands/simulated-command.ts
-var import_node_path5 = require("path");
-var import_mini4 = require("zod/mini");
+import { basename, join as join4 } from "path";
+import { z as z4 } from "zod/mini";
 
 // src/types/ai-file.ts
-var import_node_path4 = __toESM(require("path"), 1);
+import path, { relative as relative2, resolve as resolve3 } from "path";
 var AiFile = class {
   /**
    * @example "."
@@ -804,11 +776,11 @@ var AiFile = class {
     return this.relativeFilePath;
   }
   getFilePath() {
-    const fullPath = import_node_path4.default.join(this.baseDir, this.relativeDirPath, this.relativeFilePath);
-    const resolvedFull = (0, import_node_path4.resolve)(fullPath);
-    const resolvedBase = (0, import_node_path4.resolve)(this.baseDir);
-    const rel = (0, import_node_path4.relative)(resolvedBase, resolvedFull);
-    if (rel.startsWith("..") || import_node_path4.default.isAbsolute(rel)) {
+    const fullPath = path.join(this.baseDir, this.relativeDirPath, this.relativeFilePath);
+    const resolvedFull = resolve3(fullPath);
+    const resolvedBase = resolve3(this.baseDir);
+    const rel = relative2(resolvedBase, resolvedFull);
+    if (rel.startsWith("..") || path.isAbsolute(rel)) {
       throw new Error(
         `Path traversal detected: Final path escapes baseDir. baseDir="${this.baseDir}", relativeDirPath="${this.relativeDirPath}", relativeFilePath="${this.relativeFilePath}"`
       );
@@ -819,7 +791,7 @@ var AiFile = class {
     return this.fileContent;
   }
   getRelativePathFromCwd() {
-    return import_node_path4.default.join(this.relativeDirPath, this.relativeFilePath);
+    return path.join(this.relativeDirPath, this.relativeFilePath);
   }
   setFileContent(newFileContent) {
     this.fileContent = newFileContent;
@@ -915,8 +887,8 @@ var ToolCommand = class extends AiFile {
 };
 
 // src/features/commands/simulated-command.ts
-var SimulatedCommandFrontmatterSchema = import_mini4.z.object({
-  description: import_mini4.z.string()
+var SimulatedCommandFrontmatterSchema = z4.object({
+  description: z4.string()
 });
 var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
   frontmatter;
@@ -926,7 +898,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
       const result = SimulatedCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path5.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join4(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -976,7 +948,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path5.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join4(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -986,7 +958,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path5.join)(
+    const filePath = join4(
       baseDir,
       _SimulatedCommand.getSettablePaths().relativeDirPath,
       relativeFilePath
@@ -1000,7 +972,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
     return {
       baseDir,
       relativeDirPath: _SimulatedCommand.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path5.basename)(relativeFilePath),
+      relativeFilePath: basename(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1026,7 +998,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
 var AgentsmdCommand = class _AgentsmdCommand extends SimulatedCommand {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path6.join)(".agents", "commands")
+      relativeDirPath: join5(".agents", "commands")
     };
   }
   static fromRulesyncCommand({
@@ -1043,7 +1015,7 @@ var AgentsmdCommand = class _AgentsmdCommand extends SimulatedCommand {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path6.join)(
+    const filePath = join5(
       baseDir,
       _AgentsmdCommand.getSettablePaths().relativeDirPath,
       relativeFilePath
@@ -1057,7 +1029,7 @@ var AgentsmdCommand = class _AgentsmdCommand extends SimulatedCommand {
     return new _AgentsmdCommand({
       baseDir,
       relativeDirPath: _AgentsmdCommand.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path6.basename)(relativeFilePath),
+      relativeFilePath: basename2(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1081,8 +1053,8 @@ var AgentsmdCommand = class _AgentsmdCommand extends SimulatedCommand {
 };
 
 // src/features/commands/antigravity-command.ts
-var import_node_path8 = require("path");
-var import_mini6 = require("zod/mini");
+import { basename as basename4, join as join7 } from "path";
+import { z as z6 } from "zod/mini";
 
 // src/utils/type-guards.ts
 function isRecord(value) {
@@ -1090,8 +1062,8 @@ function isRecord(value) {
 }
 
 // src/features/commands/rulesync-command.ts
-var import_node_path7 = require("path");
-var import_mini5 = require("zod/mini");
+import { basename as basename3, join as join6 } from "path";
+import { z as z5 } from "zod/mini";
 
 // src/types/rulesync-file.ts
 var RulesyncFile = class extends AiFile {
@@ -1101,9 +1073,9 @@ var RulesyncFile = class extends AiFile {
 };
 
 // src/features/commands/rulesync-command.ts
-var RulesyncCommandFrontmatterSchema = import_mini5.z.looseObject({
-  targets: import_mini5.z._default(RulesyncTargetsSchema, ["*"]),
-  description: import_mini5.z.string()
+var RulesyncCommandFrontmatterSchema = z5.looseObject({
+  targets: z5._default(RulesyncTargetsSchema, ["*"]),
+  description: z5.string()
 });
 var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
   frontmatter;
@@ -1112,7 +1084,7 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
     const parseResult = RulesyncCommandFrontmatterSchema.safeParse(frontmatter);
     if (!parseResult.success && rest.validate) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path7.join)(rest.baseDir ?? process.cwd(), rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
+        `Invalid frontmatter in ${join6(rest.baseDir ?? process.cwd(), rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
       );
     }
     const parsedFrontmatter = parseResult.success ? { ...frontmatter, ...parseResult.data } : { ...frontmatter, targets: frontmatter.targets ?? ["*"] };
@@ -1145,7 +1117,7 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path7.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join6(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -1153,7 +1125,7 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
   static async fromFile({
     relativeFilePath
   }) {
-    const filePath = (0, import_node_path7.join)(
+    const filePath = join6(
       process.cwd(),
       _RulesyncCommand.getSettablePaths().relativeDirPath,
       relativeFilePath
@@ -1164,7 +1136,7 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
     if (!result.success) {
       throw new Error(`Invalid frontmatter in ${relativeFilePath}: ${formatError(result.error)}`);
     }
-    const filename = (0, import_node_path7.basename)(relativeFilePath);
+    const filename = basename3(relativeFilePath);
     return new _RulesyncCommand({
       baseDir: process.cwd(),
       relativeDirPath: _RulesyncCommand.getSettablePaths().relativeDirPath,
@@ -1177,12 +1149,12 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
 };
 
 // src/features/commands/antigravity-command.ts
-var AntigravityWorkflowFrontmatterSchema = import_mini6.z.looseObject({
-  trigger: import_mini6.z.optional(import_mini6.z.string()),
-  turbo: import_mini6.z.optional(import_mini6.z.boolean())
+var AntigravityWorkflowFrontmatterSchema = z6.looseObject({
+  trigger: z6.optional(z6.string()),
+  turbo: z6.optional(z6.boolean())
 });
-var AntigravityCommandFrontmatterSchema = import_mini6.z.looseObject({
-  description: import_mini6.z.string(),
+var AntigravityCommandFrontmatterSchema = z6.looseObject({
+  description: z6.string(),
   // Support for workflow-specific configuration
   ...AntigravityWorkflowFrontmatterSchema.shape
 });
@@ -1191,7 +1163,7 @@ var AntigravityCommand = class _AntigravityCommand extends ToolCommand {
   body;
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path8.join)(".agent", "workflows")
+      relativeDirPath: join7(".agent", "workflows")
     };
   }
   constructor({ frontmatter, body, ...rest }) {
@@ -1199,7 +1171,7 @@ var AntigravityCommand = class _AntigravityCommand extends ToolCommand {
       const result = AntigravityCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path8.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join7(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -1283,7 +1255,7 @@ ${body}${turboDirective}`;
     const antigravityTrigger = antigravityConfig && typeof antigravityConfig.trigger === "string" ? antigravityConfig.trigger : void 0;
     const rootTrigger = typeof rulesyncFrontmatter.trigger === "string" ? rulesyncFrontmatter.trigger : void 0;
     const bodyTriggerMatch = rulesyncCommand.getBody().match(/trigger:\s*(\/[\w-]+)/);
-    const filenameTrigger = `/${(0, import_node_path8.basename)(rulesyncCommand.getRelativeFilePath(), ".md")}`;
+    const filenameTrigger = `/${basename4(rulesyncCommand.getRelativeFilePath(), ".md")}`;
     return antigravityTrigger || rootTrigger || (bodyTriggerMatch ? bodyTriggerMatch[1] : void 0) || filenameTrigger;
   }
   validate() {
@@ -1297,7 +1269,7 @@ ${body}${turboDirective}`;
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path8.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join7(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -1313,7 +1285,7 @@ ${body}${turboDirective}`;
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path8.join)(
+    const filePath = join7(
       baseDir,
       _AntigravityCommand.getSettablePaths().relativeDirPath,
       relativeFilePath
@@ -1327,7 +1299,7 @@ ${body}${turboDirective}`;
     return new _AntigravityCommand({
       baseDir,
       relativeDirPath: _AntigravityCommand.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path8.basename)(relativeFilePath),
+      relativeFilePath: basename4(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       fileContent,
@@ -1352,14 +1324,14 @@ ${body}${turboDirective}`;
 };
 
 // src/features/commands/claudecode-command.ts
-var import_node_path9 = require("path");
-var import_mini7 = require("zod/mini");
-var ClaudecodeCommandFrontmatterSchema = import_mini7.z.looseObject({
-  description: import_mini7.z.string(),
-  "allowed-tools": import_mini7.z.optional(import_mini7.z.union([import_mini7.z.string(), import_mini7.z.array(import_mini7.z.string())])),
-  "argument-hint": import_mini7.z.optional(import_mini7.z.string()),
-  model: import_mini7.z.optional(import_mini7.z.string()),
-  "disable-model-invocation": import_mini7.z.optional(import_mini7.z.boolean())
+import { basename as basename5, join as join8 } from "path";
+import { z as z7 } from "zod/mini";
+var ClaudecodeCommandFrontmatterSchema = z7.looseObject({
+  description: z7.string(),
+  "allowed-tools": z7.optional(z7.union([z7.string(), z7.array(z7.string())])),
+  "argument-hint": z7.optional(z7.string()),
+  model: z7.optional(z7.string()),
+  "disable-model-invocation": z7.optional(z7.boolean())
 });
 var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
   frontmatter;
@@ -1369,7 +1341,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
       const result = ClaudecodeCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path9.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join8(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -1382,7 +1354,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path9.join)(".claude", "commands")
+      relativeDirPath: join8(".claude", "commands")
     };
   }
   getBody() {
@@ -1445,7 +1417,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path9.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join8(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -1463,7 +1435,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path9.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join8(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = ClaudecodeCommandFrontmatterSchema.safeParse(frontmatter);
@@ -1473,7 +1445,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
     return new _ClaudecodeCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path9.basename)(relativeFilePath),
+      relativeFilePath: basename5(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1496,16 +1468,16 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
 };
 
 // src/features/commands/cline-command.ts
-var import_node_path10 = require("path");
+import { basename as basename6, join as join9 } from "path";
 var ClineCommand = class _ClineCommand extends ToolCommand {
   static getSettablePaths({ global } = {}) {
     if (global) {
       return {
-        relativeDirPath: (0, import_node_path10.join)("Documents", "Cline", "Workflows")
+        relativeDirPath: join9("Documents", "Cline", "Workflows")
       };
     }
     return {
-      relativeDirPath: (0, import_node_path10.join)(".clinerules", "workflows")
+      relativeDirPath: join9(".clinerules", "workflows")
     };
   }
   toRulesyncCommand() {
@@ -1557,13 +1529,13 @@ var ClineCommand = class _ClineCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path10.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join9(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _ClineCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path10.basename)(relativeFilePath),
+      relativeFilePath: basename6(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -1584,14 +1556,14 @@ var ClineCommand = class _ClineCommand extends ToolCommand {
 };
 
 // src/features/commands/codexcli-command.ts
-var import_node_path11 = require("path");
+import { basename as basename7, join as join10 } from "path";
 var CodexcliCommand = class _CodexcliCommand extends ToolCommand {
   static getSettablePaths({ global } = {}) {
     if (!global) {
       throw new Error("CodexcliCommand only supports global mode. Please pass { global: true }.");
     }
     return {
-      relativeDirPath: (0, import_node_path11.join)(".codex", "prompts")
+      relativeDirPath: join10(".codex", "prompts")
     };
   }
   toRulesyncCommand() {
@@ -1644,13 +1616,13 @@ var CodexcliCommand = class _CodexcliCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path11.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join10(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _CodexcliCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path11.basename)(relativeFilePath),
+      relativeFilePath: basename7(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -1671,11 +1643,11 @@ var CodexcliCommand = class _CodexcliCommand extends ToolCommand {
 };
 
 // src/features/commands/copilot-command.ts
-var import_node_path12 = require("path");
-var import_mini8 = require("zod/mini");
-var CopilotCommandFrontmatterSchema = import_mini8.z.looseObject({
-  mode: import_mini8.z.optional(import_mini8.z.string()),
-  description: import_mini8.z.string()
+import { basename as basename8, join as join11 } from "path";
+import { z as z8 } from "zod/mini";
+var CopilotCommandFrontmatterSchema = z8.looseObject({
+  mode: z8.optional(z8.string()),
+  description: z8.string()
 });
 var CopilotCommand = class _CopilotCommand extends ToolCommand {
   frontmatter;
@@ -1685,7 +1657,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
       const result = CopilotCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path12.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join11(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -1698,7 +1670,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
   }
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path12.join)(".github", "prompts")
+      relativeDirPath: join11(".github", "prompts")
     };
   }
   getBody() {
@@ -1738,7 +1710,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path12.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join11(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -1773,7 +1745,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const filePath = (0, import_node_path12.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join11(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = CopilotCommandFrontmatterSchema.safeParse(frontmatter);
@@ -1783,7 +1755,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
     return new _CopilotCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path12.basename)(relativeFilePath),
+      relativeFilePath: basename8(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1812,11 +1784,11 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
 };
 
 // src/features/commands/cursor-command.ts
-var import_node_path13 = require("path");
+import { basename as basename9, join as join12 } from "path";
 var CursorCommand = class _CursorCommand extends ToolCommand {
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path13.join)(".cursor", "commands")
+      relativeDirPath: join12(".cursor", "commands")
     };
   }
   toRulesyncCommand() {
@@ -1869,13 +1841,13 @@ var CursorCommand = class _CursorCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path13.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join12(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _CursorCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path13.basename)(relativeFilePath),
+      relativeFilePath: basename9(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -1896,11 +1868,11 @@ var CursorCommand = class _CursorCommand extends ToolCommand {
 };
 
 // src/features/commands/factorydroid-command.ts
-var import_node_path14 = require("path");
+import { basename as basename10, join as join13 } from "path";
 var FactorydroidCommand = class _FactorydroidCommand extends SimulatedCommand {
   static getSettablePaths(_options) {
     return {
-      relativeDirPath: (0, import_node_path14.join)(".factory", "commands")
+      relativeDirPath: join13(".factory", "commands")
     };
   }
   static fromRulesyncCommand({
@@ -1920,7 +1892,7 @@ var FactorydroidCommand = class _FactorydroidCommand extends SimulatedCommand {
     global = false
   }) {
     const paths = _FactorydroidCommand.getSettablePaths({ global });
-    const filePath = (0, import_node_path14.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join13(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = SimulatedCommandFrontmatterSchema.safeParse(frontmatter);
@@ -1930,7 +1902,7 @@ var FactorydroidCommand = class _FactorydroidCommand extends SimulatedCommand {
     return new _FactorydroidCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path14.basename)(relativeFilePath),
+      relativeFilePath: basename10(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1954,12 +1926,12 @@ var FactorydroidCommand = class _FactorydroidCommand extends SimulatedCommand {
 };
 
 // src/features/commands/geminicli-command.ts
-var import_node_path15 = require("path");
-var import_smol_toml = require("smol-toml");
-var import_mini9 = require("zod/mini");
-var GeminiCliCommandFrontmatterSchema = import_mini9.z.looseObject({
-  description: import_mini9.z.optional(import_mini9.z.string()),
-  prompt: import_mini9.z.string()
+import { basename as basename11, join as join14 } from "path";
+import { parse as parseToml } from "smol-toml";
+import { z as z9 } from "zod/mini";
+var GeminiCliCommandFrontmatterSchema = z9.looseObject({
+  description: z9.optional(z9.string()),
+  prompt: z9.string()
 });
 var GeminiCliCommand = class _GeminiCliCommand extends ToolCommand {
   frontmatter;
@@ -1972,16 +1944,16 @@ var GeminiCliCommand = class _GeminiCliCommand extends ToolCommand {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path15.join)(".gemini", "commands")
+      relativeDirPath: join14(".gemini", "commands")
     };
   }
   parseTomlContent(content) {
     try {
-      const parsed = (0, import_smol_toml.parse)(content);
+      const parsed = parseToml(content);
       const result = GeminiCliCommandFrontmatterSchema.safeParse(parsed);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path15.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join14(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
       return {
@@ -1990,7 +1962,7 @@ var GeminiCliCommand = class _GeminiCliCommand extends ToolCommand {
       };
     } catch (error) {
       throw new Error(
-        `Failed to parse TOML command file (${(0, import_node_path15.join)(this.relativeDirPath, this.relativeFilePath)}): ${formatError(error)}`,
+        `Failed to parse TOML command file (${join14(this.relativeDirPath, this.relativeFilePath)}): ${formatError(error)}`,
         { cause: error }
       );
     }
@@ -2057,12 +2029,12 @@ ${geminiFrontmatter.prompt}
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path15.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join14(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     return new _GeminiCliCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path15.basename)(relativeFilePath),
+      relativeFilePath: basename11(relativeFilePath),
       fileContent,
       validate
     });
@@ -2099,11 +2071,11 @@ prompt = ""`;
 };
 
 // src/features/commands/kilo-command.ts
-var import_node_path16 = require("path");
+import { basename as basename12, join as join15 } from "path";
 var KiloCommand = class _KiloCommand extends ToolCommand {
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path16.join)(".kilocode", "workflows")
+      relativeDirPath: join15(".kilocode", "workflows")
     };
   }
   toRulesyncCommand() {
@@ -2153,13 +2125,13 @@ var KiloCommand = class _KiloCommand extends ToolCommand {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const filePath = (0, import_node_path16.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join15(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _KiloCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path16.basename)(relativeFilePath),
+      relativeFilePath: basename12(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -2180,11 +2152,11 @@ var KiloCommand = class _KiloCommand extends ToolCommand {
 };
 
 // src/features/commands/kiro-command.ts
-var import_node_path17 = require("path");
+import { basename as basename13, join as join16 } from "path";
 var KiroCommand = class _KiroCommand extends ToolCommand {
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path17.join)(".kiro", "prompts")
+      relativeDirPath: join16(".kiro", "prompts")
     };
   }
   toRulesyncCommand() {
@@ -2234,13 +2206,13 @@ var KiroCommand = class _KiroCommand extends ToolCommand {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const filePath = (0, import_node_path17.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join16(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _KiroCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path17.basename)(relativeFilePath),
+      relativeFilePath: basename13(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -2261,13 +2233,13 @@ var KiroCommand = class _KiroCommand extends ToolCommand {
 };
 
 // src/features/commands/opencode-command.ts
-var import_node_path18 = require("path");
-var import_mini10 = require("zod/mini");
-var OpenCodeCommandFrontmatterSchema = import_mini10.z.looseObject({
-  description: import_mini10.z.string(),
-  agent: (0, import_mini10.optional)(import_mini10.z.string()),
-  subtask: (0, import_mini10.optional)(import_mini10.z.boolean()),
-  model: (0, import_mini10.optional)(import_mini10.z.string())
+import { basename as basename14, join as join17 } from "path";
+import { optional as optional2, z as z10 } from "zod/mini";
+var OpenCodeCommandFrontmatterSchema = z10.looseObject({
+  description: z10.string(),
+  agent: optional2(z10.string()),
+  subtask: optional2(z10.boolean()),
+  model: optional2(z10.string())
 });
 var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
   frontmatter;
@@ -2277,7 +2249,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
       const result = OpenCodeCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path18.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join17(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -2290,7 +2262,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
   }
   static getSettablePaths({ global } = {}) {
     return {
-      relativeDirPath: global ? (0, import_node_path18.join)(".config", "opencode", "command") : (0, import_node_path18.join)(".opencode", "command")
+      relativeDirPath: global ? join17(".config", "opencode", "command") : join17(".opencode", "command")
     };
   }
   getBody() {
@@ -2351,7 +2323,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
     return {
       success: false,
       error: new Error(
-        `Invalid frontmatter in ${(0, import_node_path18.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join17(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
       )
     };
   }
@@ -2362,7 +2334,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path18.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join17(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = OpenCodeCommandFrontmatterSchema.safeParse(frontmatter);
@@ -2372,7 +2344,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
     return new _OpenCodeCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path18.basename)(relativeFilePath),
+      relativeFilePath: basename14(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -2401,18 +2373,18 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
 };
 
 // src/features/commands/roo-command.ts
-var import_node_path19 = require("path");
-var import_mini11 = require("zod/mini");
-var RooCommandFrontmatterSchema = import_mini11.z.looseObject({
-  description: import_mini11.z.string(),
-  "argument-hint": (0, import_mini11.optional)(import_mini11.z.string())
+import { basename as basename15, join as join18 } from "path";
+import { optional as optional3, z as z11 } from "zod/mini";
+var RooCommandFrontmatterSchema = z11.looseObject({
+  description: z11.string(),
+  "argument-hint": optional3(z11.string())
 });
 var RooCommand = class _RooCommand extends ToolCommand {
   frontmatter;
   body;
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path19.join)(".roo", "commands")
+      relativeDirPath: join18(".roo", "commands")
     };
   }
   constructor({ frontmatter, body, ...rest }) {
@@ -2420,7 +2392,7 @@ var RooCommand = class _RooCommand extends ToolCommand {
       const result = RooCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path19.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join18(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -2491,7 +2463,7 @@ var RooCommand = class _RooCommand extends ToolCommand {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path19.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join18(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -2507,7 +2479,7 @@ var RooCommand = class _RooCommand extends ToolCommand {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path19.join)(baseDir, _RooCommand.getSettablePaths().relativeDirPath, relativeFilePath);
+    const filePath = join18(baseDir, _RooCommand.getSettablePaths().relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = RooCommandFrontmatterSchema.safeParse(frontmatter);
@@ -2517,7 +2489,7 @@ var RooCommand = class _RooCommand extends ToolCommand {
     return new _RooCommand({
       baseDir,
       relativeDirPath: _RooCommand.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path19.basename)(relativeFilePath),
+      relativeFilePath: basename15(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       fileContent,
@@ -2558,7 +2530,7 @@ var commandsProcessorToolTargetTuple = [
   "opencode",
   "roo"
 ];
-var CommandsProcessorToolTargetSchema = import_mini12.z.enum(commandsProcessorToolTargetTuple);
+var CommandsProcessorToolTargetSchema = z12.enum(commandsProcessorToolTargetTuple);
 var toolCommandFactories = /* @__PURE__ */ new Map([
   [
     "agentsmd",
@@ -2740,11 +2712,11 @@ var CommandsProcessor = class extends FeatureProcessor {
    */
   async loadRulesyncFiles() {
     const rulesyncCommandPaths = await findFilesByGlobs(
-      (0, import_node_path20.join)(RulesyncCommand.getSettablePaths().relativeDirPath, "*.md")
+      join19(RulesyncCommand.getSettablePaths().relativeDirPath, "*.md")
     );
     const rulesyncCommands = await Promise.all(
       rulesyncCommandPaths.map(
-        (path3) => RulesyncCommand.fromFile({ relativeFilePath: (0, import_node_path20.basename)(path3) })
+        (path3) => RulesyncCommand.fromFile({ relativeFilePath: basename16(path3) })
       )
     );
     logger.debug(`Successfully loaded ${rulesyncCommands.length} rulesync commands`);
@@ -2760,14 +2732,14 @@ var CommandsProcessor = class extends FeatureProcessor {
     const factory = this.getFactory(this.toolTarget);
     const paths = factory.class.getSettablePaths({ global: this.global });
     const commandFilePaths = await findFilesByGlobs(
-      (0, import_node_path20.join)(this.baseDir, paths.relativeDirPath, `*.${factory.meta.extension}`)
+      join19(this.baseDir, paths.relativeDirPath, `*.${factory.meta.extension}`)
     );
     if (forDeletion) {
       const toolCommands2 = commandFilePaths.map(
         (path3) => factory.class.forDeletion({
           baseDir: this.baseDir,
           relativeDirPath: paths.relativeDirPath,
-          relativeFilePath: (0, import_node_path20.basename)(path3),
+          relativeFilePath: basename16(path3),
           global: this.global
         })
       ).filter((cmd) => cmd.isDeletable());
@@ -2778,7 +2750,7 @@ var CommandsProcessor = class extends FeatureProcessor {
       commandFilePaths.map(
         (path3) => factory.class.fromFile({
           baseDir: this.baseDir,
-          relativeFilePath: (0, import_node_path20.basename)(path3),
+          relativeFilePath: basename16(path3),
           global: this.global
         })
       )
@@ -2823,26 +2795,26 @@ var CommandsProcessor = class extends FeatureProcessor {
 };
 
 // src/features/hooks/hooks-processor.ts
-var import_mini14 = require("zod/mini");
+import { z as z14 } from "zod/mini";
 
 // src/types/hooks.ts
-var import_mini13 = require("zod/mini");
+import { z as z13 } from "zod/mini";
 var CONTROL_CHARS = ["\n", "\r", "\0"];
 var hasControlChars = (val) => CONTROL_CHARS.some((char) => val.includes(char));
-var safeString = import_mini13.z.pipe(
-  import_mini13.z.string(),
-  import_mini13.z.custom(
+var safeString = z13.pipe(
+  z13.string(),
+  z13.custom(
     (val) => typeof val === "string" && !hasControlChars(val),
     "must not contain newline, carriage return, or NUL characters"
   )
 );
-var HookDefinitionSchema = import_mini13.z.looseObject({
-  command: import_mini13.z.optional(safeString),
-  type: import_mini13.z.optional(import_mini13.z.enum(["command", "prompt"])),
-  timeout: import_mini13.z.optional(import_mini13.z.number()),
-  matcher: import_mini13.z.optional(safeString),
-  prompt: import_mini13.z.optional(import_mini13.z.string()),
-  loop_limit: import_mini13.z.optional(import_mini13.z.nullable(import_mini13.z.number()))
+var HookDefinitionSchema = z13.looseObject({
+  command: z13.optional(safeString),
+  type: z13.optional(z13.enum(["command", "prompt"])),
+  timeout: z13.optional(z13.number()),
+  matcher: z13.optional(safeString),
+  prompt: z13.optional(z13.string()),
+  loop_limit: z13.optional(z13.nullable(z13.number()))
 });
 var CURSOR_HOOK_EVENTS = [
   "sessionStart",
@@ -2901,14 +2873,14 @@ var FACTORYDROID_HOOK_EVENTS = [
   "notification",
   "setup"
 ];
-var hooksRecordSchema = import_mini13.z.record(import_mini13.z.string(), import_mini13.z.array(HookDefinitionSchema));
-var HooksConfigSchema = import_mini13.z.looseObject({
-  version: import_mini13.z.optional(import_mini13.z.number()),
+var hooksRecordSchema = z13.record(z13.string(), z13.array(HookDefinitionSchema));
+var HooksConfigSchema = z13.looseObject({
+  version: z13.optional(z13.number()),
   hooks: hooksRecordSchema,
-  cursor: import_mini13.z.optional(import_mini13.z.looseObject({ hooks: import_mini13.z.optional(hooksRecordSchema) })),
-  claudecode: import_mini13.z.optional(import_mini13.z.looseObject({ hooks: import_mini13.z.optional(hooksRecordSchema) })),
-  opencode: import_mini13.z.optional(import_mini13.z.looseObject({ hooks: import_mini13.z.optional(hooksRecordSchema) })),
-  factorydroid: import_mini13.z.optional(import_mini13.z.looseObject({ hooks: import_mini13.z.optional(hooksRecordSchema) }))
+  cursor: z13.optional(z13.looseObject({ hooks: z13.optional(hooksRecordSchema) })),
+  claudecode: z13.optional(z13.looseObject({ hooks: z13.optional(hooksRecordSchema) })),
+  opencode: z13.optional(z13.looseObject({ hooks: z13.optional(hooksRecordSchema) })),
+  factorydroid: z13.optional(z13.looseObject({ hooks: z13.optional(hooksRecordSchema) }))
 });
 var CANONICAL_TO_CLAUDE_EVENT_NAMES = {
   sessionStart: "SessionStart",
@@ -2978,14 +2950,14 @@ var CANONICAL_TO_OPENCODE_EVENT_NAMES = {
 };
 
 // src/features/hooks/claudecode-hooks.ts
-var import_node_path22 = require("path");
+import { join as join21 } from "path";
 
 // src/types/tool-file.ts
 var ToolFile = class extends AiFile {
 };
 
 // src/features/hooks/rulesync-hooks.ts
-var import_node_path21 = require("path");
+import { join as join20 } from "path";
 var RulesyncHooks = class _RulesyncHooks extends RulesyncFile {
   json;
   constructor(params) {
@@ -3016,7 +2988,7 @@ var RulesyncHooks = class _RulesyncHooks extends RulesyncFile {
     validate = true
   }) {
     const paths = _RulesyncHooks.getSettablePaths();
-    const filePath = (0, import_node_path21.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = join20(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     if (!await fileExists(filePath)) {
       throw new Error(`No ${RULESYNC_HOOKS_RELATIVE_FILE_PATH} found.`);
     }
@@ -3174,7 +3146,7 @@ var ClaudecodeHooks = class _ClaudecodeHooks extends ToolHooks {
     global = false
   }) {
     const paths = _ClaudecodeHooks.getSettablePaths({ global });
-    const filePath = (0, import_node_path22.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = join21(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const fileContent = await readFileContentOrNull(filePath) ?? '{"hooks":{}}';
     return new _ClaudecodeHooks({
       baseDir,
@@ -3191,7 +3163,7 @@ var ClaudecodeHooks = class _ClaudecodeHooks extends ToolHooks {
     global = false
   }) {
     const paths = _ClaudecodeHooks.getSettablePaths({ global });
-    const filePath = (0, import_node_path22.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = join21(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const existingContent = await readOrInitializeFileContent(
       filePath,
       JSON.stringify({}, null, 2)
@@ -3223,7 +3195,7 @@ var ClaudecodeHooks = class _ClaudecodeHooks extends ToolHooks {
       settings = JSON.parse(this.getFileContent());
     } catch (error) {
       throw new Error(
-        `Failed to parse Claude hooks content in ${(0, import_node_path22.join)(this.getRelativeDirPath(), this.getRelativeFilePath())}: ${formatError(error)}`,
+        `Failed to parse Claude hooks content in ${join21(this.getRelativeDirPath(), this.getRelativeFilePath())}: ${formatError(error)}`,
         {
           cause: error
         }
@@ -3253,7 +3225,7 @@ var ClaudecodeHooks = class _ClaudecodeHooks extends ToolHooks {
 };
 
 // src/features/hooks/cursor-hooks.ts
-var import_node_path23 = require("path");
+import { join as join22 } from "path";
 var CursorHooks = class _CursorHooks extends ToolHooks {
   constructor(params) {
     const { rulesyncHooks: _r, ...rest } = params;
@@ -3274,7 +3246,7 @@ var CursorHooks = class _CursorHooks extends ToolHooks {
   }) {
     const paths = _CursorHooks.getSettablePaths();
     const fileContent = await readFileContent(
-      (0, import_node_path23.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)
+      join22(baseDir, paths.relativeDirPath, paths.relativeFilePath)
     );
     return new _CursorHooks({
       baseDir,
@@ -3354,7 +3326,7 @@ var CursorHooks = class _CursorHooks extends ToolHooks {
 };
 
 // src/features/hooks/factorydroid-hooks.ts
-var import_node_path24 = require("path");
+import { join as join23 } from "path";
 function canonicalToFactorydroidHooks(config) {
   const supported = new Set(FACTORYDROID_HOOK_EVENTS);
   const sharedHooks = {};
@@ -3459,7 +3431,7 @@ var FactorydroidHooks = class _FactorydroidHooks extends ToolHooks {
     global = false
   }) {
     const paths = _FactorydroidHooks.getSettablePaths({ global });
-    const filePath = (0, import_node_path24.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = join23(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const fileContent = await readFileContentOrNull(filePath) ?? '{"hooks":{}}';
     return new _FactorydroidHooks({
       baseDir,
@@ -3476,7 +3448,7 @@ var FactorydroidHooks = class _FactorydroidHooks extends ToolHooks {
     global = false
   }) {
     const paths = _FactorydroidHooks.getSettablePaths({ global });
-    const filePath = (0, import_node_path24.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = join23(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const existingContent = await readOrInitializeFileContent(
       filePath,
       JSON.stringify({}, null, 2)
@@ -3508,7 +3480,7 @@ var FactorydroidHooks = class _FactorydroidHooks extends ToolHooks {
       settings = JSON.parse(this.getFileContent());
     } catch (error) {
       throw new Error(
-        `Failed to parse Factory Droid hooks content in ${(0, import_node_path24.join)(this.getRelativeDirPath(), this.getRelativeFilePath())}: ${formatError(error)}`,
+        `Failed to parse Factory Droid hooks content in ${join23(this.getRelativeDirPath(), this.getRelativeFilePath())}: ${formatError(error)}`,
         {
           cause: error
         }
@@ -3538,7 +3510,7 @@ var FactorydroidHooks = class _FactorydroidHooks extends ToolHooks {
 };
 
 // src/features/hooks/opencode-hooks.ts
-var import_node_path25 = require("path");
+import { join as join24 } from "path";
 var NAMED_HOOKS = /* @__PURE__ */ new Set(["tool.execute.before", "tool.execute.after"]);
 function escapeForTemplateLiteral(command) {
   return command.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
@@ -3636,7 +3608,7 @@ var OpencodeHooks = class _OpencodeHooks extends ToolHooks {
   }
   static getSettablePaths(options) {
     return {
-      relativeDirPath: options?.global ? (0, import_node_path25.join)(".config", "opencode", "plugins") : (0, import_node_path25.join)(".opencode", "plugins"),
+      relativeDirPath: options?.global ? join24(".config", "opencode", "plugins") : join24(".opencode", "plugins"),
       relativeFilePath: "rulesync-hooks.js"
     };
   }
@@ -3647,7 +3619,7 @@ var OpencodeHooks = class _OpencodeHooks extends ToolHooks {
   }) {
     const paths = _OpencodeHooks.getSettablePaths({ global });
     const fileContent = await readFileContent(
-      (0, import_node_path25.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)
+      join24(baseDir, paths.relativeDirPath, paths.relativeFilePath)
     );
     return new _OpencodeHooks({
       baseDir,
@@ -3697,7 +3669,7 @@ var OpencodeHooks = class _OpencodeHooks extends ToolHooks {
 
 // src/features/hooks/hooks-processor.ts
 var hooksProcessorToolTargetTuple = ["cursor", "claudecode", "opencode", "factorydroid"];
-var HooksProcessorToolTargetSchema = import_mini14.z.enum(hooksProcessorToolTargetTuple);
+var HooksProcessorToolTargetSchema = z14.enum(hooksProcessorToolTargetTuple);
 var toolHooksFactories = /* @__PURE__ */ new Map([
   [
     "cursor",
@@ -3873,13 +3845,13 @@ var HooksProcessor = class extends FeatureProcessor {
 };
 
 // src/features/ignore/ignore-processor.ts
-var import_mini15 = require("zod/mini");
+import { z as z15 } from "zod/mini";
 
 // src/features/ignore/augmentcode-ignore.ts
-var import_node_path27 = require("path");
+import { join as join26 } from "path";
 
 // src/features/ignore/rulesync-ignore.ts
-var import_node_path26 = require("path");
+import { join as join25 } from "path";
 var RulesyncIgnore = class _RulesyncIgnore extends RulesyncFile {
   validate() {
     return { success: true, error: null };
@@ -3899,12 +3871,12 @@ var RulesyncIgnore = class _RulesyncIgnore extends RulesyncFile {
   static async fromFile() {
     const baseDir = process.cwd();
     const paths = this.getSettablePaths();
-    const recommendedPath = (0, import_node_path26.join)(
+    const recommendedPath = join25(
       baseDir,
       paths.recommended.relativeDirPath,
       paths.recommended.relativeFilePath
     );
-    const legacyPath = (0, import_node_path26.join)(baseDir, paths.legacy.relativeDirPath, paths.legacy.relativeFilePath);
+    const legacyPath = join25(baseDir, paths.legacy.relativeDirPath, paths.legacy.relativeFilePath);
     if (await fileExists(recommendedPath)) {
       const fileContent2 = await readFileContent(recommendedPath);
       return new _RulesyncIgnore({
@@ -4020,7 +3992,7 @@ var AugmentcodeIgnore = class _AugmentcodeIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path27.join)(
+      join26(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4050,8 +4022,8 @@ var AugmentcodeIgnore = class _AugmentcodeIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/claudecode-ignore.ts
-var import_es_toolkit2 = require("es-toolkit");
-var import_node_path28 = require("path");
+import { uniq } from "es-toolkit";
+import { join as join27 } from "path";
 var ClaudecodeIgnore = class _ClaudecodeIgnore extends ToolIgnore {
   constructor(params) {
     super(params);
@@ -4093,7 +4065,7 @@ var ClaudecodeIgnore = class _ClaudecodeIgnore extends ToolIgnore {
     const fileContent = rulesyncIgnore.getFileContent();
     const patterns = fileContent.split(/\r?\n|\r/).map((line) => line.trim()).filter((line) => line.length > 0 && !line.startsWith("#"));
     const deniedValues = patterns.map((pattern) => `Read(${pattern})`);
-    const filePath = (0, import_node_path28.join)(
+    const filePath = join27(
       baseDir,
       this.getSettablePaths().relativeDirPath,
       this.getSettablePaths().relativeFilePath
@@ -4113,7 +4085,7 @@ var ClaudecodeIgnore = class _ClaudecodeIgnore extends ToolIgnore {
       ...existingJsonValue,
       permissions: {
         ...existingJsonValue.permissions,
-        deny: (0, import_es_toolkit2.uniq)([...preservedDenies, ...deniedValues].toSorted())
+        deny: uniq([...preservedDenies, ...deniedValues].toSorted())
       }
     };
     return new _ClaudecodeIgnore({
@@ -4129,7 +4101,7 @@ var ClaudecodeIgnore = class _ClaudecodeIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path28.join)(
+      join27(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4159,7 +4131,7 @@ var ClaudecodeIgnore = class _ClaudecodeIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/cline-ignore.ts
-var import_node_path29 = require("path");
+import { join as join28 } from "path";
 var ClineIgnore = class _ClineIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4196,7 +4168,7 @@ var ClineIgnore = class _ClineIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path29.join)(
+      join28(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4226,7 +4198,7 @@ var ClineIgnore = class _ClineIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/cursor-ignore.ts
-var import_node_path30 = require("path");
+import { join as join29 } from "path";
 var CursorIgnore = class _CursorIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4259,7 +4231,7 @@ var CursorIgnore = class _CursorIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path30.join)(
+      join29(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4289,7 +4261,7 @@ var CursorIgnore = class _CursorIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/geminicli-ignore.ts
-var import_node_path31 = require("path");
+import { join as join30 } from "path";
 var GeminiCliIgnore = class _GeminiCliIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4316,7 +4288,7 @@ var GeminiCliIgnore = class _GeminiCliIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path31.join)(
+      join30(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4346,7 +4318,7 @@ var GeminiCliIgnore = class _GeminiCliIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/junie-ignore.ts
-var import_node_path32 = require("path");
+import { join as join31 } from "path";
 var JunieIgnore = class _JunieIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4373,7 +4345,7 @@ var JunieIgnore = class _JunieIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path32.join)(
+      join31(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4403,7 +4375,7 @@ var JunieIgnore = class _JunieIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/kilo-ignore.ts
-var import_node_path33 = require("path");
+import { join as join32 } from "path";
 var KiloIgnore = class _KiloIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4440,7 +4412,7 @@ var KiloIgnore = class _KiloIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path33.join)(
+      join32(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4470,7 +4442,7 @@ var KiloIgnore = class _KiloIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/kiro-ignore.ts
-var import_node_path34 = require("path");
+import { join as join33 } from "path";
 var KiroIgnore = class _KiroIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4497,7 +4469,7 @@ var KiroIgnore = class _KiroIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path34.join)(
+      join33(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4527,7 +4499,7 @@ var KiroIgnore = class _KiroIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/qwencode-ignore.ts
-var import_node_path35 = require("path");
+import { join as join34 } from "path";
 var QwencodeIgnore = class _QwencodeIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4554,7 +4526,7 @@ var QwencodeIgnore = class _QwencodeIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path35.join)(
+      join34(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4584,7 +4556,7 @@ var QwencodeIgnore = class _QwencodeIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/roo-ignore.ts
-var import_node_path36 = require("path");
+import { join as join35 } from "path";
 var RooIgnore = class _RooIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4611,7 +4583,7 @@ var RooIgnore = class _RooIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path36.join)(
+      join35(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4641,7 +4613,7 @@ var RooIgnore = class _RooIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/windsurf-ignore.ts
-var import_node_path37 = require("path");
+import { join as join36 } from "path";
 var WindsurfIgnore = class _WindsurfIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4668,7 +4640,7 @@ var WindsurfIgnore = class _WindsurfIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path37.join)(
+      join36(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4698,8 +4670,8 @@ var WindsurfIgnore = class _WindsurfIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/zed-ignore.ts
-var import_es_toolkit3 = require("es-toolkit");
-var import_node_path38 = require("path");
+import { uniq as uniq2 } from "es-toolkit";
+import { join as join37 } from "path";
 var ZedIgnore = class _ZedIgnore extends ToolIgnore {
   constructor(params) {
     super(params);
@@ -4735,7 +4707,7 @@ var ZedIgnore = class _ZedIgnore extends ToolIgnore {
   }) {
     const fileContent = rulesyncIgnore.getFileContent();
     const patterns = fileContent.split(/\r?\n|\r/).map((line) => line.trim()).filter((line) => line.length > 0 && !line.startsWith("#"));
-    const filePath = (0, import_node_path38.join)(
+    const filePath = join37(
       baseDir,
       this.getSettablePaths().relativeDirPath,
       this.getSettablePaths().relativeFilePath
@@ -4744,7 +4716,7 @@ var ZedIgnore = class _ZedIgnore extends ToolIgnore {
     const existingFileContent = exists ? await readFileContent(filePath) : "{}";
     const existingJsonValue = JSON.parse(existingFileContent);
     const existingPrivateFiles = existingJsonValue.private_files ?? [];
-    const mergedPatterns = (0, import_es_toolkit3.uniq)([...existingPrivateFiles, ...patterns].toSorted());
+    const mergedPatterns = uniq2([...existingPrivateFiles, ...patterns].toSorted());
     const jsonValue = {
       ...existingJsonValue,
       private_files: mergedPatterns
@@ -4762,7 +4734,7 @@ var ZedIgnore = class _ZedIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path38.join)(
+      join37(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4807,7 +4779,7 @@ var ignoreProcessorToolTargets = [
   "windsurf",
   "zed"
 ];
-var IgnoreProcessorToolTargetSchema = import_mini15.z.enum(ignoreProcessorToolTargets);
+var IgnoreProcessorToolTargetSchema = z15.enum(ignoreProcessorToolTargets);
 var toolIgnoreFactories = /* @__PURE__ */ new Map([
   ["augmentcode", { class: AugmentcodeIgnore }],
   ["claudecode", { class: ClaudecodeIgnore }],
@@ -4944,49 +4916,49 @@ var IgnoreProcessor = class extends FeatureProcessor {
 };
 
 // src/features/mcp/mcp-processor.ts
-var import_mini19 = require("zod/mini");
+import { z as z19 } from "zod/mini";
 
 // src/features/mcp/claudecode-mcp.ts
-var import_node_path40 = require("path");
+import { join as join39 } from "path";
 
 // src/features/mcp/rulesync-mcp.ts
-var import_object = require("es-toolkit/object");
-var import_node_path39 = require("path");
-var import_mini17 = require("zod/mini");
+import { omit } from "es-toolkit/object";
+import { join as join38 } from "path";
+import { z as z17 } from "zod/mini";
 
 // src/types/mcp.ts
-var import_mini16 = require("zod/mini");
-var McpServerSchema = import_mini16.z.object({
-  type: import_mini16.z.optional(import_mini16.z.enum(["stdio", "sse", "http"])),
-  command: import_mini16.z.optional(import_mini16.z.union([import_mini16.z.string(), import_mini16.z.array(import_mini16.z.string())])),
-  args: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  url: import_mini16.z.optional(import_mini16.z.string()),
-  httpUrl: import_mini16.z.optional(import_mini16.z.string()),
-  env: import_mini16.z.optional(import_mini16.z.record(import_mini16.z.string(), import_mini16.z.string())),
-  disabled: import_mini16.z.optional(import_mini16.z.boolean()),
-  networkTimeout: import_mini16.z.optional(import_mini16.z.number()),
-  timeout: import_mini16.z.optional(import_mini16.z.number()),
-  trust: import_mini16.z.optional(import_mini16.z.boolean()),
-  cwd: import_mini16.z.optional(import_mini16.z.string()),
-  transport: import_mini16.z.optional(import_mini16.z.enum(["stdio", "sse", "http"])),
-  alwaysAllow: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  tools: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  kiroAutoApprove: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  kiroAutoBlock: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  headers: import_mini16.z.optional(import_mini16.z.record(import_mini16.z.string(), import_mini16.z.string())),
-  enabledTools: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  disabledTools: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string()))
+import { z as z16 } from "zod/mini";
+var McpServerSchema = z16.object({
+  type: z16.optional(z16.enum(["stdio", "sse", "http"])),
+  command: z16.optional(z16.union([z16.string(), z16.array(z16.string())])),
+  args: z16.optional(z16.array(z16.string())),
+  url: z16.optional(z16.string()),
+  httpUrl: z16.optional(z16.string()),
+  env: z16.optional(z16.record(z16.string(), z16.string())),
+  disabled: z16.optional(z16.boolean()),
+  networkTimeout: z16.optional(z16.number()),
+  timeout: z16.optional(z16.number()),
+  trust: z16.optional(z16.boolean()),
+  cwd: z16.optional(z16.string()),
+  transport: z16.optional(z16.enum(["stdio", "sse", "http"])),
+  alwaysAllow: z16.optional(z16.array(z16.string())),
+  tools: z16.optional(z16.array(z16.string())),
+  kiroAutoApprove: z16.optional(z16.array(z16.string())),
+  kiroAutoBlock: z16.optional(z16.array(z16.string())),
+  headers: z16.optional(z16.record(z16.string(), z16.string())),
+  enabledTools: z16.optional(z16.array(z16.string())),
+  disabledTools: z16.optional(z16.array(z16.string()))
 });
-var McpServersSchema = import_mini16.z.record(import_mini16.z.string(), McpServerSchema);
+var McpServersSchema = z16.record(z16.string(), McpServerSchema);
 
 // src/features/mcp/rulesync-mcp.ts
-var RulesyncMcpServerSchema = import_mini17.z.extend(McpServerSchema, {
-  targets: import_mini17.z.optional(RulesyncTargetsSchema),
-  description: import_mini17.z.optional(import_mini17.z.string()),
-  exposed: import_mini17.z.optional(import_mini17.z.boolean())
+var RulesyncMcpServerSchema = z17.extend(McpServerSchema, {
+  targets: z17.optional(RulesyncTargetsSchema),
+  description: z17.optional(z17.string()),
+  exposed: z17.optional(z17.boolean())
 });
-var RulesyncMcpConfigSchema = import_mini17.z.object({
-  mcpServers: import_mini17.z.record(import_mini17.z.string(), RulesyncMcpServerSchema)
+var RulesyncMcpConfigSchema = z17.object({
+  mcpServers: z17.record(z17.string(), RulesyncMcpServerSchema)
 });
 var RulesyncMcp = class _RulesyncMcp extends RulesyncFile {
   json;
@@ -5022,12 +4994,12 @@ var RulesyncMcp = class _RulesyncMcp extends RulesyncFile {
   static async fromFile({ validate = true }) {
     const baseDir = process.cwd();
     const paths = this.getSettablePaths();
-    const recommendedPath = (0, import_node_path39.join)(
+    const recommendedPath = join38(
       baseDir,
       paths.recommended.relativeDirPath,
       paths.recommended.relativeFilePath
     );
-    const legacyPath = (0, import_node_path39.join)(baseDir, paths.legacy.relativeDirPath, paths.legacy.relativeFilePath);
+    const legacyPath = join38(baseDir, paths.legacy.relativeDirPath, paths.legacy.relativeFilePath);
     if (await fileExists(recommendedPath)) {
       const fileContent2 = await readFileContent(recommendedPath);
       return new _RulesyncMcp({
@@ -5064,7 +5036,7 @@ var RulesyncMcp = class _RulesyncMcp extends RulesyncFile {
     const entries = Object.entries(this.json.mcpServers);
     return Object.fromEntries(
       entries.map(([serverName, serverConfig]) => {
-        return [serverName, (0, import_object.omit)(serverConfig, ["targets", "description", "exposed"])];
+        return [serverName, omit(serverConfig, ["targets", "description", "exposed"])];
       })
     );
   }
@@ -5075,7 +5047,7 @@ var RulesyncMcp = class _RulesyncMcp extends RulesyncFile {
   stripMcpServerFields(fields) {
     if (fields.length === 0) return this;
     const filteredServers = Object.fromEntries(
-      Object.entries(this.json.mcpServers).map(([name, config]) => [name, (0, import_object.omit)(config, fields)])
+      Object.entries(this.json.mcpServers).map(([name, config]) => [name, omit(config, fields)])
     );
     return new _RulesyncMcp({
       baseDir: this.baseDir,
@@ -5172,7 +5144,7 @@ var ClaudecodeMcp = class _ClaudecodeMcp extends ToolMcp {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const fileContent = await readFileContentOrNull((0, import_node_path40.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
+    const fileContent = await readFileContentOrNull(join39(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
     const json = JSON.parse(fileContent);
     const newJson = { ...json, mcpServers: json.mcpServers ?? {} };
     return new _ClaudecodeMcp({
@@ -5191,7 +5163,7 @@ var ClaudecodeMcp = class _ClaudecodeMcp extends ToolMcp {
   }) {
     const paths = this.getSettablePaths({ global });
     const fileContent = await readOrInitializeFileContent(
-      (0, import_node_path40.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath),
+      join39(baseDir, paths.relativeDirPath, paths.relativeFilePath),
       JSON.stringify({ mcpServers: {} }, null, 2)
     );
     const json = JSON.parse(fileContent);
@@ -5230,7 +5202,7 @@ var ClaudecodeMcp = class _ClaudecodeMcp extends ToolMcp {
 };
 
 // src/features/mcp/cline-mcp.ts
-var import_node_path41 = require("path");
+import { join as join40 } from "path";
 var ClineMcp = class _ClineMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5251,7 +5223,7 @@ var ClineMcp = class _ClineMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path41.join)(
+      join40(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5300,8 +5272,8 @@ var ClineMcp = class _ClineMcp extends ToolMcp {
 };
 
 // src/features/mcp/codexcli-mcp.ts
-var import_node_path42 = require("path");
-var smolToml = __toESM(require("smol-toml"), 1);
+import { join as join41 } from "path";
+import * as smolToml from "smol-toml";
 function convertFromCodexFormat(codexMcp) {
   const result = {};
   for (const [name, config] of Object.entries(codexMcp)) {
@@ -5381,7 +5353,7 @@ var CodexcliMcp = class _CodexcliMcp extends ToolMcp {
   }) {
     const paths = this.getSettablePaths({ global });
     const fileContent = await readFileContent(
-      (0, import_node_path42.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)
+      join41(baseDir, paths.relativeDirPath, paths.relativeFilePath)
     );
     return new _CodexcliMcp({
       baseDir,
@@ -5398,7 +5370,7 @@ var CodexcliMcp = class _CodexcliMcp extends ToolMcp {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const configTomlFilePath = (0, import_node_path42.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const configTomlFilePath = join41(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const configTomlFileContent = await readOrInitializeFileContent(
       configTomlFilePath,
       smolToml.stringify({})
@@ -5455,7 +5427,7 @@ var CodexcliMcp = class _CodexcliMcp extends ToolMcp {
 };
 
 // src/features/mcp/copilot-mcp.ts
-var import_node_path43 = require("path");
+import { join as join42 } from "path";
 function convertToCopilotFormat(mcpServers) {
   return { servers: mcpServers };
 }
@@ -5482,7 +5454,7 @@ var CopilotMcp = class _CopilotMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path43.join)(
+      join42(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5535,7 +5507,7 @@ var CopilotMcp = class _CopilotMcp extends ToolMcp {
 };
 
 // src/features/mcp/cursor-mcp.ts
-var import_node_path44 = require("path");
+import { join as join43 } from "path";
 var CURSOR_ENV_VAR_PATTERN = /\$\{env:([^}]+)\}/g;
 function isMcpServers(value) {
   return value !== void 0 && value !== null && typeof value === "object";
@@ -5596,7 +5568,7 @@ var CursorMcp = class _CursorMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path44.join)(
+      join43(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5664,7 +5636,7 @@ var CursorMcp = class _CursorMcp extends ToolMcp {
 };
 
 // src/features/mcp/factorydroid-mcp.ts
-var import_node_path45 = require("path");
+import { join as join44 } from "path";
 var FactorydroidMcp = class _FactorydroidMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5685,7 +5657,7 @@ var FactorydroidMcp = class _FactorydroidMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path45.join)(
+      join44(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5745,7 +5717,7 @@ var FactorydroidMcp = class _FactorydroidMcp extends ToolMcp {
 };
 
 // src/features/mcp/geminicli-mcp.ts
-var import_node_path46 = require("path");
+import { join as join45 } from "path";
 var GeminiCliMcp = class _GeminiCliMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5773,7 +5745,7 @@ var GeminiCliMcp = class _GeminiCliMcp extends ToolMcp {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const fileContent = await readFileContentOrNull((0, import_node_path46.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
+    const fileContent = await readFileContentOrNull(join45(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
     const json = JSON.parse(fileContent);
     const newJson = { ...json, mcpServers: json.mcpServers ?? {} };
     return new _GeminiCliMcp({
@@ -5792,7 +5764,7 @@ var GeminiCliMcp = class _GeminiCliMcp extends ToolMcp {
   }) {
     const paths = this.getSettablePaths({ global });
     const fileContent = await readOrInitializeFileContent(
-      (0, import_node_path46.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath),
+      join45(baseDir, paths.relativeDirPath, paths.relativeFilePath),
       JSON.stringify({ mcpServers: {} }, null, 2)
     );
     const json = JSON.parse(fileContent);
@@ -5837,7 +5809,7 @@ var GeminiCliMcp = class _GeminiCliMcp extends ToolMcp {
 };
 
 // src/features/mcp/junie-mcp.ts
-var import_node_path47 = require("path");
+import { join as join46 } from "path";
 var JunieMcp = class _JunieMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5849,7 +5821,7 @@ var JunieMcp = class _JunieMcp extends ToolMcp {
   }
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path47.join)(".junie", "mcp"),
+      relativeDirPath: join46(".junie", "mcp"),
       relativeFilePath: "mcp.json"
     };
   }
@@ -5858,7 +5830,7 @@ var JunieMcp = class _JunieMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path47.join)(
+      join46(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5907,7 +5879,7 @@ var JunieMcp = class _JunieMcp extends ToolMcp {
 };
 
 // src/features/mcp/kilo-mcp.ts
-var import_node_path48 = require("path");
+import { join as join47 } from "path";
 var KiloMcp = class _KiloMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5928,7 +5900,7 @@ var KiloMcp = class _KiloMcp extends ToolMcp {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const fileContent = await readFileContentOrNull((0, import_node_path48.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
+    const fileContent = await readFileContentOrNull(join47(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
     return new _KiloMcp({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
@@ -5976,7 +5948,7 @@ var KiloMcp = class _KiloMcp extends ToolMcp {
 };
 
 // src/features/mcp/kiro-mcp.ts
-var import_node_path49 = require("path");
+import { join as join48 } from "path";
 var KiroMcp = class _KiroMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5988,7 +5960,7 @@ var KiroMcp = class _KiroMcp extends ToolMcp {
   }
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path49.join)(".kiro", "settings"),
+      relativeDirPath: join48(".kiro", "settings"),
       relativeFilePath: "mcp.json"
     };
   }
@@ -5997,7 +5969,7 @@ var KiroMcp = class _KiroMcp extends ToolMcp {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const fileContent = await readFileContentOrNull((0, import_node_path49.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
+    const fileContent = await readFileContentOrNull(join48(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
     return new _KiroMcp({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
@@ -6045,29 +6017,29 @@ var KiroMcp = class _KiroMcp extends ToolMcp {
 };
 
 // src/features/mcp/opencode-mcp.ts
-var import_node_path50 = require("path");
-var import_mini18 = require("zod/mini");
-var OpencodeMcpLocalServerSchema = import_mini18.z.object({
-  type: import_mini18.z.literal("local"),
-  command: import_mini18.z.array(import_mini18.z.string()),
-  environment: import_mini18.z.optional(import_mini18.z.record(import_mini18.z.string(), import_mini18.z.string())),
-  enabled: import_mini18.z._default(import_mini18.z.boolean(), true),
-  cwd: import_mini18.z.optional(import_mini18.z.string())
+import { join as join49 } from "path";
+import { z as z18 } from "zod/mini";
+var OpencodeMcpLocalServerSchema = z18.object({
+  type: z18.literal("local"),
+  command: z18.array(z18.string()),
+  environment: z18.optional(z18.record(z18.string(), z18.string())),
+  enabled: z18._default(z18.boolean(), true),
+  cwd: z18.optional(z18.string())
 });
-var OpencodeMcpRemoteServerSchema = import_mini18.z.object({
-  type: import_mini18.z.literal("remote"),
-  url: import_mini18.z.string(),
-  headers: import_mini18.z.optional(import_mini18.z.record(import_mini18.z.string(), import_mini18.z.string())),
-  enabled: import_mini18.z._default(import_mini18.z.boolean(), true)
+var OpencodeMcpRemoteServerSchema = z18.object({
+  type: z18.literal("remote"),
+  url: z18.string(),
+  headers: z18.optional(z18.record(z18.string(), z18.string())),
+  enabled: z18._default(z18.boolean(), true)
 });
-var OpencodeMcpServerSchema = import_mini18.z.union([
+var OpencodeMcpServerSchema = z18.union([
   OpencodeMcpLocalServerSchema,
   OpencodeMcpRemoteServerSchema
 ]);
-var OpencodeConfigSchema = import_mini18.z.looseObject({
-  $schema: import_mini18.z.optional(import_mini18.z.string()),
-  mcp: import_mini18.z.optional(import_mini18.z.record(import_mini18.z.string(), OpencodeMcpServerSchema)),
-  tools: import_mini18.z.optional(import_mini18.z.record(import_mini18.z.string(), import_mini18.z.boolean()))
+var OpencodeConfigSchema = z18.looseObject({
+  $schema: z18.optional(z18.string()),
+  mcp: z18.optional(z18.record(z18.string(), OpencodeMcpServerSchema)),
+  tools: z18.optional(z18.record(z18.string(), z18.boolean()))
 });
 function convertFromOpencodeFormat(opencodeMcp, tools) {
   return Object.fromEntries(
@@ -6185,7 +6157,7 @@ var OpencodeMcp = class _OpencodeMcp extends ToolMcp {
   static getSettablePaths({ global } = {}) {
     if (global) {
       return {
-        relativeDirPath: (0, import_node_path50.join)(".config", "opencode"),
+        relativeDirPath: join49(".config", "opencode"),
         relativeFilePath: "opencode.json"
       };
     }
@@ -6200,7 +6172,7 @@ var OpencodeMcp = class _OpencodeMcp extends ToolMcp {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const fileContent = await readFileContentOrNull((0, import_node_path50.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcp":{}}';
+    const fileContent = await readFileContentOrNull(join49(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcp":{}}';
     const json = JSON.parse(fileContent);
     const newJson = { ...json, mcp: json.mcp ?? {} };
     return new _OpencodeMcp({
@@ -6219,7 +6191,7 @@ var OpencodeMcp = class _OpencodeMcp extends ToolMcp {
   }) {
     const paths = this.getSettablePaths({ global });
     const fileContent = await readOrInitializeFileContent(
-      (0, import_node_path50.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath),
+      join49(baseDir, paths.relativeDirPath, paths.relativeFilePath),
       JSON.stringify({ mcp: {} }, null, 2)
     );
     const json = JSON.parse(fileContent);
@@ -6272,7 +6244,7 @@ var OpencodeMcp = class _OpencodeMcp extends ToolMcp {
 };
 
 // src/features/mcp/roo-mcp.ts
-var import_node_path51 = require("path");
+import { join as join50 } from "path";
 function isRooMcpServers(value) {
   return value !== void 0 && value !== null && typeof value === "object";
 }
@@ -6324,7 +6296,7 @@ var RooMcp = class _RooMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path51.join)(
+      join50(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -6395,7 +6367,7 @@ var mcpProcessorToolTargetTuple = [
   "opencode",
   "roo"
 ];
-var McpProcessorToolTargetSchema = import_mini19.z.enum(mcpProcessorToolTargetTuple);
+var McpProcessorToolTargetSchema = z19.enum(mcpProcessorToolTargetTuple);
 var toolMcpFactories = /* @__PURE__ */ new Map([
   [
     "claudecode",
@@ -6697,25 +6669,25 @@ var McpProcessor = class extends FeatureProcessor {
 };
 
 // src/features/rules/rules-processor.ts
-var import_toon = require("@toon-format/toon");
-var import_node_path109 = require("path");
-var import_mini49 = require("zod/mini");
+import { encode } from "@toon-format/toon";
+import { basename as basename24, join as join108, relative as relative4 } from "path";
+import { z as z49 } from "zod/mini";
 
 // src/constants/general.ts
 var SKILL_FILE_NAME = "SKILL.md";
 
 // src/features/skills/agentsmd-skill.ts
-var import_node_path55 = require("path");
+import { join as join54 } from "path";
 
 // src/features/skills/simulated-skill.ts
-var import_node_path54 = require("path");
-var import_mini20 = require("zod/mini");
+import { join as join53 } from "path";
+import { z as z20 } from "zod/mini";
 
 // src/features/skills/tool-skill.ts
-var import_node_path53 = require("path");
+import { join as join52 } from "path";
 
 // src/types/ai-dir.ts
-var import_node_path52 = __toESM(require("path"), 1);
+import path2, { basename as basename17, join as join51, relative as relative3, resolve as resolve4 } from "path";
 var AiDir = class {
   /**
    * @example "."
@@ -6749,7 +6721,7 @@ var AiDir = class {
     otherFiles = [],
     global = false
   }) {
-    if (dirName.includes(import_node_path52.default.sep) || dirName.includes("/") || dirName.includes("\\")) {
+    if (dirName.includes(path2.sep) || dirName.includes("/") || dirName.includes("\\")) {
       throw new Error(`Directory name cannot contain path separators: dirName="${dirName}"`);
     }
     this.baseDir = baseDir;
@@ -6772,11 +6744,11 @@ var AiDir = class {
     return this.dirName;
   }
   getDirPath() {
-    const fullPath = import_node_path52.default.join(this.baseDir, this.relativeDirPath, this.dirName);
-    const resolvedFull = (0, import_node_path52.resolve)(fullPath);
-    const resolvedBase = (0, import_node_path52.resolve)(this.baseDir);
-    const rel = (0, import_node_path52.relative)(resolvedBase, resolvedFull);
-    if (rel.startsWith("..") || import_node_path52.default.isAbsolute(rel)) {
+    const fullPath = path2.join(this.baseDir, this.relativeDirPath, this.dirName);
+    const resolvedFull = resolve4(fullPath);
+    const resolvedBase = resolve4(this.baseDir);
+    const rel = relative3(resolvedBase, resolvedFull);
+    if (rel.startsWith("..") || path2.isAbsolute(rel)) {
       throw new Error(
         `Path traversal detected: Final path escapes baseDir. baseDir="${this.baseDir}", relativeDirPath="${this.relativeDirPath}", dirName="${this.dirName}"`
       );
@@ -6790,7 +6762,7 @@ var AiDir = class {
     return this.otherFiles;
   }
   getRelativePathFromCwd() {
-    return import_node_path52.default.join(this.relativeDirPath, this.dirName);
+    return path2.join(this.relativeDirPath, this.dirName);
   }
   getGlobal() {
     return this.global;
@@ -6809,15 +6781,15 @@ var AiDir = class {
    * @returns Array of files with their relative paths and buffers
    */
   static async collectOtherFiles(baseDir, relativeDirPath, dirName, excludeFileName) {
-    const dirPath = (0, import_node_path52.join)(baseDir, relativeDirPath, dirName);
-    const glob = (0, import_node_path52.join)(dirPath, "**", "*");
+    const dirPath = join51(baseDir, relativeDirPath, dirName);
+    const glob = join51(dirPath, "**", "*");
     const filePaths = await findFilesByGlobs(glob, { type: "file" });
-    const filteredPaths = filePaths.filter((filePath) => (0, import_node_path52.basename)(filePath) !== excludeFileName);
+    const filteredPaths = filePaths.filter((filePath) => basename17(filePath) !== excludeFileName);
     const files = await Promise.all(
       filteredPaths.map(async (filePath) => {
         const fileBuffer = await readFileBuffer(filePath);
         return {
-          relativeFilePathToDirPath: (0, import_node_path52.relative)(dirPath, filePath),
+          relativeFilePathToDirPath: relative3(dirPath, filePath),
           fileBuffer
         };
       })
@@ -6908,8 +6880,8 @@ var ToolSkill = class extends AiDir {
   }) {
     const settablePaths = getSettablePaths({ global });
     const actualRelativeDirPath = relativeDirPath ?? settablePaths.relativeDirPath;
-    const skillDirPath = (0, import_node_path53.join)(baseDir, actualRelativeDirPath, dirName);
-    const skillFilePath = (0, import_node_path53.join)(skillDirPath, SKILL_FILE_NAME);
+    const skillDirPath = join52(baseDir, actualRelativeDirPath, dirName);
+    const skillFilePath = join52(skillDirPath, SKILL_FILE_NAME);
     if (!await fileExists(skillFilePath)) {
       throw new Error(`${SKILL_FILE_NAME} not found in ${skillDirPath}`);
     }
@@ -6933,16 +6905,16 @@ var ToolSkill = class extends AiDir {
   }
   requireMainFileFrontmatter() {
     if (!this.mainFile?.frontmatter) {
-      throw new Error(`Frontmatter is not defined in ${(0, import_node_path53.join)(this.relativeDirPath, this.dirName)}`);
+      throw new Error(`Frontmatter is not defined in ${join52(this.relativeDirPath, this.dirName)}`);
     }
     return this.mainFile.frontmatter;
   }
 };
 
 // src/features/skills/simulated-skill.ts
-var SimulatedSkillFrontmatterSchema = import_mini20.z.looseObject({
-  name: import_mini20.z.string(),
-  description: import_mini20.z.string()
+var SimulatedSkillFrontmatterSchema = z20.looseObject({
+  name: z20.string(),
+  description: z20.string()
 });
 var SimulatedSkill = class extends ToolSkill {
   frontmatter;
@@ -6973,7 +6945,7 @@ var SimulatedSkill = class extends ToolSkill {
       const result = SimulatedSkillFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path54.join)(relativeDirPath, dirName)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join53(relativeDirPath, dirName)}: ${formatError(result.error)}`
         );
       }
     }
@@ -7031,8 +7003,8 @@ var SimulatedSkill = class extends ToolSkill {
   }) {
     const settablePaths = this.getSettablePaths();
     const actualRelativeDirPath = relativeDirPath ?? settablePaths.relativeDirPath;
-    const skillDirPath = (0, import_node_path54.join)(baseDir, actualRelativeDirPath, dirName);
-    const skillFilePath = (0, import_node_path54.join)(skillDirPath, SKILL_FILE_NAME);
+    const skillDirPath = join53(baseDir, actualRelativeDirPath, dirName);
+    const skillFilePath = join53(skillDirPath, SKILL_FILE_NAME);
     if (!await fileExists(skillFilePath)) {
       throw new Error(`${SKILL_FILE_NAME} not found in ${skillDirPath}`);
     }
@@ -7109,7 +7081,7 @@ var AgentsmdSkill = class _AgentsmdSkill extends SimulatedSkill {
       throw new Error("AgentsmdSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path55.join)(".agents", "skills")
+      relativeDirPath: join54(".agents", "skills")
     };
   }
   static async fromDir(params) {
@@ -7136,11 +7108,11 @@ var AgentsmdSkill = class _AgentsmdSkill extends SimulatedSkill {
 };
 
 // src/features/skills/factorydroid-skill.ts
-var import_node_path56 = require("path");
+import { join as join55 } from "path";
 var FactorydroidSkill = class _FactorydroidSkill extends SimulatedSkill {
   static getSettablePaths(_options) {
     return {
-      relativeDirPath: (0, import_node_path56.join)(".factory", "skills")
+      relativeDirPath: join55(".factory", "skills")
     };
   }
   static async fromDir(params) {
@@ -7167,11 +7139,11 @@ var FactorydroidSkill = class _FactorydroidSkill extends SimulatedSkill {
 };
 
 // src/features/skills/skills-processor.ts
-var import_node_path72 = require("path");
-var import_mini34 = require("zod/mini");
+import { basename as basename19, join as join71 } from "path";
+import { z as z34 } from "zod/mini";
 
 // src/types/dir-feature-processor.ts
-var import_node_path57 = require("path");
+import { join as join56 } from "path";
 var DirFeatureProcessor = class {
   baseDir;
   dryRun;
@@ -7202,7 +7174,7 @@ var DirFeatureProcessor = class {
       const mainFile = aiDir.getMainFile();
       let mainFileContent;
       if (mainFile) {
-        const mainFilePath = (0, import_node_path57.join)(dirPath, mainFile.name);
+        const mainFilePath = join56(dirPath, mainFile.name);
         const content = stringifyFrontmatter(mainFile.body, mainFile.frontmatter);
         mainFileContent = addTrailingNewline(content);
         const existingContent = await readFileContentOrNull(mainFilePath);
@@ -7216,7 +7188,7 @@ var DirFeatureProcessor = class {
         const contentWithNewline = addTrailingNewline(file.fileBuffer.toString("utf-8"));
         otherFileContents.push(contentWithNewline);
         if (!dirHasChanges) {
-          const filePath = (0, import_node_path57.join)(dirPath, file.relativeFilePathToDirPath);
+          const filePath = join56(dirPath, file.relativeFilePathToDirPath);
           const existingContent = await readFileContentOrNull(filePath);
           if (existingContent !== contentWithNewline) {
             dirHasChanges = true;
@@ -7230,22 +7202,22 @@ var DirFeatureProcessor = class {
       if (this.dryRun) {
         logger.info(`[DRY RUN] Would create directory: ${dirPath}`);
         if (mainFile) {
-          logger.info(`[DRY RUN] Would write: ${(0, import_node_path57.join)(dirPath, mainFile.name)}`);
-          changedPaths.push((0, import_node_path57.join)(relativeDir, mainFile.name));
+          logger.info(`[DRY RUN] Would write: ${join56(dirPath, mainFile.name)}`);
+          changedPaths.push(join56(relativeDir, mainFile.name));
         }
         for (const file of otherFiles) {
-          logger.info(`[DRY RUN] Would write: ${(0, import_node_path57.join)(dirPath, file.relativeFilePathToDirPath)}`);
-          changedPaths.push((0, import_node_path57.join)(relativeDir, file.relativeFilePathToDirPath));
+          logger.info(`[DRY RUN] Would write: ${join56(dirPath, file.relativeFilePathToDirPath)}`);
+          changedPaths.push(join56(relativeDir, file.relativeFilePathToDirPath));
         }
       } else {
         await ensureDir(dirPath);
         if (mainFile && mainFileContent) {
-          const mainFilePath = (0, import_node_path57.join)(dirPath, mainFile.name);
+          const mainFilePath = join56(dirPath, mainFile.name);
           await writeFileContent(mainFilePath, mainFileContent);
-          changedPaths.push((0, import_node_path57.join)(relativeDir, mainFile.name));
+          changedPaths.push(join56(relativeDir, mainFile.name));
         }
         for (const [i, file] of otherFiles.entries()) {
-          const filePath = (0, import_node_path57.join)(dirPath, file.relativeFilePathToDirPath);
+          const filePath = join56(dirPath, file.relativeFilePathToDirPath);
           const content = otherFileContents[i];
           if (content === void 0) {
             throw new Error(
@@ -7253,7 +7225,7 @@ var DirFeatureProcessor = class {
             );
           }
           await writeFileContent(filePath, content);
-          changedPaths.push((0, import_node_path57.join)(relativeDir, file.relativeFilePathToDirPath));
+          changedPaths.push(join56(relativeDir, file.relativeFilePathToDirPath));
         }
       }
       changedCount++;
@@ -7285,37 +7257,37 @@ var DirFeatureProcessor = class {
 };
 
 // src/features/skills/agentsskills-skill.ts
-var import_node_path59 = require("path");
-var import_mini22 = require("zod/mini");
+import { join as join58 } from "path";
+import { z as z22 } from "zod/mini";
 
 // src/features/skills/rulesync-skill.ts
-var import_node_path58 = require("path");
-var import_mini21 = require("zod/mini");
-var RulesyncSkillFrontmatterSchemaInternal = import_mini21.z.looseObject({
-  name: import_mini21.z.string(),
-  description: import_mini21.z.string(),
-  targets: import_mini21.z._default(RulesyncTargetsSchema, ["*"]),
-  claudecode: import_mini21.z.optional(
-    import_mini21.z.looseObject({
-      "allowed-tools": import_mini21.z.optional(import_mini21.z.array(import_mini21.z.string()))
+import { join as join57 } from "path";
+import { z as z21 } from "zod/mini";
+var RulesyncSkillFrontmatterSchemaInternal = z21.looseObject({
+  name: z21.string(),
+  description: z21.string(),
+  targets: z21._default(RulesyncTargetsSchema, ["*"]),
+  claudecode: z21.optional(
+    z21.looseObject({
+      "allowed-tools": z21.optional(z21.array(z21.string()))
     })
   ),
-  codexcli: import_mini21.z.optional(
-    import_mini21.z.looseObject({
-      "short-description": import_mini21.z.optional(import_mini21.z.string())
+  codexcli: z21.optional(
+    z21.looseObject({
+      "short-description": z21.optional(z21.string())
     })
   ),
-  opencode: import_mini21.z.optional(
-    import_mini21.z.looseObject({
-      "allowed-tools": import_mini21.z.optional(import_mini21.z.array(import_mini21.z.string()))
+  opencode: z21.optional(
+    z21.looseObject({
+      "allowed-tools": z21.optional(z21.array(z21.string()))
     })
   ),
-  copilot: import_mini21.z.optional(
-    import_mini21.z.looseObject({
-      license: import_mini21.z.optional(import_mini21.z.string())
+  copilot: z21.optional(
+    z21.looseObject({
+      license: z21.optional(z21.string())
     })
   ),
-  roo: import_mini21.z.optional(import_mini21.z.looseObject({}))
+  roo: z21.optional(z21.looseObject({}))
 });
 var RulesyncSkillFrontmatterSchema = RulesyncSkillFrontmatterSchemaInternal;
 var RulesyncSkill = class _RulesyncSkill extends AiDir {
@@ -7355,7 +7327,7 @@ var RulesyncSkill = class _RulesyncSkill extends AiDir {
   }
   getFrontmatter() {
     if (!this.mainFile?.frontmatter) {
-      throw new Error(`Frontmatter is not defined in ${(0, import_node_path58.join)(this.relativeDirPath, this.dirName)}`);
+      throw new Error(`Frontmatter is not defined in ${join57(this.relativeDirPath, this.dirName)}`);
     }
     const result = RulesyncSkillFrontmatterSchema.parse(this.mainFile.frontmatter);
     return result;
@@ -7381,8 +7353,8 @@ var RulesyncSkill = class _RulesyncSkill extends AiDir {
     dirName,
     global = false
   }) {
-    const skillDirPath = (0, import_node_path58.join)(baseDir, relativeDirPath, dirName);
-    const skillFilePath = (0, import_node_path58.join)(skillDirPath, SKILL_FILE_NAME);
+    const skillDirPath = join57(baseDir, relativeDirPath, dirName);
+    const skillFilePath = join57(skillDirPath, SKILL_FILE_NAME);
     if (!await fileExists(skillFilePath)) {
       throw new Error(`${SKILL_FILE_NAME} not found in ${skillDirPath}`);
     }
@@ -7412,14 +7384,14 @@ var RulesyncSkill = class _RulesyncSkill extends AiDir {
 };
 
 // src/features/skills/agentsskills-skill.ts
-var AgentsSkillsSkillFrontmatterSchema = import_mini22.z.looseObject({
-  name: import_mini22.z.string(),
-  description: import_mini22.z.string()
+var AgentsSkillsSkillFrontmatterSchema = z22.looseObject({
+  name: z22.string(),
+  description: z22.string()
 });
 var AgentsSkillsSkill = class _AgentsSkillsSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path59.join)(".agents", "skills"),
+    relativeDirPath = join58(".agents", "skills"),
     dirName,
     frontmatter,
     body,
@@ -7451,7 +7423,7 @@ var AgentsSkillsSkill = class _AgentsSkillsSkill extends ToolSkill {
       throw new Error("AgentsSkillsSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path59.join)(".agents", "skills")
+      relativeDirPath: join58(".agents", "skills")
     };
   }
   getFrontmatter() {
@@ -7530,9 +7502,9 @@ var AgentsSkillsSkill = class _AgentsSkillsSkill extends ToolSkill {
     });
     const result = AgentsSkillsSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path59.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join58(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path59.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join58(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _AgentsSkillsSkill({
@@ -7567,16 +7539,16 @@ var AgentsSkillsSkill = class _AgentsSkillsSkill extends ToolSkill {
 };
 
 // src/features/skills/antigravity-skill.ts
-var import_node_path60 = require("path");
-var import_mini23 = require("zod/mini");
-var AntigravitySkillFrontmatterSchema = import_mini23.z.looseObject({
-  name: import_mini23.z.string(),
-  description: import_mini23.z.string()
+import { join as join59 } from "path";
+import { z as z23 } from "zod/mini";
+var AntigravitySkillFrontmatterSchema = z23.looseObject({
+  name: z23.string(),
+  description: z23.string()
 });
 var AntigravitySkill = class _AntigravitySkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path60.join)(".agent", "skills"),
+    relativeDirPath = join59(".agent", "skills"),
     dirName,
     frontmatter,
     body,
@@ -7608,11 +7580,11 @@ var AntigravitySkill = class _AntigravitySkill extends ToolSkill {
   } = {}) {
     if (global) {
       return {
-        relativeDirPath: (0, import_node_path60.join)(".gemini", "antigravity", "skills")
+        relativeDirPath: join59(".gemini", "antigravity", "skills")
       };
     }
     return {
-      relativeDirPath: (0, import_node_path60.join)(".agent", "skills")
+      relativeDirPath: join59(".agent", "skills")
     };
   }
   getFrontmatter() {
@@ -7691,9 +7663,9 @@ var AntigravitySkill = class _AntigravitySkill extends ToolSkill {
     });
     const result = AntigravitySkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path60.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join59(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path60.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join59(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _AntigravitySkill({
@@ -7727,17 +7699,17 @@ var AntigravitySkill = class _AntigravitySkill extends ToolSkill {
 };
 
 // src/features/skills/claudecode-skill.ts
-var import_node_path61 = require("path");
-var import_mini24 = require("zod/mini");
-var ClaudecodeSkillFrontmatterSchema = import_mini24.z.looseObject({
-  name: import_mini24.z.string(),
-  description: import_mini24.z.string(),
-  "allowed-tools": import_mini24.z.optional(import_mini24.z.array(import_mini24.z.string()))
+import { join as join60 } from "path";
+import { z as z24 } from "zod/mini";
+var ClaudecodeSkillFrontmatterSchema = z24.looseObject({
+  name: z24.string(),
+  description: z24.string(),
+  "allowed-tools": z24.optional(z24.array(z24.string()))
 });
 var ClaudecodeSkill = class _ClaudecodeSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path61.join)(".claude", "skills"),
+    relativeDirPath = join60(".claude", "skills"),
     dirName,
     frontmatter,
     body,
@@ -7768,7 +7740,7 @@ var ClaudecodeSkill = class _ClaudecodeSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path61.join)(".claude", "skills")
+      relativeDirPath: join60(".claude", "skills")
     };
   }
   getFrontmatter() {
@@ -7853,9 +7825,9 @@ var ClaudecodeSkill = class _ClaudecodeSkill extends ToolSkill {
     });
     const result = ClaudecodeSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path61.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join60(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path61.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join60(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _ClaudecodeSkill({
@@ -7889,21 +7861,21 @@ var ClaudecodeSkill = class _ClaudecodeSkill extends ToolSkill {
 };
 
 // src/features/skills/codexcli-skill.ts
-var import_node_path62 = require("path");
-var import_mini25 = require("zod/mini");
-var CodexCliSkillFrontmatterSchema = import_mini25.z.looseObject({
-  name: import_mini25.z.string(),
-  description: import_mini25.z.string(),
-  metadata: import_mini25.z.optional(
-    import_mini25.z.looseObject({
-      "short-description": import_mini25.z.optional(import_mini25.z.string())
+import { join as join61 } from "path";
+import { z as z25 } from "zod/mini";
+var CodexCliSkillFrontmatterSchema = z25.looseObject({
+  name: z25.string(),
+  description: z25.string(),
+  metadata: z25.optional(
+    z25.looseObject({
+      "short-description": z25.optional(z25.string())
     })
   )
 });
 var CodexCliSkill = class _CodexCliSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path62.join)(".codex", "skills"),
+    relativeDirPath = join61(".codex", "skills"),
     dirName,
     frontmatter,
     body,
@@ -7934,7 +7906,7 @@ var CodexCliSkill = class _CodexCliSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path62.join)(".codex", "skills")
+      relativeDirPath: join61(".codex", "skills")
     };
   }
   getFrontmatter() {
@@ -8023,9 +7995,9 @@ var CodexCliSkill = class _CodexCliSkill extends ToolSkill {
     });
     const result = CodexCliSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path62.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join61(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path62.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join61(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _CodexCliSkill({
@@ -8059,17 +8031,17 @@ var CodexCliSkill = class _CodexCliSkill extends ToolSkill {
 };
 
 // src/features/skills/copilot-skill.ts
-var import_node_path63 = require("path");
-var import_mini26 = require("zod/mini");
-var CopilotSkillFrontmatterSchema = import_mini26.z.looseObject({
-  name: import_mini26.z.string(),
-  description: import_mini26.z.string(),
-  license: import_mini26.z.optional(import_mini26.z.string())
+import { join as join62 } from "path";
+import { z as z26 } from "zod/mini";
+var CopilotSkillFrontmatterSchema = z26.looseObject({
+  name: z26.string(),
+  description: z26.string(),
+  license: z26.optional(z26.string())
 });
 var CopilotSkill = class _CopilotSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path63.join)(".github", "skills"),
+    relativeDirPath = join62(".github", "skills"),
     dirName,
     frontmatter,
     body,
@@ -8101,7 +8073,7 @@ var CopilotSkill = class _CopilotSkill extends ToolSkill {
       throw new Error("CopilotSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path63.join)(".github", "skills")
+      relativeDirPath: join62(".github", "skills")
     };
   }
   getFrontmatter() {
@@ -8186,9 +8158,9 @@ var CopilotSkill = class _CopilotSkill extends ToolSkill {
     });
     const result = CopilotSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path63.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join62(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path63.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join62(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _CopilotSkill({
@@ -8223,16 +8195,16 @@ var CopilotSkill = class _CopilotSkill extends ToolSkill {
 };
 
 // src/features/skills/cursor-skill.ts
-var import_node_path64 = require("path");
-var import_mini27 = require("zod/mini");
-var CursorSkillFrontmatterSchema = import_mini27.z.looseObject({
-  name: import_mini27.z.string(),
-  description: import_mini27.z.string()
+import { join as join63 } from "path";
+import { z as z27 } from "zod/mini";
+var CursorSkillFrontmatterSchema = z27.looseObject({
+  name: z27.string(),
+  description: z27.string()
 });
 var CursorSkill = class _CursorSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path64.join)(".cursor", "skills"),
+    relativeDirPath = join63(".cursor", "skills"),
     dirName,
     frontmatter,
     body,
@@ -8261,7 +8233,7 @@ var CursorSkill = class _CursorSkill extends ToolSkill {
   }
   static getSettablePaths(_options) {
     return {
-      relativeDirPath: (0, import_node_path64.join)(".cursor", "skills")
+      relativeDirPath: join63(".cursor", "skills")
     };
   }
   getFrontmatter() {
@@ -8340,9 +8312,9 @@ var CursorSkill = class _CursorSkill extends ToolSkill {
     });
     const result = CursorSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path64.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join63(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path64.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join63(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _CursorSkill({
@@ -8377,11 +8349,11 @@ var CursorSkill = class _CursorSkill extends ToolSkill {
 };
 
 // src/features/skills/geminicli-skill.ts
-var import_node_path65 = require("path");
-var import_mini28 = require("zod/mini");
-var GeminiCliSkillFrontmatterSchema = import_mini28.z.looseObject({
-  name: import_mini28.z.string(),
-  description: import_mini28.z.string()
+import { join as join64 } from "path";
+import { z as z28 } from "zod/mini";
+var GeminiCliSkillFrontmatterSchema = z28.looseObject({
+  name: z28.string(),
+  description: z28.string()
 });
 var GeminiCliSkill = class _GeminiCliSkill extends ToolSkill {
   constructor({
@@ -8417,7 +8389,7 @@ var GeminiCliSkill = class _GeminiCliSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path65.join)(".gemini", "skills")
+      relativeDirPath: join64(".gemini", "skills")
     };
   }
   getFrontmatter() {
@@ -8496,9 +8468,9 @@ var GeminiCliSkill = class _GeminiCliSkill extends ToolSkill {
     });
     const result = GeminiCliSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path65.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join64(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path65.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join64(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _GeminiCliSkill({
@@ -8533,16 +8505,16 @@ var GeminiCliSkill = class _GeminiCliSkill extends ToolSkill {
 };
 
 // src/features/skills/kilo-skill.ts
-var import_node_path66 = require("path");
-var import_mini29 = require("zod/mini");
-var KiloSkillFrontmatterSchema = import_mini29.z.looseObject({
-  name: import_mini29.z.string(),
-  description: import_mini29.z.string()
+import { join as join65 } from "path";
+import { z as z29 } from "zod/mini";
+var KiloSkillFrontmatterSchema = z29.looseObject({
+  name: z29.string(),
+  description: z29.string()
 });
 var KiloSkill = class _KiloSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path66.join)(".kilocode", "skills"),
+    relativeDirPath = join65(".kilocode", "skills"),
     dirName,
     frontmatter,
     body,
@@ -8573,7 +8545,7 @@ var KiloSkill = class _KiloSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path66.join)(".kilocode", "skills")
+      relativeDirPath: join65(".kilocode", "skills")
     };
   }
   getFrontmatter() {
@@ -8660,13 +8632,13 @@ var KiloSkill = class _KiloSkill extends ToolSkill {
     });
     const result = KiloSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path66.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join65(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path66.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join65(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     if (result.data.name !== loaded.dirName) {
-      const skillFilePath = (0, import_node_path66.join)(
+      const skillFilePath = join65(
         loaded.baseDir,
         loaded.relativeDirPath,
         loaded.dirName,
@@ -8707,16 +8679,16 @@ var KiloSkill = class _KiloSkill extends ToolSkill {
 };
 
 // src/features/skills/kiro-skill.ts
-var import_node_path67 = require("path");
-var import_mini30 = require("zod/mini");
-var KiroSkillFrontmatterSchema = import_mini30.z.looseObject({
-  name: import_mini30.z.string(),
-  description: import_mini30.z.string()
+import { join as join66 } from "path";
+import { z as z30 } from "zod/mini";
+var KiroSkillFrontmatterSchema = z30.looseObject({
+  name: z30.string(),
+  description: z30.string()
 });
 var KiroSkill = class _KiroSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path67.join)(".kiro", "skills"),
+    relativeDirPath = join66(".kiro", "skills"),
     dirName,
     frontmatter,
     body,
@@ -8748,7 +8720,7 @@ var KiroSkill = class _KiroSkill extends ToolSkill {
       throw new Error("KiroSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path67.join)(".kiro", "skills")
+      relativeDirPath: join66(".kiro", "skills")
     };
   }
   getFrontmatter() {
@@ -8835,13 +8807,13 @@ var KiroSkill = class _KiroSkill extends ToolSkill {
     });
     const result = KiroSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path67.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join66(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path67.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join66(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     if (result.data.name !== loaded.dirName) {
-      const skillFilePath = (0, import_node_path67.join)(
+      const skillFilePath = join66(
         loaded.baseDir,
         loaded.relativeDirPath,
         loaded.dirName,
@@ -8883,17 +8855,17 @@ var KiroSkill = class _KiroSkill extends ToolSkill {
 };
 
 // src/features/skills/opencode-skill.ts
-var import_node_path68 = require("path");
-var import_mini31 = require("zod/mini");
-var OpenCodeSkillFrontmatterSchema = import_mini31.z.looseObject({
-  name: import_mini31.z.string(),
-  description: import_mini31.z.string(),
-  "allowed-tools": import_mini31.z.optional(import_mini31.z.array(import_mini31.z.string()))
+import { join as join67 } from "path";
+import { z as z31 } from "zod/mini";
+var OpenCodeSkillFrontmatterSchema = z31.looseObject({
+  name: z31.string(),
+  description: z31.string(),
+  "allowed-tools": z31.optional(z31.array(z31.string()))
 });
 var OpenCodeSkill = class _OpenCodeSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path68.join)(".opencode", "skill"),
+    relativeDirPath = join67(".opencode", "skill"),
     dirName,
     frontmatter,
     body,
@@ -8922,7 +8894,7 @@ var OpenCodeSkill = class _OpenCodeSkill extends ToolSkill {
   }
   static getSettablePaths({ global = false } = {}) {
     return {
-      relativeDirPath: global ? (0, import_node_path68.join)(".config", "opencode", "skill") : (0, import_node_path68.join)(".opencode", "skill")
+      relativeDirPath: global ? join67(".config", "opencode", "skill") : join67(".opencode", "skill")
     };
   }
   getFrontmatter() {
@@ -9007,9 +8979,9 @@ var OpenCodeSkill = class _OpenCodeSkill extends ToolSkill {
     });
     const result = OpenCodeSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path68.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join67(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path68.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join67(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _OpenCodeSkill({
@@ -9043,16 +9015,16 @@ var OpenCodeSkill = class _OpenCodeSkill extends ToolSkill {
 };
 
 // src/features/skills/replit-skill.ts
-var import_node_path69 = require("path");
-var import_mini32 = require("zod/mini");
-var ReplitSkillFrontmatterSchema = import_mini32.z.looseObject({
-  name: import_mini32.z.string(),
-  description: import_mini32.z.string()
+import { join as join68 } from "path";
+import { z as z32 } from "zod/mini";
+var ReplitSkillFrontmatterSchema = z32.looseObject({
+  name: z32.string(),
+  description: z32.string()
 });
 var ReplitSkill = class _ReplitSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path69.join)(".agents", "skills"),
+    relativeDirPath = join68(".agents", "skills"),
     dirName,
     frontmatter,
     body,
@@ -9084,7 +9056,7 @@ var ReplitSkill = class _ReplitSkill extends ToolSkill {
       throw new Error("ReplitSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path69.join)(".agents", "skills")
+      relativeDirPath: join68(".agents", "skills")
     };
   }
   getFrontmatter() {
@@ -9163,9 +9135,9 @@ var ReplitSkill = class _ReplitSkill extends ToolSkill {
     });
     const result = ReplitSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path69.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join68(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path69.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join68(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _ReplitSkill({
@@ -9200,16 +9172,16 @@ var ReplitSkill = class _ReplitSkill extends ToolSkill {
 };
 
 // src/features/skills/roo-skill.ts
-var import_node_path70 = require("path");
-var import_mini33 = require("zod/mini");
-var RooSkillFrontmatterSchema = import_mini33.z.looseObject({
-  name: import_mini33.z.string(),
-  description: import_mini33.z.string()
+import { join as join69 } from "path";
+import { z as z33 } from "zod/mini";
+var RooSkillFrontmatterSchema = z33.looseObject({
+  name: z33.string(),
+  description: z33.string()
 });
 var RooSkill = class _RooSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path70.join)(".roo", "skills"),
+    relativeDirPath = join69(".roo", "skills"),
     dirName,
     frontmatter,
     body,
@@ -9240,7 +9212,7 @@ var RooSkill = class _RooSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path70.join)(".roo", "skills")
+      relativeDirPath: join69(".roo", "skills")
     };
   }
   getFrontmatter() {
@@ -9327,13 +9299,13 @@ var RooSkill = class _RooSkill extends ToolSkill {
     });
     const result = RooSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path70.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = join69(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path70.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join69(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     if (result.data.name !== loaded.dirName) {
-      const skillFilePath = (0, import_node_path70.join)(
+      const skillFilePath = join69(
         loaded.baseDir,
         loaded.relativeDirPath,
         loaded.dirName,
@@ -9374,17 +9346,17 @@ var RooSkill = class _RooSkill extends ToolSkill {
 };
 
 // src/features/skills/skills-utils.ts
-var import_node_path71 = require("path");
+import { basename as basename18, join as join70 } from "path";
 async function getLocalSkillDirNames(baseDir) {
-  const skillsDir = (0, import_node_path71.join)(baseDir, RULESYNC_SKILLS_RELATIVE_DIR_PATH);
+  const skillsDir = join70(baseDir, RULESYNC_SKILLS_RELATIVE_DIR_PATH);
   const names = /* @__PURE__ */ new Set();
   if (!await directoryExists(skillsDir)) {
     return names;
   }
-  const dirPaths = await findFilesByGlobs((0, import_node_path71.join)(skillsDir, "*"), { type: "dir" });
+  const dirPaths = await findFilesByGlobs(join70(skillsDir, "*"), { type: "dir" });
   for (const dirPath of dirPaths) {
-    const name = (0, import_node_path71.basename)(dirPath);
-    if (name === (0, import_node_path71.basename)(RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH)) continue;
+    const name = basename18(dirPath);
+    if (name === basename18(RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH)) continue;
     names.add(name);
   }
   return names;
@@ -9408,7 +9380,7 @@ var skillsProcessorToolTargetTuple = [
   "replit",
   "roo"
 ];
-var SkillsProcessorToolTargetSchema = import_mini34.z.enum(skillsProcessorToolTargetTuple);
+var SkillsProcessorToolTargetSchema = z34.enum(skillsProcessorToolTargetTuple);
 var toolSkillFactories = /* @__PURE__ */ new Map([
   [
     "agentsmd",
@@ -9602,11 +9574,11 @@ var SkillsProcessor = class extends DirFeatureProcessor {
       )
     );
     const localSkillNames = new Set(localDirNames);
-    const curatedDirPath = (0, import_node_path72.join)(this.baseDir, RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH);
+    const curatedDirPath = join71(this.baseDir, RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH);
     let curatedSkills = [];
     if (await directoryExists(curatedDirPath)) {
-      const curatedDirPaths = await findFilesByGlobs((0, import_node_path72.join)(curatedDirPath, "*"), { type: "dir" });
-      const curatedDirNames = curatedDirPaths.map((path3) => (0, import_node_path72.basename)(path3));
+      const curatedDirPaths = await findFilesByGlobs(join71(curatedDirPath, "*"), { type: "dir" });
+      const curatedDirNames = curatedDirPaths.map((path3) => basename19(path3));
       const nonConflicting = curatedDirNames.filter((name) => {
         if (localSkillNames.has(name)) {
           logger.debug(`Skipping curated skill "${name}": local skill takes precedence.`);
@@ -9639,9 +9611,9 @@ var SkillsProcessor = class extends DirFeatureProcessor {
   async loadToolDirs() {
     const factory = this.getFactory(this.toolTarget);
     const paths = factory.class.getSettablePaths({ global: this.global });
-    const skillsDirPath = (0, import_node_path72.join)(this.baseDir, paths.relativeDirPath);
-    const dirPaths = await findFilesByGlobs((0, import_node_path72.join)(skillsDirPath, "*"), { type: "dir" });
-    const dirNames = dirPaths.map((path3) => (0, import_node_path72.basename)(path3));
+    const skillsDirPath = join71(this.baseDir, paths.relativeDirPath);
+    const dirPaths = await findFilesByGlobs(join71(skillsDirPath, "*"), { type: "dir" });
+    const dirNames = dirPaths.map((path3) => basename19(path3));
     const toolSkills = await Promise.all(
       dirNames.map(
         (dirName) => factory.class.fromDir({
@@ -9657,9 +9629,9 @@ var SkillsProcessor = class extends DirFeatureProcessor {
   async loadToolDirsToDelete() {
     const factory = this.getFactory(this.toolTarget);
     const paths = factory.class.getSettablePaths({ global: this.global });
-    const skillsDirPath = (0, import_node_path72.join)(this.baseDir, paths.relativeDirPath);
-    const dirPaths = await findFilesByGlobs((0, import_node_path72.join)(skillsDirPath, "*"), { type: "dir" });
-    const dirNames = dirPaths.map((path3) => (0, import_node_path72.basename)(path3));
+    const skillsDirPath = join71(this.baseDir, paths.relativeDirPath);
+    const dirPaths = await findFilesByGlobs(join71(skillsDirPath, "*"), { type: "dir" });
+    const dirNames = dirPaths.map((path3) => basename19(path3));
     const toolSkills = dirNames.map(
       (dirName) => factory.class.forDeletion({
         baseDir: this.baseDir,
@@ -9720,11 +9692,11 @@ var SkillsProcessor = class extends DirFeatureProcessor {
 };
 
 // src/features/subagents/agentsmd-subagent.ts
-var import_node_path74 = require("path");
+import { join as join73 } from "path";
 
 // src/features/subagents/simulated-subagent.ts
-var import_node_path73 = require("path");
-var import_mini35 = require("zod/mini");
+import { basename as basename20, join as join72 } from "path";
+import { z as z35 } from "zod/mini";
 
 // src/features/subagents/tool-subagent.ts
 var ToolSubagent = class extends ToolFile {
@@ -9767,9 +9739,9 @@ var ToolSubagent = class extends ToolFile {
 };
 
 // src/features/subagents/simulated-subagent.ts
-var SimulatedSubagentFrontmatterSchema = import_mini35.z.object({
-  name: import_mini35.z.string(),
-  description: import_mini35.z.string()
+var SimulatedSubagentFrontmatterSchema = z35.object({
+  name: z35.string(),
+  description: z35.string()
 });
 var SimulatedSubagent = class extends ToolSubagent {
   frontmatter;
@@ -9779,7 +9751,7 @@ var SimulatedSubagent = class extends ToolSubagent {
       const result = SimulatedSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path73.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join72(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -9830,7 +9802,7 @@ var SimulatedSubagent = class extends ToolSubagent {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path73.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join72(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -9840,7 +9812,7 @@ var SimulatedSubagent = class extends ToolSubagent {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path73.join)(baseDir, this.getSettablePaths().relativeDirPath, relativeFilePath);
+    const filePath = join72(baseDir, this.getSettablePaths().relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = SimulatedSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -9850,7 +9822,7 @@ var SimulatedSubagent = class extends ToolSubagent {
     return {
       baseDir,
       relativeDirPath: this.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path73.basename)(relativeFilePath),
+      relativeFilePath: basename20(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -9876,7 +9848,7 @@ var SimulatedSubagent = class extends ToolSubagent {
 var AgentsmdSubagent = class _AgentsmdSubagent extends SimulatedSubagent {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path74.join)(".agents", "subagents")
+      relativeDirPath: join73(".agents", "subagents")
     };
   }
   static async fromFile(params) {
@@ -9899,11 +9871,11 @@ var AgentsmdSubagent = class _AgentsmdSubagent extends SimulatedSubagent {
 };
 
 // src/features/subagents/codexcli-subagent.ts
-var import_node_path75 = require("path");
+import { join as join74 } from "path";
 var CodexCliSubagent = class _CodexCliSubagent extends SimulatedSubagent {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path75.join)(".codex", "subagents")
+      relativeDirPath: join74(".codex", "subagents")
     };
   }
   static async fromFile(params) {
@@ -9926,11 +9898,11 @@ var CodexCliSubagent = class _CodexCliSubagent extends SimulatedSubagent {
 };
 
 // src/features/subagents/factorydroid-subagent.ts
-var import_node_path76 = require("path");
+import { join as join75 } from "path";
 var FactorydroidSubagent = class _FactorydroidSubagent extends SimulatedSubagent {
   static getSettablePaths(_options) {
     return {
-      relativeDirPath: (0, import_node_path76.join)(".factory", "droids")
+      relativeDirPath: join75(".factory", "droids")
     };
   }
   static async fromFile(params) {
@@ -9953,11 +9925,11 @@ var FactorydroidSubagent = class _FactorydroidSubagent extends SimulatedSubagent
 };
 
 // src/features/subagents/geminicli-subagent.ts
-var import_node_path77 = require("path");
+import { join as join76 } from "path";
 var GeminiCliSubagent = class _GeminiCliSubagent extends SimulatedSubagent {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path77.join)(".gemini", "subagents")
+      relativeDirPath: join76(".gemini", "subagents")
     };
   }
   static async fromFile(params) {
@@ -9980,11 +9952,11 @@ var GeminiCliSubagent = class _GeminiCliSubagent extends SimulatedSubagent {
 };
 
 // src/features/subagents/roo-subagent.ts
-var import_node_path78 = require("path");
+import { join as join77 } from "path";
 var RooSubagent = class _RooSubagent extends SimulatedSubagent {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path78.join)(".roo", "subagents")
+      relativeDirPath: join77(".roo", "subagents")
     };
   }
   static async fromFile(params) {
@@ -10007,20 +9979,20 @@ var RooSubagent = class _RooSubagent extends SimulatedSubagent {
 };
 
 // src/features/subagents/subagents-processor.ts
-var import_node_path85 = require("path");
-var import_mini42 = require("zod/mini");
+import { basename as basename23, join as join84 } from "path";
+import { z as z42 } from "zod/mini";
 
 // src/features/subagents/claudecode-subagent.ts
-var import_node_path80 = require("path");
-var import_mini37 = require("zod/mini");
+import { join as join79 } from "path";
+import { z as z37 } from "zod/mini";
 
 // src/features/subagents/rulesync-subagent.ts
-var import_node_path79 = require("path");
-var import_mini36 = require("zod/mini");
-var RulesyncSubagentFrontmatterSchema = import_mini36.z.looseObject({
-  targets: import_mini36.z._default(RulesyncTargetsSchema, ["*"]),
-  name: import_mini36.z.string(),
-  description: import_mini36.z.string()
+import { basename as basename21, join as join78 } from "path";
+import { z as z36 } from "zod/mini";
+var RulesyncSubagentFrontmatterSchema = z36.looseObject({
+  targets: z36._default(RulesyncTargetsSchema, ["*"]),
+  name: z36.string(),
+  description: z36.string()
 });
 var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
   frontmatter;
@@ -10029,7 +10001,7 @@ var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
     const parseResult = RulesyncSubagentFrontmatterSchema.safeParse(frontmatter);
     if (!parseResult.success && rest.validate !== false) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path79.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
+        `Invalid frontmatter in ${join78(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
       );
     }
     const parsedFrontmatter = parseResult.success ? { ...frontmatter, ...parseResult.data } : { ...frontmatter, targets: frontmatter?.targets ?? ["*"] };
@@ -10062,7 +10034,7 @@ var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path79.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join78(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -10071,14 +10043,14 @@ var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
     relativeFilePath
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path79.join)(process.cwd(), RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, relativeFilePath)
+      join78(process.cwd(), RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, relativeFilePath)
     );
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = RulesyncSubagentFrontmatterSchema.safeParse(frontmatter);
     if (!result.success) {
       throw new Error(`Invalid frontmatter in ${relativeFilePath}: ${formatError(result.error)}`);
     }
-    const filename = (0, import_node_path79.basename)(relativeFilePath);
+    const filename = basename21(relativeFilePath);
     return new _RulesyncSubagent({
       baseDir: process.cwd(),
       relativeDirPath: this.getSettablePaths().relativeDirPath,
@@ -10090,13 +10062,13 @@ var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
 };
 
 // src/features/subagents/claudecode-subagent.ts
-var ClaudecodeSubagentFrontmatterSchema = import_mini37.z.looseObject({
-  name: import_mini37.z.string(),
-  description: import_mini37.z.string(),
-  model: import_mini37.z.optional(import_mini37.z.string()),
-  tools: import_mini37.z.optional(import_mini37.z.union([import_mini37.z.string(), import_mini37.z.array(import_mini37.z.string())])),
-  permissionMode: import_mini37.z.optional(import_mini37.z.string()),
-  skills: import_mini37.z.optional(import_mini37.z.union([import_mini37.z.string(), import_mini37.z.array(import_mini37.z.string())]))
+var ClaudecodeSubagentFrontmatterSchema = z37.looseObject({
+  name: z37.string(),
+  description: z37.string(),
+  model: z37.optional(z37.string()),
+  tools: z37.optional(z37.union([z37.string(), z37.array(z37.string())])),
+  permissionMode: z37.optional(z37.string()),
+  skills: z37.optional(z37.union([z37.string(), z37.array(z37.string())]))
 });
 var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
   frontmatter;
@@ -10106,7 +10078,7 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
       const result = ClaudecodeSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path80.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join79(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -10118,7 +10090,7 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path80.join)(".claude", "agents")
+      relativeDirPath: join79(".claude", "agents")
     };
   }
   getFrontmatter() {
@@ -10194,7 +10166,7 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path80.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join79(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -10212,7 +10184,7 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path80.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join79(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = ClaudecodeSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -10247,13 +10219,13 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
 };
 
 // src/features/subagents/copilot-subagent.ts
-var import_node_path81 = require("path");
-var import_mini38 = require("zod/mini");
+import { join as join80 } from "path";
+import { z as z38 } from "zod/mini";
 var REQUIRED_TOOL = "agent/runSubagent";
-var CopilotSubagentFrontmatterSchema = import_mini38.z.looseObject({
-  name: import_mini38.z.string(),
-  description: import_mini38.z.string(),
-  tools: import_mini38.z.optional(import_mini38.z.union([import_mini38.z.string(), import_mini38.z.array(import_mini38.z.string())]))
+var CopilotSubagentFrontmatterSchema = z38.looseObject({
+  name: z38.string(),
+  description: z38.string(),
+  tools: z38.optional(z38.union([z38.string(), z38.array(z38.string())]))
 });
 var normalizeTools = (tools) => {
   if (!tools) {
@@ -10273,7 +10245,7 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
       const result = CopilotSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path81.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join80(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -10285,7 +10257,7 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path81.join)(".github", "agents")
+      relativeDirPath: join80(".github", "agents")
     };
   }
   getFrontmatter() {
@@ -10359,7 +10331,7 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path81.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join80(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -10377,7 +10349,7 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path81.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join80(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = CopilotSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -10413,11 +10385,11 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
 };
 
 // src/features/subagents/cursor-subagent.ts
-var import_node_path82 = require("path");
-var import_mini39 = require("zod/mini");
-var CursorSubagentFrontmatterSchema = import_mini39.z.looseObject({
-  name: import_mini39.z.string(),
-  description: import_mini39.z.string()
+import { join as join81 } from "path";
+import { z as z39 } from "zod/mini";
+var CursorSubagentFrontmatterSchema = z39.looseObject({
+  name: z39.string(),
+  description: z39.string()
 });
 var CursorSubagent = class _CursorSubagent extends ToolSubagent {
   frontmatter;
@@ -10427,7 +10399,7 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
       const result = CursorSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path82.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join81(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -10439,7 +10411,7 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path82.join)(".cursor", "agents")
+      relativeDirPath: join81(".cursor", "agents")
     };
   }
   getFrontmatter() {
@@ -10506,7 +10478,7 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path82.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join81(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -10524,7 +10496,7 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path82.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join81(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = CursorSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -10560,23 +10532,23 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
 };
 
 // src/features/subagents/kiro-subagent.ts
-var import_node_path83 = require("path");
-var import_mini40 = require("zod/mini");
-var KiroCliSubagentJsonSchema = import_mini40.z.looseObject({
-  name: import_mini40.z.string(),
-  description: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.string())),
-  prompt: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.string())),
-  tools: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.array(import_mini40.z.string()))),
-  toolAliases: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.record(import_mini40.z.string(), import_mini40.z.string()))),
-  toolSettings: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.unknown())),
-  toolSchema: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.unknown())),
-  hooks: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.record(import_mini40.z.string(), import_mini40.z.array(import_mini40.z.unknown())))),
-  model: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.string())),
-  mcpServers: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.record(import_mini40.z.string(), import_mini40.z.unknown()))),
-  useLegacyMcpJson: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.boolean())),
-  resources: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.array(import_mini40.z.string()))),
-  allowedTools: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.array(import_mini40.z.string()))),
-  includeMcpJson: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.boolean()))
+import { join as join82 } from "path";
+import { z as z40 } from "zod/mini";
+var KiroCliSubagentJsonSchema = z40.looseObject({
+  name: z40.string(),
+  description: z40.optional(z40.nullable(z40.string())),
+  prompt: z40.optional(z40.nullable(z40.string())),
+  tools: z40.optional(z40.nullable(z40.array(z40.string()))),
+  toolAliases: z40.optional(z40.nullable(z40.record(z40.string(), z40.string()))),
+  toolSettings: z40.optional(z40.nullable(z40.unknown())),
+  toolSchema: z40.optional(z40.nullable(z40.unknown())),
+  hooks: z40.optional(z40.nullable(z40.record(z40.string(), z40.array(z40.unknown())))),
+  model: z40.optional(z40.nullable(z40.string())),
+  mcpServers: z40.optional(z40.nullable(z40.record(z40.string(), z40.unknown()))),
+  useLegacyMcpJson: z40.optional(z40.nullable(z40.boolean())),
+  resources: z40.optional(z40.nullable(z40.array(z40.string()))),
+  allowedTools: z40.optional(z40.nullable(z40.array(z40.string()))),
+  includeMcpJson: z40.optional(z40.nullable(z40.boolean()))
 });
 var KiroSubagent = class _KiroSubagent extends ToolSubagent {
   body;
@@ -10588,7 +10560,7 @@ var KiroSubagent = class _KiroSubagent extends ToolSubagent {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path83.join)(".kiro", "agents")
+      relativeDirPath: join82(".kiro", "agents")
     };
   }
   getBody() {
@@ -10668,7 +10640,7 @@ var KiroSubagent = class _KiroSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path83.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join82(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     return new _KiroSubagent({
       baseDir,
@@ -10697,12 +10669,12 @@ var KiroSubagent = class _KiroSubagent extends ToolSubagent {
 };
 
 // src/features/subagents/opencode-subagent.ts
-var import_node_path84 = require("path");
-var import_mini41 = require("zod/mini");
-var OpenCodeSubagentFrontmatterSchema = import_mini41.z.looseObject({
-  description: import_mini41.z.string(),
-  mode: import_mini41.z._default(import_mini41.z.string(), "subagent"),
-  name: import_mini41.z.optional(import_mini41.z.string())
+import { basename as basename22, join as join83 } from "path";
+import { z as z41 } from "zod/mini";
+var OpenCodeSubagentFrontmatterSchema = z41.looseObject({
+  description: z41.string(),
+  mode: z41._default(z41.string(), "subagent"),
+  name: z41.optional(z41.string())
 });
 var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
   frontmatter;
@@ -10712,7 +10684,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
       const result = OpenCodeSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path84.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join83(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -10726,7 +10698,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
     global = false
   } = {}) {
     return {
-      relativeDirPath: global ? (0, import_node_path84.join)(".config", "opencode", "agent") : (0, import_node_path84.join)(".opencode", "agent")
+      relativeDirPath: global ? join83(".config", "opencode", "agent") : join83(".opencode", "agent")
     };
   }
   getFrontmatter() {
@@ -10739,7 +10711,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
     const { description, mode, name, ...opencodeSection } = this.frontmatter;
     const rulesyncFrontmatter = {
       targets: ["*"],
-      name: name ?? (0, import_node_path84.basename)(this.getRelativeFilePath(), ".md"),
+      name: name ?? basename22(this.getRelativeFilePath(), ".md"),
       description,
       opencode: { mode, ...opencodeSection }
     };
@@ -10792,7 +10764,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
     return {
       success: false,
       error: new Error(
-        `Invalid frontmatter in ${(0, import_node_path84.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join83(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
       )
     };
   }
@@ -10809,7 +10781,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path84.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = join83(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = OpenCodeSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -10858,7 +10830,7 @@ var subagentsProcessorToolTargetTuple = [
   "opencode",
   "roo"
 ];
-var SubagentsProcessorToolTargetSchema = import_mini42.z.enum(subagentsProcessorToolTargetTuple);
+var SubagentsProcessorToolTargetSchema = z42.enum(subagentsProcessorToolTargetTuple);
 var toolSubagentFactories = /* @__PURE__ */ new Map([
   [
     "agentsmd",
@@ -11020,7 +10992,7 @@ var SubagentsProcessor = class extends FeatureProcessor {
    * Load and parse rulesync subagent files from .rulesync/subagents/ directory
    */
   async loadRulesyncFiles() {
-    const subagentsDir = (0, import_node_path85.join)(this.baseDir, RulesyncSubagent.getSettablePaths().relativeDirPath);
+    const subagentsDir = join84(this.baseDir, RulesyncSubagent.getSettablePaths().relativeDirPath);
     const dirExists = await directoryExists(subagentsDir);
     if (!dirExists) {
       logger.debug(`Rulesync subagents directory not found: ${subagentsDir}`);
@@ -11035,7 +11007,7 @@ var SubagentsProcessor = class extends FeatureProcessor {
     logger.debug(`Found ${mdFiles.length} subagent files in ${subagentsDir}`);
     const rulesyncSubagents = [];
     for (const mdFile of mdFiles) {
-      const filepath = (0, import_node_path85.join)(subagentsDir, mdFile);
+      const filepath = join84(subagentsDir, mdFile);
       try {
         const rulesyncSubagent = await RulesyncSubagent.fromFile({
           relativeFilePath: mdFile,
@@ -11065,14 +11037,14 @@ var SubagentsProcessor = class extends FeatureProcessor {
     const factory = this.getFactory(this.toolTarget);
     const paths = factory.class.getSettablePaths({ global: this.global });
     const subagentFilePaths = await findFilesByGlobs(
-      (0, import_node_path85.join)(this.baseDir, paths.relativeDirPath, factory.meta.filePattern)
+      join84(this.baseDir, paths.relativeDirPath, factory.meta.filePattern)
     );
     if (forDeletion) {
       const toolSubagents2 = subagentFilePaths.map(
         (path3) => factory.class.forDeletion({
           baseDir: this.baseDir,
           relativeDirPath: paths.relativeDirPath,
-          relativeFilePath: (0, import_node_path85.basename)(path3),
+          relativeFilePath: basename23(path3),
           global: this.global
         })
       ).filter((subagent) => subagent.isDeletable());
@@ -11085,7 +11057,7 @@ var SubagentsProcessor = class extends FeatureProcessor {
       subagentFilePaths.map(
         (path3) => factory.class.fromFile({
           baseDir: this.baseDir,
-          relativeFilePath: (0, import_node_path85.basename)(path3),
+          relativeFilePath: basename23(path3),
           global: this.global
         })
       )
@@ -11130,49 +11102,49 @@ var SubagentsProcessor = class extends FeatureProcessor {
 };
 
 // src/features/rules/agentsmd-rule.ts
-var import_node_path88 = require("path");
+import { join as join87 } from "path";
 
 // src/features/rules/tool-rule.ts
-var import_node_path87 = require("path");
+import { join as join86 } from "path";
 
 // src/features/rules/rulesync-rule.ts
-var import_node_path86 = require("path");
-var import_mini43 = require("zod/mini");
-var RulesyncRuleFrontmatterSchema = import_mini43.z.object({
-  root: import_mini43.z.optional(import_mini43.z.boolean()),
-  localRoot: import_mini43.z.optional(import_mini43.z.boolean()),
-  targets: import_mini43.z._default(RulesyncTargetsSchema, ["*"]),
-  description: import_mini43.z.optional(import_mini43.z.string()),
-  globs: import_mini43.z.optional(import_mini43.z.array(import_mini43.z.string())),
-  agentsmd: import_mini43.z.optional(
-    import_mini43.z.object({
+import { join as join85 } from "path";
+import { z as z43 } from "zod/mini";
+var RulesyncRuleFrontmatterSchema = z43.object({
+  root: z43.optional(z43.boolean()),
+  localRoot: z43.optional(z43.boolean()),
+  targets: z43._default(RulesyncTargetsSchema, ["*"]),
+  description: z43.optional(z43.string()),
+  globs: z43.optional(z43.array(z43.string())),
+  agentsmd: z43.optional(
+    z43.object({
       // @example "path/to/subproject"
-      subprojectPath: import_mini43.z.optional(import_mini43.z.string())
+      subprojectPath: z43.optional(z43.string())
     })
   ),
-  claudecode: import_mini43.z.optional(
-    import_mini43.z.object({
+  claudecode: z43.optional(
+    z43.object({
       // Glob patterns for conditional rules (takes precedence over globs)
       // @example ["src/**/*.ts", "tests/**/*.test.ts"]
-      paths: import_mini43.z.optional(import_mini43.z.array(import_mini43.z.string()))
+      paths: z43.optional(z43.array(z43.string()))
     })
   ),
-  cursor: import_mini43.z.optional(
-    import_mini43.z.object({
-      alwaysApply: import_mini43.z.optional(import_mini43.z.boolean()),
-      description: import_mini43.z.optional(import_mini43.z.string()),
-      globs: import_mini43.z.optional(import_mini43.z.array(import_mini43.z.string()))
+  cursor: z43.optional(
+    z43.object({
+      alwaysApply: z43.optional(z43.boolean()),
+      description: z43.optional(z43.string()),
+      globs: z43.optional(z43.array(z43.string()))
     })
   ),
-  copilot: import_mini43.z.optional(
-    import_mini43.z.object({
-      excludeAgent: import_mini43.z.optional(import_mini43.z.union([import_mini43.z.literal("code-review"), import_mini43.z.literal("coding-agent")]))
+  copilot: z43.optional(
+    z43.object({
+      excludeAgent: z43.optional(z43.union([z43.literal("code-review"), z43.literal("coding-agent")]))
     })
   ),
-  antigravity: import_mini43.z.optional(
-    import_mini43.z.looseObject({
-      trigger: import_mini43.z.optional(import_mini43.z.string()),
-      globs: import_mini43.z.optional(import_mini43.z.array(import_mini43.z.string()))
+  antigravity: z43.optional(
+    z43.looseObject({
+      trigger: z43.optional(z43.string()),
+      globs: z43.optional(z43.array(z43.string()))
     })
   )
 });
@@ -11183,7 +11155,7 @@ var RulesyncRule = class _RulesyncRule extends RulesyncFile {
     const parseResult = RulesyncRuleFrontmatterSchema.safeParse(frontmatter);
     if (!parseResult.success && rest.validate !== false) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path86.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
+        `Invalid frontmatter in ${join85(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
       );
     }
     const parsedFrontmatter = parseResult.success ? parseResult.data : { ...frontmatter, targets: frontmatter.targets ?? ["*"] };
@@ -11218,7 +11190,7 @@ var RulesyncRule = class _RulesyncRule extends RulesyncFile {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path86.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join85(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -11227,7 +11199,7 @@ var RulesyncRule = class _RulesyncRule extends RulesyncFile {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path86.join)(
+    const filePath = join85(
       process.cwd(),
       this.getSettablePaths().recommended.relativeDirPath,
       relativeFilePath
@@ -11329,7 +11301,7 @@ var ToolRule = class extends ToolFile {
     rulesyncRule,
     validate = true,
     rootPath = { relativeDirPath: ".", relativeFilePath: "AGENTS.md" },
-    nonRootPath = { relativeDirPath: (0, import_node_path87.join)(".agents", "memories") }
+    nonRootPath = { relativeDirPath: join86(".agents", "memories") }
   }) {
     const params = this.buildToolRuleParamsDefault({
       baseDir,
@@ -11340,7 +11312,7 @@ var ToolRule = class extends ToolFile {
     });
     const rulesyncFrontmatter = rulesyncRule.getFrontmatter();
     if (!rulesyncFrontmatter.root && rulesyncFrontmatter.agentsmd?.subprojectPath) {
-      params.relativeDirPath = (0, import_node_path87.join)(rulesyncFrontmatter.agentsmd.subprojectPath);
+      params.relativeDirPath = join86(rulesyncFrontmatter.agentsmd.subprojectPath);
       params.relativeFilePath = "AGENTS.md";
     }
     return params;
@@ -11389,7 +11361,7 @@ var ToolRule = class extends ToolFile {
   }
 };
 function buildToolPath(toolDir, subDir, excludeToolDir) {
-  return excludeToolDir ? subDir : (0, import_node_path87.join)(toolDir, subDir);
+  return excludeToolDir ? subDir : join86(toolDir, subDir);
 }
 
 // src/features/rules/agentsmd-rule.ts
@@ -11418,8 +11390,8 @@ var AgentsMdRule = class _AgentsMdRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "AGENTS.md";
-    const relativePath = isRoot ? "AGENTS.md" : (0, import_node_path88.join)(".agents", "memories", relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path88.join)(baseDir, relativePath));
+    const relativePath = isRoot ? "AGENTS.md" : join87(".agents", "memories", relativeFilePath);
+    const fileContent = await readFileContent(join87(baseDir, relativePath));
     return new _AgentsMdRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : this.getSettablePaths().nonRoot.relativeDirPath,
@@ -11474,21 +11446,21 @@ var AgentsMdRule = class _AgentsMdRule extends ToolRule {
 };
 
 // src/features/rules/antigravity-rule.ts
-var import_node_path89 = require("path");
-var import_mini44 = require("zod/mini");
-var AntigravityRuleFrontmatterSchema = import_mini44.z.looseObject({
-  trigger: import_mini44.z.optional(
-    import_mini44.z.union([
-      import_mini44.z.literal("always_on"),
-      import_mini44.z.literal("glob"),
-      import_mini44.z.literal("manual"),
-      import_mini44.z.literal("model_decision"),
-      import_mini44.z.string()
+import { join as join88 } from "path";
+import { z as z44 } from "zod/mini";
+var AntigravityRuleFrontmatterSchema = z44.looseObject({
+  trigger: z44.optional(
+    z44.union([
+      z44.literal("always_on"),
+      z44.literal("glob"),
+      z44.literal("manual"),
+      z44.literal("model_decision"),
+      z44.string()
       // accepts any string for forward compatibility
     ])
   ),
-  globs: import_mini44.z.optional(import_mini44.z.string()),
-  description: import_mini44.z.optional(import_mini44.z.string())
+  globs: z44.optional(z44.string()),
+  description: z44.optional(z44.string())
 });
 function parseGlobsString(globs) {
   if (!globs) {
@@ -11633,7 +11605,7 @@ var AntigravityRule = class _AntigravityRule extends ToolRule {
       const result = AntigravityRuleFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path89.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join88(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -11657,7 +11629,7 @@ var AntigravityRule = class _AntigravityRule extends ToolRule {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path89.join)(
+    const filePath = join88(
       baseDir,
       this.getSettablePaths().nonRoot.relativeDirPath,
       relativeFilePath
@@ -11798,7 +11770,7 @@ var AntigravityRule = class _AntigravityRule extends ToolRule {
 };
 
 // src/features/rules/augmentcode-legacy-rule.ts
-var import_node_path90 = require("path");
+import { join as join89 } from "path";
 var AugmentcodeLegacyRule = class _AugmentcodeLegacyRule extends ToolRule {
   toRulesyncRule() {
     const rulesyncFrontmatter = {
@@ -11859,8 +11831,8 @@ var AugmentcodeLegacyRule = class _AugmentcodeLegacyRule extends ToolRule {
   }) {
     const settablePaths = this.getSettablePaths();
     const isRoot = relativeFilePath === settablePaths.root.relativeFilePath;
-    const relativePath = isRoot ? settablePaths.root.relativeFilePath : (0, import_node_path90.join)(settablePaths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path90.join)(baseDir, relativePath));
+    const relativePath = isRoot ? settablePaths.root.relativeFilePath : join89(settablePaths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent(join89(baseDir, relativePath));
     return new _AugmentcodeLegacyRule({
       baseDir,
       relativeDirPath: isRoot ? settablePaths.root.relativeDirPath : settablePaths.nonRoot.relativeDirPath,
@@ -11889,7 +11861,7 @@ var AugmentcodeLegacyRule = class _AugmentcodeLegacyRule extends ToolRule {
 };
 
 // src/features/rules/augmentcode-rule.ts
-var import_node_path91 = require("path");
+import { join as join90 } from "path";
 var AugmentcodeRule = class _AugmentcodeRule extends ToolRule {
   toRulesyncRule() {
     return this.toRulesyncRuleDefault();
@@ -11921,7 +11893,7 @@ var AugmentcodeRule = class _AugmentcodeRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path91.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      join90(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     const { body: content } = parseFrontmatter(fileContent);
     return new _AugmentcodeRule({
@@ -11957,7 +11929,7 @@ var AugmentcodeRule = class _AugmentcodeRule extends ToolRule {
 };
 
 // src/features/rules/claudecode-legacy-rule.ts
-var import_node_path92 = require("path");
+import { join as join91 } from "path";
 var ClaudecodeLegacyRule = class _ClaudecodeLegacyRule extends ToolRule {
   static getSettablePaths({
     global,
@@ -11992,7 +11964,7 @@ var ClaudecodeLegacyRule = class _ClaudecodeLegacyRule extends ToolRule {
     if (isRoot) {
       const relativePath2 = paths.root.relativeFilePath;
       const fileContent2 = await readFileContent(
-        (0, import_node_path92.join)(baseDir, paths.root.relativeDirPath, relativePath2)
+        join91(baseDir, paths.root.relativeDirPath, relativePath2)
       );
       return new _ClaudecodeLegacyRule({
         baseDir,
@@ -12006,8 +11978,8 @@ var ClaudecodeLegacyRule = class _ClaudecodeLegacyRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path92.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path92.join)(baseDir, relativePath));
+    const relativePath = join91(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent(join91(baseDir, relativePath));
     return new _ClaudecodeLegacyRule({
       baseDir,
       relativeDirPath: paths.nonRoot.relativeDirPath,
@@ -12066,10 +12038,10 @@ var ClaudecodeLegacyRule = class _ClaudecodeLegacyRule extends ToolRule {
 };
 
 // src/features/rules/claudecode-rule.ts
-var import_node_path93 = require("path");
-var import_mini45 = require("zod/mini");
-var ClaudecodeRuleFrontmatterSchema = import_mini45.z.object({
-  paths: import_mini45.z.optional(import_mini45.z.array(import_mini45.z.string()))
+import { join as join92 } from "path";
+import { z as z45 } from "zod/mini";
+var ClaudecodeRuleFrontmatterSchema = z45.object({
+  paths: z45.optional(z45.array(z45.string()))
 });
 var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
   frontmatter;
@@ -12101,7 +12073,7 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
       const result = ClaudecodeRuleFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path93.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join92(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -12129,7 +12101,7 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
     const isRoot = relativeFilePath === paths.root.relativeFilePath;
     if (isRoot) {
       const fileContent2 = await readFileContent(
-        (0, import_node_path93.join)(baseDir, paths.root.relativeDirPath, paths.root.relativeFilePath)
+        join92(baseDir, paths.root.relativeDirPath, paths.root.relativeFilePath)
       );
       return new _ClaudecodeRule({
         baseDir,
@@ -12144,13 +12116,13 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path93.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path93.join)(baseDir, relativePath));
+    const relativePath = join92(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent(join92(baseDir, relativePath));
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = ClaudecodeRuleFrontmatterSchema.safeParse(frontmatter);
     if (!result.success) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path93.join)(baseDir, relativePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join92(baseDir, relativePath)}: ${formatError(result.error)}`
       );
     }
     return new _ClaudecodeRule({
@@ -12257,7 +12229,7 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path93.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join92(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -12277,10 +12249,10 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
 };
 
 // src/features/rules/cline-rule.ts
-var import_node_path94 = require("path");
-var import_mini46 = require("zod/mini");
-var ClineRuleFrontmatterSchema = import_mini46.z.object({
-  description: import_mini46.z.string()
+import { join as join93 } from "path";
+import { z as z46 } from "zod/mini";
+var ClineRuleFrontmatterSchema = z46.object({
+  description: z46.string()
 });
 var ClineRule = class _ClineRule extends ToolRule {
   static getSettablePaths(_options = {}) {
@@ -12323,7 +12295,7 @@ var ClineRule = class _ClineRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path94.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      join93(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _ClineRule({
       baseDir,
@@ -12349,7 +12321,7 @@ var ClineRule = class _ClineRule extends ToolRule {
 };
 
 // src/features/rules/codexcli-rule.ts
-var import_node_path95 = require("path");
+import { join as join94 } from "path";
 var CodexcliRule = class _CodexcliRule extends ToolRule {
   static getSettablePaths({
     global,
@@ -12384,7 +12356,7 @@ var CodexcliRule = class _CodexcliRule extends ToolRule {
     if (isRoot) {
       const relativePath2 = paths.root.relativeFilePath;
       const fileContent2 = await readFileContent(
-        (0, import_node_path95.join)(baseDir, paths.root.relativeDirPath, relativePath2)
+        join94(baseDir, paths.root.relativeDirPath, relativePath2)
       );
       return new _CodexcliRule({
         baseDir,
@@ -12398,8 +12370,8 @@ var CodexcliRule = class _CodexcliRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path95.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path95.join)(baseDir, relativePath));
+    const relativePath = join94(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent(join94(baseDir, relativePath));
     return new _CodexcliRule({
       baseDir,
       relativeDirPath: paths.nonRoot.relativeDirPath,
@@ -12458,12 +12430,12 @@ var CodexcliRule = class _CodexcliRule extends ToolRule {
 };
 
 // src/features/rules/copilot-rule.ts
-var import_node_path96 = require("path");
-var import_mini47 = require("zod/mini");
-var CopilotRuleFrontmatterSchema = import_mini47.z.object({
-  description: import_mini47.z.optional(import_mini47.z.string()),
-  applyTo: import_mini47.z.optional(import_mini47.z.string()),
-  excludeAgent: import_mini47.z.optional(import_mini47.z.union([import_mini47.z.literal("code-review"), import_mini47.z.literal("coding-agent")]))
+import { join as join95 } from "path";
+import { z as z47 } from "zod/mini";
+var CopilotRuleFrontmatterSchema = z47.object({
+  description: z47.optional(z47.string()),
+  applyTo: z47.optional(z47.string()),
+  excludeAgent: z47.optional(z47.union([z47.literal("code-review"), z47.literal("coding-agent")]))
 });
 var CopilotRule = class _CopilotRule extends ToolRule {
   frontmatter;
@@ -12484,7 +12456,7 @@ var CopilotRule = class _CopilotRule extends ToolRule {
       const result = CopilotRuleFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path96.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join95(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -12566,11 +12538,11 @@ var CopilotRule = class _CopilotRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "copilot-instructions.md";
-    const relativePath = isRoot ? (0, import_node_path96.join)(
+    const relativePath = isRoot ? join95(
       this.getSettablePaths().root.relativeDirPath,
       this.getSettablePaths().root.relativeFilePath
-    ) : (0, import_node_path96.join)(this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path96.join)(baseDir, relativePath));
+    ) : join95(this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent(join95(baseDir, relativePath));
     if (isRoot) {
       return new _CopilotRule({
         baseDir,
@@ -12586,7 +12558,7 @@ var CopilotRule = class _CopilotRule extends ToolRule {
     const result = CopilotRuleFrontmatterSchema.safeParse(frontmatter);
     if (!result.success) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path96.join)(baseDir, relativeFilePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join95(baseDir, relativeFilePath)}: ${formatError(result.error)}`
       );
     }
     return new _CopilotRule({
@@ -12626,7 +12598,7 @@ var CopilotRule = class _CopilotRule extends ToolRule {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path96.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join95(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -12646,12 +12618,12 @@ var CopilotRule = class _CopilotRule extends ToolRule {
 };
 
 // src/features/rules/cursor-rule.ts
-var import_node_path97 = require("path");
-var import_mini48 = require("zod/mini");
-var CursorRuleFrontmatterSchema = import_mini48.z.object({
-  description: import_mini48.z.optional(import_mini48.z.string()),
-  globs: import_mini48.z.optional(import_mini48.z.string()),
-  alwaysApply: import_mini48.z.optional(import_mini48.z.boolean())
+import { join as join96 } from "path";
+import { z as z48 } from "zod/mini";
+var CursorRuleFrontmatterSchema = z48.object({
+  description: z48.optional(z48.string()),
+  globs: z48.optional(z48.string()),
+  alwaysApply: z48.optional(z48.boolean())
 });
 var CursorRule = class _CursorRule extends ToolRule {
   frontmatter;
@@ -12668,7 +12640,7 @@ var CursorRule = class _CursorRule extends ToolRule {
       const result = CursorRuleFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path97.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join96(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -12785,13 +12757,13 @@ var CursorRule = class _CursorRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path97.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      join96(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     const { frontmatter, body: content } = _CursorRule.parseCursorFrontmatter(fileContent);
     const result = CursorRuleFrontmatterSchema.safeParse(frontmatter);
     if (!result.success) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path97.join)(baseDir, relativeFilePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${join96(baseDir, relativeFilePath)}: ${formatError(result.error)}`
       );
     }
     return new _CursorRule({
@@ -12828,7 +12800,7 @@ var CursorRule = class _CursorRule extends ToolRule {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path97.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${join96(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -12848,7 +12820,7 @@ var CursorRule = class _CursorRule extends ToolRule {
 };
 
 // src/features/rules/factorydroid-rule.ts
-var import_node_path98 = require("path");
+import { join as join97 } from "path";
 var FactorydroidRule = class _FactorydroidRule extends ToolRule {
   constructor({ fileContent, root, ...rest }) {
     super({
@@ -12888,8 +12860,8 @@ var FactorydroidRule = class _FactorydroidRule extends ToolRule {
     const paths = this.getSettablePaths({ global });
     const isRoot = relativeFilePath === paths.root.relativeFilePath;
     if (isRoot) {
-      const relativePath2 = (0, import_node_path98.join)(paths.root.relativeDirPath, paths.root.relativeFilePath);
-      const fileContent2 = await readFileContent((0, import_node_path98.join)(baseDir, relativePath2));
+      const relativePath2 = join97(paths.root.relativeDirPath, paths.root.relativeFilePath);
+      const fileContent2 = await readFileContent(join97(baseDir, relativePath2));
       return new _FactorydroidRule({
         baseDir,
         relativeDirPath: paths.root.relativeDirPath,
@@ -12902,8 +12874,8 @@ var FactorydroidRule = class _FactorydroidRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path98.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path98.join)(baseDir, relativePath));
+    const relativePath = join97(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent(join97(baseDir, relativePath));
     return new _FactorydroidRule({
       baseDir,
       relativeDirPath: paths.nonRoot.relativeDirPath,
@@ -12962,7 +12934,7 @@ var FactorydroidRule = class _FactorydroidRule extends ToolRule {
 };
 
 // src/features/rules/geminicli-rule.ts
-var import_node_path99 = require("path");
+import { join as join98 } from "path";
 var GeminiCliRule = class _GeminiCliRule extends ToolRule {
   static getSettablePaths({
     global,
@@ -12997,7 +12969,7 @@ var GeminiCliRule = class _GeminiCliRule extends ToolRule {
     if (isRoot) {
       const relativePath2 = paths.root.relativeFilePath;
       const fileContent2 = await readFileContent(
-        (0, import_node_path99.join)(baseDir, paths.root.relativeDirPath, relativePath2)
+        join98(baseDir, paths.root.relativeDirPath, relativePath2)
       );
       return new _GeminiCliRule({
         baseDir,
@@ -13011,8 +12983,8 @@ var GeminiCliRule = class _GeminiCliRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path99.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path99.join)(baseDir, relativePath));
+    const relativePath = join98(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent(join98(baseDir, relativePath));
     return new _GeminiCliRule({
       baseDir,
       relativeDirPath: paths.nonRoot.relativeDirPath,
@@ -13071,7 +13043,7 @@ var GeminiCliRule = class _GeminiCliRule extends ToolRule {
 };
 
 // src/features/rules/junie-rule.ts
-var import_node_path100 = require("path");
+import { join as join99 } from "path";
 var JunieRule = class _JunieRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13090,8 +13062,8 @@ var JunieRule = class _JunieRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "guidelines.md";
-    const relativePath = isRoot ? "guidelines.md" : (0, import_node_path100.join)(".junie", "memories", relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path100.join)(baseDir, relativePath));
+    const relativePath = isRoot ? "guidelines.md" : join99(".junie", "memories", relativeFilePath);
+    const fileContent = await readFileContent(join99(baseDir, relativePath));
     return new _JunieRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : this.getSettablePaths().nonRoot.relativeDirPath,
@@ -13146,7 +13118,7 @@ var JunieRule = class _JunieRule extends ToolRule {
 };
 
 // src/features/rules/kilo-rule.ts
-var import_node_path101 = require("path");
+import { join as join100 } from "path";
 var KiloRule = class _KiloRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13161,7 +13133,7 @@ var KiloRule = class _KiloRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path101.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      join100(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _KiloRule({
       baseDir,
@@ -13213,7 +13185,7 @@ var KiloRule = class _KiloRule extends ToolRule {
 };
 
 // src/features/rules/kiro-rule.ts
-var import_node_path102 = require("path");
+import { join as join101 } from "path";
 var KiroRule = class _KiroRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13228,7 +13200,7 @@ var KiroRule = class _KiroRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path102.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      join101(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _KiroRule({
       baseDir,
@@ -13282,7 +13254,7 @@ var KiroRule = class _KiroRule extends ToolRule {
 };
 
 // src/features/rules/opencode-rule.ts
-var import_node_path103 = require("path");
+import { join as join102 } from "path";
 var OpenCodeRule = class _OpenCodeRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13301,8 +13273,8 @@ var OpenCodeRule = class _OpenCodeRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "AGENTS.md";
-    const relativePath = isRoot ? "AGENTS.md" : (0, import_node_path103.join)(".opencode", "memories", relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path103.join)(baseDir, relativePath));
+    const relativePath = isRoot ? "AGENTS.md" : join102(".opencode", "memories", relativeFilePath);
+    const fileContent = await readFileContent(join102(baseDir, relativePath));
     return new _OpenCodeRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : this.getSettablePaths().nonRoot.relativeDirPath,
@@ -13357,7 +13329,7 @@ var OpenCodeRule = class _OpenCodeRule extends ToolRule {
 };
 
 // src/features/rules/qwencode-rule.ts
-var import_node_path104 = require("path");
+import { join as join103 } from "path";
 var QwencodeRule = class _QwencodeRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13376,8 +13348,8 @@ var QwencodeRule = class _QwencodeRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "QWEN.md";
-    const relativePath = isRoot ? "QWEN.md" : (0, import_node_path104.join)(".qwen", "memories", relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path104.join)(baseDir, relativePath));
+    const relativePath = isRoot ? "QWEN.md" : join103(".qwen", "memories", relativeFilePath);
+    const fileContent = await readFileContent(join103(baseDir, relativePath));
     return new _QwencodeRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : this.getSettablePaths().nonRoot.relativeDirPath,
@@ -13429,7 +13401,7 @@ var QwencodeRule = class _QwencodeRule extends ToolRule {
 };
 
 // src/features/rules/replit-rule.ts
-var import_node_path105 = require("path");
+import { join as join104 } from "path";
 var ReplitRule = class _ReplitRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13451,7 +13423,7 @@ var ReplitRule = class _ReplitRule extends ToolRule {
     }
     const relativePath = paths.root.relativeFilePath;
     const fileContent = await readFileContent(
-      (0, import_node_path105.join)(baseDir, paths.root.relativeDirPath, relativePath)
+      join104(baseDir, paths.root.relativeDirPath, relativePath)
     );
     return new _ReplitRule({
       baseDir,
@@ -13517,7 +13489,7 @@ var ReplitRule = class _ReplitRule extends ToolRule {
 };
 
 // src/features/rules/roo-rule.ts
-var import_node_path106 = require("path");
+import { join as join105 } from "path";
 var RooRule = class _RooRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13532,7 +13504,7 @@ var RooRule = class _RooRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path106.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      join105(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _RooRule({
       baseDir,
@@ -13601,7 +13573,7 @@ var RooRule = class _RooRule extends ToolRule {
 };
 
 // src/features/rules/warp-rule.ts
-var import_node_path107 = require("path");
+import { join as join106 } from "path";
 var WarpRule = class _WarpRule extends ToolRule {
   constructor({ fileContent, root, ...rest }) {
     super({
@@ -13627,8 +13599,8 @@ var WarpRule = class _WarpRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === this.getSettablePaths().root.relativeFilePath;
-    const relativePath = isRoot ? this.getSettablePaths().root.relativeFilePath : (0, import_node_path107.join)(this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path107.join)(baseDir, relativePath));
+    const relativePath = isRoot ? this.getSettablePaths().root.relativeFilePath : join106(this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent(join106(baseDir, relativePath));
     return new _WarpRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : ".warp",
@@ -13683,7 +13655,7 @@ var WarpRule = class _WarpRule extends ToolRule {
 };
 
 // src/features/rules/windsurf-rule.ts
-var import_node_path108 = require("path");
+import { join as join107 } from "path";
 var WindsurfRule = class _WindsurfRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13698,7 +13670,7 @@ var WindsurfRule = class _WindsurfRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path108.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      join107(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _WindsurfRule({
       baseDir,
@@ -13773,8 +13745,8 @@ var rulesProcessorToolTargets = [
   "warp",
   "windsurf"
 ];
-var RulesProcessorToolTargetSchema = import_mini49.z.enum(rulesProcessorToolTargets);
-var formatRulePaths = (rules) => rules.map((r) => (0, import_node_path109.join)(r.getRelativeDirPath(), r.getRelativeFilePath())).join(", ");
+var RulesProcessorToolTargetSchema = z49.enum(rulesProcessorToolTargets);
+var formatRulePaths = (rules) => rules.map((r) => join108(r.getRelativeDirPath(), r.getRelativeFilePath())).join(", ");
 var toolRuleFactories = /* @__PURE__ */ new Map([
   [
     "agentsmd",
@@ -14085,7 +14057,7 @@ var RulesProcessor = class extends FeatureProcessor {
     }).relativeDirPath;
     return this.skills.filter((skill) => skillClass.isTargetedByRulesyncSkill(skill)).map((skill) => {
       const frontmatter = skill.getFrontmatter();
-      const relativePath = (0, import_node_path109.join)(toolRelativeDirPath, skill.getDirName(), SKILL_FILE_NAME);
+      const relativePath = join108(toolRelativeDirPath, skill.getDirName(), SKILL_FILE_NAME);
       return {
         name: frontmatter.name,
         description: frontmatter.description,
@@ -14196,12 +14168,12 @@ var RulesProcessor = class extends FeatureProcessor {
    * Load and parse rulesync rule files from .rulesync/rules/ directory
    */
   async loadRulesyncFiles() {
-    const rulesyncBaseDir = (0, import_node_path109.join)(this.baseDir, RULESYNC_RULES_RELATIVE_DIR_PATH);
-    const files = await findFilesByGlobs((0, import_node_path109.join)(rulesyncBaseDir, "**", "*.md"));
+    const rulesyncBaseDir = join108(this.baseDir, RULESYNC_RULES_RELATIVE_DIR_PATH);
+    const files = await findFilesByGlobs(join108(rulesyncBaseDir, "**", "*.md"));
     logger.debug(`Found ${files.length} rulesync files`);
     const rulesyncRules = await Promise.all(
       files.map((file) => {
-        const relativeFilePath = (0, import_node_path109.relative)(rulesyncBaseDir, file);
+        const relativeFilePath = relative4(rulesyncBaseDir, file);
         checkPathTraversal({ relativePath: relativeFilePath, intendedRootDir: rulesyncBaseDir });
         return RulesyncRule.fromFile({
           relativeFilePath
@@ -14259,7 +14231,7 @@ var RulesProcessor = class extends FeatureProcessor {
           return [];
         }
         const rootFilePaths = await findFilesByGlobs(
-          (0, import_node_path109.join)(
+          join108(
             this.baseDir,
             settablePaths.root.relativeDirPath ?? ".",
             settablePaths.root.relativeFilePath
@@ -14270,7 +14242,7 @@ var RulesProcessor = class extends FeatureProcessor {
             (filePath) => factory.class.forDeletion({
               baseDir: this.baseDir,
               relativeDirPath: settablePaths.root?.relativeDirPath ?? ".",
-              relativeFilePath: (0, import_node_path109.basename)(filePath),
+              relativeFilePath: basename24(filePath),
               global: this.global
             })
           ).filter((rule) => rule.isDeletable());
@@ -14279,7 +14251,7 @@ var RulesProcessor = class extends FeatureProcessor {
           rootFilePaths.map(
             (filePath) => factory.class.fromFile({
               baseDir: this.baseDir,
-              relativeFilePath: (0, import_node_path109.basename)(filePath),
+              relativeFilePath: basename24(filePath),
               global: this.global
             })
           )
@@ -14297,13 +14269,13 @@ var RulesProcessor = class extends FeatureProcessor {
           return [];
         }
         const localRootFilePaths = await findFilesByGlobs(
-          (0, import_node_path109.join)(this.baseDir, settablePaths.root.relativeDirPath ?? ".", "CLAUDE.local.md")
+          join108(this.baseDir, settablePaths.root.relativeDirPath ?? ".", "CLAUDE.local.md")
         );
         return localRootFilePaths.map(
           (filePath) => factory.class.forDeletion({
             baseDir: this.baseDir,
             relativeDirPath: settablePaths.root?.relativeDirPath ?? ".",
-            relativeFilePath: (0, import_node_path109.basename)(filePath),
+            relativeFilePath: basename24(filePath),
             global: this.global
           })
         ).filter((rule) => rule.isDeletable());
@@ -14313,13 +14285,13 @@ var RulesProcessor = class extends FeatureProcessor {
         if (!settablePaths.nonRoot) {
           return [];
         }
-        const nonRootBaseDir = (0, import_node_path109.join)(this.baseDir, settablePaths.nonRoot.relativeDirPath);
+        const nonRootBaseDir = join108(this.baseDir, settablePaths.nonRoot.relativeDirPath);
         const nonRootFilePaths = await findFilesByGlobs(
-          (0, import_node_path109.join)(nonRootBaseDir, "**", `*.${factory.meta.extension}`)
+          join108(nonRootBaseDir, "**", `*.${factory.meta.extension}`)
         );
         if (forDeletion) {
           return nonRootFilePaths.map((filePath) => {
-            const relativeFilePath = (0, import_node_path109.relative)(nonRootBaseDir, filePath);
+            const relativeFilePath = relative4(nonRootBaseDir, filePath);
             checkPathTraversal({
               relativePath: relativeFilePath,
               intendedRootDir: nonRootBaseDir
@@ -14334,7 +14306,7 @@ var RulesProcessor = class extends FeatureProcessor {
         }
         return await Promise.all(
           nonRootFilePaths.map((filePath) => {
-            const relativeFilePath = (0, import_node_path109.relative)(nonRootBaseDir, filePath);
+            const relativeFilePath = relative4(nonRootBaseDir, filePath);
             checkPathTraversal({ relativePath: relativeFilePath, intendedRootDir: nonRootBaseDir });
             return factory.class.fromFile({
               baseDir: this.baseDir,
@@ -14398,7 +14370,7 @@ var RulesProcessor = class extends FeatureProcessor {
       }
       return rule;
     });
-    const toonContent = (0, import_toon.encode)({
+    const toonContent = encode({
       rules
     });
     lines.push(toonContent);
@@ -14444,14 +14416,14 @@ s/<command> [arguments]
 This syntax employs a double slash (\`s/\`) to prevent conflicts with built-in slash commands.
 The \`s\` in \`s/\` stands for *simulate*. Because custom slash commands are not built-in, this syntax provides a pseudo way to invoke them.
 
-When users call a custom slash command, you have to look for the markdown file, \`${(0, import_node_path109.join)(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, "{command}.md")}\`, then execute the contents of that file as the block of operations.` : "";
+When users call a custom slash command, you have to look for the markdown file, \`${join108(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, "{command}.md")}\`, then execute the contents of that file as the block of operations.` : "";
     const subagentsSection = subagents ? `## Simulated Subagents
 
 Simulated subagents are specialized AI assistants that can be invoked to handle specific types of tasks. In this case, it can be appear something like custom slash commands simply. Simulated subagents can be called by custom slash commands.
 
-When users call a simulated subagent, it will look for the corresponding markdown file, \`${(0, import_node_path109.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, "{subagent}.md")}\`, and execute its contents as the block of operations.
+When users call a simulated subagent, it will look for the corresponding markdown file, \`${join108(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, "{subagent}.md")}\`, and execute its contents as the block of operations.
 
-For example, if the user instructs \`Call planner subagent to plan the refactoring\`, you have to look for the markdown file, \`${(0, import_node_path109.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, "planner.md")}\`, and execute its contents as the block of operations.` : "";
+For example, if the user instructs \`Call planner subagent to plan the refactoring\`, you have to look for the markdown file, \`${join108(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, "planner.md")}\`, and execute its contents as the block of operations.` : "";
     const skillsSection = skills ? this.generateSkillsSection(skills) : "";
     const result = [
       overview,
@@ -14469,7 +14441,7 @@ For example, if the user instructs \`Call planner subagent to plan the refactori
       ...skill,
       path: `@${skill.path}`
     }));
-    const toonContent = (0, import_toon.encode)({ skillList: skillListWithAtPrefix });
+    const toonContent = encode({ skillList: skillListWithAtPrefix });
     return `## Simulated Skills
 
 Simulated skills are specialized capabilities that can be invoked to handle specific types of tasks. When you determine that a skill would be helpful for the current task, read the corresponding SKILL.md file and execute its instructions.
@@ -14523,7 +14495,7 @@ async function processEmptyFeatureGeneration(params) {
   return { count: totalCount, paths: [], hasDiff };
 }
 async function checkRulesyncDirExists(params) {
-  return fileExists((0, import_node_path110.join)(params.baseDir, RULESYNC_RELATIVE_DIR_PATH));
+  return fileExists(join109(params.baseDir, RULESYNC_RELATIVE_DIR_PATH));
 }
 async function generate(params) {
   const { config } = params;
@@ -14559,7 +14531,7 @@ async function generateRulesCore(params) {
   let totalCount = 0;
   const allPaths = [];
   let hasDiff = false;
-  const toolTargets = (0, import_es_toolkit4.intersection)(
+  const toolTargets = intersection(
     config.getTargets(),
     RulesProcessor.getToolTargets({ global: config.getGlobal() })
   );
@@ -14600,7 +14572,7 @@ async function generateIgnoreCore(params) {
   let totalCount = 0;
   const allPaths = [];
   let hasDiff = false;
-  for (const toolTarget of (0, import_es_toolkit4.intersection)(config.getTargets(), IgnoreProcessor.getToolTargets())) {
+  for (const toolTarget of intersection(config.getTargets(), IgnoreProcessor.getToolTargets())) {
     if (!config.getFeatures(toolTarget).includes("ignore")) {
       continue;
     }
@@ -14644,7 +14616,7 @@ async function generateMcpCore(params) {
   let totalCount = 0;
   const allPaths = [];
   let hasDiff = false;
-  const toolTargets = (0, import_es_toolkit4.intersection)(
+  const toolTargets = intersection(
     config.getTargets(),
     McpProcessor.getToolTargets({ global: config.getGlobal() })
   );
@@ -14678,7 +14650,7 @@ async function generateCommandsCore(params) {
   let totalCount = 0;
   const allPaths = [];
   let hasDiff = false;
-  const toolTargets = (0, import_es_toolkit4.intersection)(
+  const toolTargets = intersection(
     config.getTargets(),
     CommandsProcessor.getToolTargets({
       global: config.getGlobal(),
@@ -14715,7 +14687,7 @@ async function generateSubagentsCore(params) {
   let totalCount = 0;
   const allPaths = [];
   let hasDiff = false;
-  const toolTargets = (0, import_es_toolkit4.intersection)(
+  const toolTargets = intersection(
     config.getTargets(),
     SubagentsProcessor.getToolTargets({
       global: config.getGlobal(),
@@ -14753,7 +14725,7 @@ async function generateSkillsCore(params) {
   const allPaths = [];
   let hasDiff = false;
   const allSkills = [];
-  const toolTargets = (0, import_es_toolkit4.intersection)(
+  const toolTargets = intersection(
     config.getTargets(),
     SkillsProcessor.getToolTargets({
       global: config.getGlobal(),
@@ -14795,7 +14767,7 @@ async function generateHooksCore(params) {
   let totalCount = 0;
   const allPaths = [];
   let hasDiff = false;
-  const toolTargets = (0, import_es_toolkit4.intersection)(
+  const toolTargets = intersection(
     config.getTargets(),
     HooksProcessor.getToolTargets({ global: config.getGlobal() })
   );
@@ -15045,37 +15017,65 @@ async function importHooksCore(params) {
   return writtenCount;
 }
 
-// src/index.ts
-async function generate2(options = {}) {
-  const { silent = true, verbose = false, ...rest } = options;
-  logger.configure({ verbose, silent });
-  const config = await ConfigResolver.resolve({
-    ...rest,
-    verbose,
-    silent
-  });
-  for (const baseDir of config.getBaseDirs()) {
-    if (!await checkRulesyncDirExists({ baseDir })) {
-      throw new Error(".rulesync directory not found. Run 'rulesync init' first.");
-    }
-  }
-  return generate({ config });
-}
-async function importFromTool2(options) {
-  const { target, silent = true, verbose = false, ...rest } = options;
-  logger.configure({ verbose, silent });
-  const config = await ConfigResolver.resolve({
-    ...rest,
-    targets: [target],
-    verbose,
-    silent
-  });
-  return importFromTool({ config, tool: target });
-}
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
+export {
+  RULESYNC_CONFIG_RELATIVE_FILE_PATH,
+  RULESYNC_RELATIVE_DIR_PATH,
+  RULESYNC_RULES_RELATIVE_DIR_PATH,
+  RULESYNC_COMMANDS_RELATIVE_DIR_PATH,
+  RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH,
+  RULESYNC_MCP_RELATIVE_FILE_PATH,
+  RULESYNC_HOOKS_RELATIVE_FILE_PATH,
+  RULESYNC_AIIGNORE_FILE_NAME,
+  RULESYNC_AIIGNORE_RELATIVE_FILE_PATH,
+  RULESYNC_IGNORE_RELATIVE_FILE_PATH,
+  RULESYNC_OVERVIEW_FILE_NAME,
+  RULESYNC_SKILLS_RELATIVE_DIR_PATH,
+  RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH,
+  RULESYNC_SOURCES_LOCK_RELATIVE_FILE_PATH,
+  RULESYNC_MCP_FILE_NAME,
+  RULESYNC_HOOKS_FILE_NAME,
+  MAX_FILE_SIZE,
+  FETCH_CONCURRENCY_LIMIT,
+  formatError,
+  logger,
+  ensureDir,
+  checkPathTraversal,
+  directoryExists,
+  readFileContent,
+  writeFileContent,
+  fileExists,
+  listDirectoryFiles,
+  findFilesByGlobs,
+  removeDirectory,
+  removeFile,
+  createTempDirectory,
+  removeTempDirectory,
   ALL_FEATURES,
+  ALL_FEATURES_WITH_WILDCARD,
   ALL_TOOL_TARGETS,
+  ConfigResolver,
+  stringifyFrontmatter,
+  RulesyncCommandFrontmatterSchema,
+  RulesyncCommand,
+  CommandsProcessor,
+  RulesyncHooks,
+  HooksProcessor,
+  RulesyncIgnore,
+  IgnoreProcessor,
+  RulesyncMcp,
+  McpProcessor,
+  SKILL_FILE_NAME,
+  RulesyncSkillFrontmatterSchema,
+  RulesyncSkill,
+  getLocalSkillDirNames,
+  SkillsProcessor,
+  RulesyncSubagentFrontmatterSchema,
+  RulesyncSubagent,
+  SubagentsProcessor,
+  RulesyncRuleFrontmatterSchema,
+  RulesyncRule,
+  RulesProcessor,
+  checkRulesyncDirExists,
   generate,
   importFromTool
-});
+};

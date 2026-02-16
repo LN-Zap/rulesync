@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -5,10 +6,6 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -25,42 +22,31 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/index.ts
-var index_exports = {};
-__export(index_exports, {
-  ALL_FEATURES: () => ALL_FEATURES,
-  ALL_TOOL_TARGETS: () => ALL_TOOL_TARGETS,
-  generate: () => generate2,
-  importFromTool: () => importFromTool2
-});
-module.exports = __toCommonJS(index_exports);
+// src/cli/index.ts
+var import_commander = require("commander");
 
-// src/config/config-resolver.ts
-var import_jsonc_parser = require("jsonc-parser");
-var import_node_path3 = require("path");
+// src/constants/announcements.ts
+var ANNOUNCEMENT = "".trim();
 
-// src/constants/rulesync-paths.ts
-var import_node_path = require("path");
-var RULESYNC_CONFIG_RELATIVE_FILE_PATH = "rulesync.jsonc";
-var RULESYNC_LOCAL_CONFIG_RELATIVE_FILE_PATH = "rulesync.local.jsonc";
-var RULESYNC_RELATIVE_DIR_PATH = ".rulesync";
-var RULESYNC_RULES_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "rules");
-var RULESYNC_COMMANDS_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "commands");
-var RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "subagents");
-var RULESYNC_MCP_RELATIVE_FILE_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "mcp.json");
-var RULESYNC_HOOKS_RELATIVE_FILE_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "hooks.json");
-var RULESYNC_AIIGNORE_FILE_NAME = ".aiignore";
-var RULESYNC_AIIGNORE_RELATIVE_FILE_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, ".aiignore");
-var RULESYNC_IGNORE_RELATIVE_FILE_PATH = ".rulesyncignore";
-var RULESYNC_OVERVIEW_FILE_NAME = "overview.md";
-var RULESYNC_SKILLS_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "skills");
-var RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH = (0, import_node_path.join)(
-  RULESYNC_SKILLS_RELATIVE_DIR_PATH,
-  ".curated"
-);
-var MAX_FILE_SIZE = 10 * 1024 * 1024;
+// src/types/features.ts
+var import_mini = require("zod/mini");
+var ALL_FEATURES = [
+  "rules",
+  "ignore",
+  "mcp",
+  "subagents",
+  "commands",
+  "skills",
+  "hooks"
+];
+var ALL_FEATURES_WITH_WILDCARD = [...ALL_FEATURES, "*"];
+var FeatureSchema = import_mini.z.enum(ALL_FEATURES);
+var FeaturesSchema = import_mini.z.array(FeatureSchema);
+var RulesyncFeaturesSchema = import_mini.z.union([
+  import_mini.z.array(import_mini.z.enum(ALL_FEATURES_WITH_WILDCARD)),
+  import_mini.z.record(import_mini.z.string(), import_mini.z.array(import_mini.z.enum(ALL_FEATURES_WITH_WILDCARD)))
+]);
 
 // src/utils/error.ts
 var import_zod = require("zod");
@@ -78,13 +64,6 @@ function formatError(error) {
   }
   return String(error);
 }
-
-// src/utils/file.ts
-var import_es_toolkit = require("es-toolkit");
-var import_globby = require("globby");
-var import_promises = require("fs/promises");
-var import_node_os = __toESM(require("os"), 1);
-var import_node_path2 = require("path");
 
 // src/utils/logger.ts
 var import_consola = require("consola");
@@ -148,7 +127,45 @@ var Logger = class {
 };
 var logger = new Logger();
 
+// src/lib/fetch.ts
+var import_promise = require("es-toolkit/promise");
+var import_node_path109 = require("path");
+
+// src/constants/rulesync-paths.ts
+var import_node_path = require("path");
+var RULESYNC_CONFIG_RELATIVE_FILE_PATH = "rulesync.jsonc";
+var RULESYNC_LOCAL_CONFIG_RELATIVE_FILE_PATH = "rulesync.local.jsonc";
+var RULESYNC_RELATIVE_DIR_PATH = ".rulesync";
+var RULESYNC_RULES_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "rules");
+var RULESYNC_COMMANDS_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "commands");
+var RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "subagents");
+var RULESYNC_MCP_RELATIVE_FILE_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "mcp.json");
+var RULESYNC_HOOKS_RELATIVE_FILE_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "hooks.json");
+var RULESYNC_AIIGNORE_FILE_NAME = ".aiignore";
+var RULESYNC_AIIGNORE_RELATIVE_FILE_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, ".aiignore");
+var RULESYNC_IGNORE_RELATIVE_FILE_PATH = ".rulesyncignore";
+var RULESYNC_OVERVIEW_FILE_NAME = "overview.md";
+var RULESYNC_SKILLS_RELATIVE_DIR_PATH = (0, import_node_path.join)(RULESYNC_RELATIVE_DIR_PATH, "skills");
+var RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH = (0, import_node_path.join)(
+  RULESYNC_SKILLS_RELATIVE_DIR_PATH,
+  ".curated"
+);
+var RULESYNC_SOURCES_LOCK_RELATIVE_FILE_PATH = "rulesync.lock";
+var RULESYNC_MCP_FILE_NAME = "mcp.json";
+var RULESYNC_HOOKS_FILE_NAME = "hooks.json";
+var MAX_FILE_SIZE = 10 * 1024 * 1024;
+var FETCH_CONCURRENCY_LIMIT = 10;
+
+// src/features/commands/commands-processor.ts
+var import_node_path19 = require("path");
+var import_mini11 = require("zod/mini");
+
 // src/utils/file.ts
+var import_es_toolkit = require("es-toolkit");
+var import_globby = require("globby");
+var import_promises = require("fs/promises");
+var import_node_os = __toESM(require("os"), 1);
+var import_node_path2 = require("path");
 async function ensureDir(dirPath) {
   try {
     await (0, import_promises.stat)(dirPath);
@@ -282,359 +299,17 @@ function toKebabCaseFilename(filename) {
   const kebabName = (0, import_es_toolkit.kebabCase)(nameWithoutExt);
   return kebabName + extension;
 }
-
-// src/config/config.ts
-var import_mini3 = require("zod/mini");
-
-// src/types/features.ts
-var import_mini = require("zod/mini");
-var ALL_FEATURES = [
-  "rules",
-  "ignore",
-  "mcp",
-  "subagents",
-  "commands",
-  "skills",
-  "hooks"
-];
-var ALL_FEATURES_WITH_WILDCARD = [...ALL_FEATURES, "*"];
-var FeatureSchema = import_mini.z.enum(ALL_FEATURES);
-var FeaturesSchema = import_mini.z.array(FeatureSchema);
-var RulesyncFeaturesSchema = import_mini.z.union([
-  import_mini.z.array(import_mini.z.enum(ALL_FEATURES_WITH_WILDCARD)),
-  import_mini.z.record(import_mini.z.string(), import_mini.z.array(import_mini.z.enum(ALL_FEATURES_WITH_WILDCARD)))
-]);
-
-// src/types/tool-targets.ts
-var import_mini2 = require("zod/mini");
-var ALL_TOOL_TARGETS = [
-  "agentsmd",
-  "agentsskills",
-  "antigravity",
-  "augmentcode",
-  "augmentcode-legacy",
-  "claudecode",
-  "claudecode-legacy",
-  "cline",
-  "codexcli",
-  "copilot",
-  "cursor",
-  "factorydroid",
-  "geminicli",
-  "junie",
-  "kilo",
-  "kiro",
-  "opencode",
-  "qwencode",
-  "replit",
-  "roo",
-  "warp",
-  "windsurf",
-  "zed"
-];
-var ALL_TOOL_TARGETS_WITH_WILDCARD = [...ALL_TOOL_TARGETS, "*"];
-var ToolTargetSchema = import_mini2.z.enum(ALL_TOOL_TARGETS);
-var ToolTargetsSchema = import_mini2.z.array(ToolTargetSchema);
-var RulesyncTargetsSchema = import_mini2.z.array(import_mini2.z.enum(ALL_TOOL_TARGETS_WITH_WILDCARD));
-
-// src/config/config.ts
-var SourceEntrySchema = import_mini3.z.object({
-  source: import_mini3.z.string().check((0, import_mini3.minLength)(1, "source must be a non-empty string")),
-  skills: (0, import_mini3.optional)(import_mini3.z.array(import_mini3.z.string()))
-});
-var ConfigParamsSchema = import_mini3.z.object({
-  baseDirs: import_mini3.z.array(import_mini3.z.string()),
-  targets: RulesyncTargetsSchema,
-  features: RulesyncFeaturesSchema,
-  verbose: import_mini3.z.boolean(),
-  delete: import_mini3.z.boolean(),
-  // New non-experimental options
-  global: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  silent: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  simulateCommands: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  simulateSubagents: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  simulateSkills: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  dryRun: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  check: (0, import_mini3.optional)(import_mini3.z.boolean()),
-  // Declarative skill sources
-  sources: (0, import_mini3.optional)(import_mini3.z.array(SourceEntrySchema))
-});
-var PartialConfigParamsSchema = import_mini3.z.partial(ConfigParamsSchema);
-var ConfigFileSchema = import_mini3.z.object({
-  $schema: (0, import_mini3.optional)(import_mini3.z.string()),
-  ...import_mini3.z.partial(ConfigParamsSchema).shape
-});
-var RequiredConfigParamsSchema = import_mini3.z.required(ConfigParamsSchema);
-var CONFLICTING_TARGET_PAIRS = [
-  ["augmentcode", "augmentcode-legacy"],
-  ["claudecode", "claudecode-legacy"]
-];
-var LEGACY_TARGETS = ["augmentcode-legacy", "claudecode-legacy"];
-var Config = class {
-  baseDirs;
-  targets;
-  features;
-  verbose;
-  delete;
-  global;
-  silent;
-  simulateCommands;
-  simulateSubagents;
-  simulateSkills;
-  dryRun;
-  check;
-  sources;
-  constructor({
-    baseDirs,
-    targets,
-    features,
-    verbose,
-    delete: isDelete,
-    global,
-    silent,
-    simulateCommands,
-    simulateSubagents,
-    simulateSkills,
-    dryRun,
-    check,
-    sources
-  }) {
-    this.validateConflictingTargets(targets);
-    if (dryRun && check) {
-      throw new Error("--dry-run and --check cannot be used together");
-    }
-    this.baseDirs = baseDirs;
-    this.targets = targets;
-    this.features = features;
-    this.verbose = verbose;
-    this.delete = isDelete;
-    this.global = global ?? false;
-    this.silent = silent ?? false;
-    this.simulateCommands = simulateCommands ?? false;
-    this.simulateSubagents = simulateSubagents ?? false;
-    this.simulateSkills = simulateSkills ?? false;
-    this.dryRun = dryRun ?? false;
-    this.check = check ?? false;
-    this.sources = sources ?? [];
-  }
-  validateConflictingTargets(targets) {
-    for (const [target1, target2] of CONFLICTING_TARGET_PAIRS) {
-      const hasTarget1 = targets.includes(target1);
-      const hasTarget2 = targets.includes(target2);
-      if (hasTarget1 && hasTarget2) {
-        throw new Error(
-          `Conflicting targets: '${target1}' and '${target2}' cannot be used together. Please choose one.`
-        );
-      }
-    }
-  }
-  getBaseDirs() {
-    return this.baseDirs;
-  }
-  getTargets() {
-    if (this.targets.includes("*")) {
-      return ALL_TOOL_TARGETS.filter(
-        // eslint-disable-next-line no-type-assertion/no-type-assertion
-        (target) => !LEGACY_TARGETS.includes(target)
-      );
-    }
-    return this.targets.filter((target) => target !== "*");
-  }
-  getFeatures(target) {
-    if (!Array.isArray(this.features)) {
-      const perTargetFeatures = this.features;
-      if (target) {
-        const targetFeatures = perTargetFeatures[target];
-        if (!targetFeatures || targetFeatures.length === 0) {
-          return [];
-        }
-        if (targetFeatures.includes("*")) {
-          return [...ALL_FEATURES];
-        }
-        return targetFeatures.filter((feature) => feature !== "*");
-      }
-      const allFeatures = [];
-      for (const features of Object.values(perTargetFeatures)) {
-        if (features && features.length > 0) {
-          if (features.includes("*")) {
-            return [...ALL_FEATURES];
-          }
-          for (const feature of features) {
-            if (feature !== "*" && !allFeatures.includes(feature)) {
-              allFeatures.push(feature);
-            }
-          }
-        }
-      }
-      return allFeatures;
-    }
-    if (this.features.includes("*")) {
-      return [...ALL_FEATURES];
-    }
-    return this.features.filter((feature) => feature !== "*");
-  }
-  /**
-   * Check if per-target features configuration is being used.
-   */
-  hasPerTargetFeatures() {
-    return !Array.isArray(this.features);
-  }
-  getVerbose() {
-    return this.verbose;
-  }
-  getDelete() {
-    return this.delete;
-  }
-  getGlobal() {
-    return this.global;
-  }
-  getSilent() {
-    return this.silent;
-  }
-  getSimulateCommands() {
-    return this.simulateCommands;
-  }
-  getSimulateSubagents() {
-    return this.simulateSubagents;
-  }
-  getSimulateSkills() {
-    return this.simulateSkills;
-  }
-  getDryRun() {
-    return this.dryRun;
-  }
-  getCheck() {
-    return this.check;
-  }
-  getSources() {
-    return this.sources;
-  }
-  /**
-   * Returns true if either dry-run or check mode is enabled.
-   * In both modes, no files should be written.
-   */
-  isPreviewMode() {
-    return this.dryRun || this.check;
-  }
-};
-
-// src/config/config-resolver.ts
-var getDefaults = () => ({
-  targets: ["agentsmd"],
-  features: ["rules"],
-  verbose: false,
-  delete: false,
-  baseDirs: [process.cwd()],
-  configPath: RULESYNC_CONFIG_RELATIVE_FILE_PATH,
-  global: false,
-  silent: false,
-  simulateCommands: false,
-  simulateSubagents: false,
-  simulateSkills: false,
-  dryRun: false,
-  check: false,
-  sources: []
-});
-var loadConfigFromFile = async (filePath) => {
-  if (!await fileExists(filePath)) {
-    return {};
-  }
-  try {
-    const fileContent = await readFileContent(filePath);
-    const jsonData = (0, import_jsonc_parser.parse)(fileContent);
-    const parsed = ConfigFileSchema.parse(jsonData);
-    const { $schema: _schema, ...configParams } = parsed;
-    return configParams;
-  } catch (error) {
-    logger.error(`Failed to load config file "${filePath}": ${formatError(error)}`);
-    throw error;
-  }
-};
-var mergeConfigs = (baseConfig, localConfig) => {
-  return {
-    targets: localConfig.targets ?? baseConfig.targets,
-    features: localConfig.features ?? baseConfig.features,
-    verbose: localConfig.verbose ?? baseConfig.verbose,
-    delete: localConfig.delete ?? baseConfig.delete,
-    baseDirs: localConfig.baseDirs ?? baseConfig.baseDirs,
-    global: localConfig.global ?? baseConfig.global,
-    silent: localConfig.silent ?? baseConfig.silent,
-    simulateCommands: localConfig.simulateCommands ?? baseConfig.simulateCommands,
-    simulateSubagents: localConfig.simulateSubagents ?? baseConfig.simulateSubagents,
-    simulateSkills: localConfig.simulateSkills ?? baseConfig.simulateSkills,
-    dryRun: localConfig.dryRun ?? baseConfig.dryRun,
-    check: localConfig.check ?? baseConfig.check,
-    sources: localConfig.sources ?? baseConfig.sources
-  };
-};
-var ConfigResolver = class {
-  static async resolve({
-    targets,
-    features,
-    verbose,
-    delete: isDelete,
-    baseDirs,
-    configPath = getDefaults().configPath,
-    global,
-    silent,
-    simulateCommands,
-    simulateSubagents,
-    simulateSkills,
-    dryRun,
-    check
-  }) {
-    const validatedConfigPath = resolvePath(configPath, process.cwd());
-    const baseConfig = await loadConfigFromFile(validatedConfigPath);
-    const configDir = (0, import_node_path3.dirname)(validatedConfigPath);
-    const localConfigPath = (0, import_node_path3.join)(configDir, RULESYNC_LOCAL_CONFIG_RELATIVE_FILE_PATH);
-    const localConfig = await loadConfigFromFile(localConfigPath);
-    const configByFile = mergeConfigs(baseConfig, localConfig);
-    const resolvedGlobal = global ?? configByFile.global ?? getDefaults().global;
-    const resolvedSimulateCommands = simulateCommands ?? configByFile.simulateCommands ?? getDefaults().simulateCommands;
-    const resolvedSimulateSubagents = simulateSubagents ?? configByFile.simulateSubagents ?? getDefaults().simulateSubagents;
-    const resolvedSimulateSkills = simulateSkills ?? configByFile.simulateSkills ?? getDefaults().simulateSkills;
-    const configParams = {
-      targets: targets ?? configByFile.targets ?? getDefaults().targets,
-      features: features ?? configByFile.features ?? getDefaults().features,
-      verbose: verbose ?? configByFile.verbose ?? getDefaults().verbose,
-      delete: isDelete ?? configByFile.delete ?? getDefaults().delete,
-      baseDirs: getBaseDirsInLightOfGlobal({
-        baseDirs: baseDirs ?? configByFile.baseDirs ?? getDefaults().baseDirs,
-        global: resolvedGlobal
-      }),
-      global: resolvedGlobal,
-      silent: silent ?? configByFile.silent ?? getDefaults().silent,
-      simulateCommands: resolvedSimulateCommands,
-      simulateSubagents: resolvedSimulateSubagents,
-      simulateSkills: resolvedSimulateSkills,
-      dryRun: dryRun ?? configByFile.dryRun ?? getDefaults().dryRun,
-      check: check ?? configByFile.check ?? getDefaults().check,
-      sources: configByFile.sources ?? getDefaults().sources
-    };
-    return new Config(configParams);
-  }
-};
-function getBaseDirsInLightOfGlobal({
-  baseDirs,
-  global
-}) {
-  if (global) {
-    return [getHomeDirectory()];
-  }
-  const resolvedBaseDirs = baseDirs.map((baseDir) => (0, import_node_path3.resolve)(baseDir));
-  resolvedBaseDirs.forEach((baseDir) => {
-    validateBaseDir(baseDir);
-  });
-  return resolvedBaseDirs;
+async function createTempDirectory(prefix = "rulesync-fetch-") {
+  return (0, import_promises.mkdtemp)((0, import_node_path2.join)(import_node_os.default.tmpdir(), prefix));
 }
-
-// src/lib/generate.ts
-var import_es_toolkit4 = require("es-toolkit");
-var import_node_path110 = require("path");
-
-// src/features/commands/commands-processor.ts
-var import_node_path20 = require("path");
-var import_mini12 = require("zod/mini");
+async function removeTempDirectory(tempDir) {
+  try {
+    await (0, import_promises.rm)(tempDir, { recursive: true, force: true });
+    logger.debug(`Removed temp directory: ${tempDir}`);
+  } catch {
+    logger.debug(`Failed to clean up temp directory: ${tempDir}`);
+  }
+}
 
 // src/types/feature-processor.ts
 var FeatureProcessor = class {
@@ -699,7 +374,7 @@ var FeatureProcessor = class {
 };
 
 // src/features/commands/agentsmd-command.ts
-var import_node_path6 = require("path");
+var import_node_path5 = require("path");
 
 // src/utils/frontmatter.ts
 var import_gray_matter = __toESM(require("gray-matter"), 1);
@@ -752,11 +427,11 @@ function parseFrontmatter(content) {
 }
 
 // src/features/commands/simulated-command.ts
-var import_node_path5 = require("path");
-var import_mini4 = require("zod/mini");
+var import_node_path4 = require("path");
+var import_mini2 = require("zod/mini");
 
 // src/types/ai-file.ts
-var import_node_path4 = __toESM(require("path"), 1);
+var import_node_path3 = __toESM(require("path"), 1);
 var AiFile = class {
   /**
    * @example "."
@@ -804,11 +479,11 @@ var AiFile = class {
     return this.relativeFilePath;
   }
   getFilePath() {
-    const fullPath = import_node_path4.default.join(this.baseDir, this.relativeDirPath, this.relativeFilePath);
-    const resolvedFull = (0, import_node_path4.resolve)(fullPath);
-    const resolvedBase = (0, import_node_path4.resolve)(this.baseDir);
-    const rel = (0, import_node_path4.relative)(resolvedBase, resolvedFull);
-    if (rel.startsWith("..") || import_node_path4.default.isAbsolute(rel)) {
+    const fullPath = import_node_path3.default.join(this.baseDir, this.relativeDirPath, this.relativeFilePath);
+    const resolvedFull = (0, import_node_path3.resolve)(fullPath);
+    const resolvedBase = (0, import_node_path3.resolve)(this.baseDir);
+    const rel = (0, import_node_path3.relative)(resolvedBase, resolvedFull);
+    if (rel.startsWith("..") || import_node_path3.default.isAbsolute(rel)) {
       throw new Error(
         `Path traversal detected: Final path escapes baseDir. baseDir="${this.baseDir}", relativeDirPath="${this.relativeDirPath}", relativeFilePath="${this.relativeFilePath}"`
       );
@@ -819,7 +494,7 @@ var AiFile = class {
     return this.fileContent;
   }
   getRelativePathFromCwd() {
-    return import_node_path4.default.join(this.relativeDirPath, this.relativeFilePath);
+    return import_node_path3.default.join(this.relativeDirPath, this.relativeFilePath);
   }
   setFileContent(newFileContent) {
     this.fileContent = newFileContent;
@@ -915,8 +590,8 @@ var ToolCommand = class extends AiFile {
 };
 
 // src/features/commands/simulated-command.ts
-var SimulatedCommandFrontmatterSchema = import_mini4.z.object({
-  description: import_mini4.z.string()
+var SimulatedCommandFrontmatterSchema = import_mini2.z.object({
+  description: import_mini2.z.string()
 });
 var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
   frontmatter;
@@ -926,7 +601,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
       const result = SimulatedCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path5.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path4.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -976,7 +651,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path5.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path4.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -986,7 +661,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path5.join)(
+    const filePath = (0, import_node_path4.join)(
       baseDir,
       _SimulatedCommand.getSettablePaths().relativeDirPath,
       relativeFilePath
@@ -1000,7 +675,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
     return {
       baseDir,
       relativeDirPath: _SimulatedCommand.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path5.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path4.basename)(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1026,7 +701,7 @@ var SimulatedCommand = class _SimulatedCommand extends ToolCommand {
 var AgentsmdCommand = class _AgentsmdCommand extends SimulatedCommand {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path6.join)(".agents", "commands")
+      relativeDirPath: (0, import_node_path5.join)(".agents", "commands")
     };
   }
   static fromRulesyncCommand({
@@ -1043,7 +718,7 @@ var AgentsmdCommand = class _AgentsmdCommand extends SimulatedCommand {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path6.join)(
+    const filePath = (0, import_node_path5.join)(
       baseDir,
       _AgentsmdCommand.getSettablePaths().relativeDirPath,
       relativeFilePath
@@ -1057,7 +732,7 @@ var AgentsmdCommand = class _AgentsmdCommand extends SimulatedCommand {
     return new _AgentsmdCommand({
       baseDir,
       relativeDirPath: _AgentsmdCommand.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path6.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path5.basename)(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1081,8 +756,8 @@ var AgentsmdCommand = class _AgentsmdCommand extends SimulatedCommand {
 };
 
 // src/features/commands/antigravity-command.ts
-var import_node_path8 = require("path");
-var import_mini6 = require("zod/mini");
+var import_node_path7 = require("path");
+var import_mini5 = require("zod/mini");
 
 // src/utils/type-guards.ts
 function isRecord(value) {
@@ -1090,8 +765,8 @@ function isRecord(value) {
 }
 
 // src/features/commands/rulesync-command.ts
-var import_node_path7 = require("path");
-var import_mini5 = require("zod/mini");
+var import_node_path6 = require("path");
+var import_mini4 = require("zod/mini");
 
 // src/types/rulesync-file.ts
 var RulesyncFile = class extends AiFile {
@@ -1100,10 +775,42 @@ var RulesyncFile = class extends AiFile {
   }
 };
 
+// src/types/tool-targets.ts
+var import_mini3 = require("zod/mini");
+var ALL_TOOL_TARGETS = [
+  "agentsmd",
+  "agentsskills",
+  "antigravity",
+  "augmentcode",
+  "augmentcode-legacy",
+  "claudecode",
+  "claudecode-legacy",
+  "cline",
+  "codexcli",
+  "copilot",
+  "cursor",
+  "factorydroid",
+  "geminicli",
+  "junie",
+  "kilo",
+  "kiro",
+  "opencode",
+  "qwencode",
+  "replit",
+  "roo",
+  "warp",
+  "windsurf",
+  "zed"
+];
+var ALL_TOOL_TARGETS_WITH_WILDCARD = [...ALL_TOOL_TARGETS, "*"];
+var ToolTargetSchema = import_mini3.z.enum(ALL_TOOL_TARGETS);
+var ToolTargetsSchema = import_mini3.z.array(ToolTargetSchema);
+var RulesyncTargetsSchema = import_mini3.z.array(import_mini3.z.enum(ALL_TOOL_TARGETS_WITH_WILDCARD));
+
 // src/features/commands/rulesync-command.ts
-var RulesyncCommandFrontmatterSchema = import_mini5.z.looseObject({
-  targets: import_mini5.z._default(RulesyncTargetsSchema, ["*"]),
-  description: import_mini5.z.string()
+var RulesyncCommandFrontmatterSchema = import_mini4.z.looseObject({
+  targets: import_mini4.z._default(RulesyncTargetsSchema, ["*"]),
+  description: import_mini4.z.string()
 });
 var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
   frontmatter;
@@ -1112,7 +819,7 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
     const parseResult = RulesyncCommandFrontmatterSchema.safeParse(frontmatter);
     if (!parseResult.success && rest.validate) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path7.join)(rest.baseDir ?? process.cwd(), rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
+        `Invalid frontmatter in ${(0, import_node_path6.join)(rest.baseDir ?? process.cwd(), rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
       );
     }
     const parsedFrontmatter = parseResult.success ? { ...frontmatter, ...parseResult.data } : { ...frontmatter, targets: frontmatter.targets ?? ["*"] };
@@ -1145,7 +852,7 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path7.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path6.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -1153,7 +860,7 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
   static async fromFile({
     relativeFilePath
   }) {
-    const filePath = (0, import_node_path7.join)(
+    const filePath = (0, import_node_path6.join)(
       process.cwd(),
       _RulesyncCommand.getSettablePaths().relativeDirPath,
       relativeFilePath
@@ -1164,7 +871,7 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
     if (!result.success) {
       throw new Error(`Invalid frontmatter in ${relativeFilePath}: ${formatError(result.error)}`);
     }
-    const filename = (0, import_node_path7.basename)(relativeFilePath);
+    const filename = (0, import_node_path6.basename)(relativeFilePath);
     return new _RulesyncCommand({
       baseDir: process.cwd(),
       relativeDirPath: _RulesyncCommand.getSettablePaths().relativeDirPath,
@@ -1177,12 +884,12 @@ var RulesyncCommand = class _RulesyncCommand extends RulesyncFile {
 };
 
 // src/features/commands/antigravity-command.ts
-var AntigravityWorkflowFrontmatterSchema = import_mini6.z.looseObject({
-  trigger: import_mini6.z.optional(import_mini6.z.string()),
-  turbo: import_mini6.z.optional(import_mini6.z.boolean())
+var AntigravityWorkflowFrontmatterSchema = import_mini5.z.looseObject({
+  trigger: import_mini5.z.optional(import_mini5.z.string()),
+  turbo: import_mini5.z.optional(import_mini5.z.boolean())
 });
-var AntigravityCommandFrontmatterSchema = import_mini6.z.looseObject({
-  description: import_mini6.z.string(),
+var AntigravityCommandFrontmatterSchema = import_mini5.z.looseObject({
+  description: import_mini5.z.string(),
   // Support for workflow-specific configuration
   ...AntigravityWorkflowFrontmatterSchema.shape
 });
@@ -1191,7 +898,7 @@ var AntigravityCommand = class _AntigravityCommand extends ToolCommand {
   body;
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path8.join)(".agent", "workflows")
+      relativeDirPath: (0, import_node_path7.join)(".agent", "workflows")
     };
   }
   constructor({ frontmatter, body, ...rest }) {
@@ -1199,7 +906,7 @@ var AntigravityCommand = class _AntigravityCommand extends ToolCommand {
       const result = AntigravityCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path8.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path7.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -1283,7 +990,7 @@ ${body}${turboDirective}`;
     const antigravityTrigger = antigravityConfig && typeof antigravityConfig.trigger === "string" ? antigravityConfig.trigger : void 0;
     const rootTrigger = typeof rulesyncFrontmatter.trigger === "string" ? rulesyncFrontmatter.trigger : void 0;
     const bodyTriggerMatch = rulesyncCommand.getBody().match(/trigger:\s*(\/[\w-]+)/);
-    const filenameTrigger = `/${(0, import_node_path8.basename)(rulesyncCommand.getRelativeFilePath(), ".md")}`;
+    const filenameTrigger = `/${(0, import_node_path7.basename)(rulesyncCommand.getRelativeFilePath(), ".md")}`;
     return antigravityTrigger || rootTrigger || (bodyTriggerMatch ? bodyTriggerMatch[1] : void 0) || filenameTrigger;
   }
   validate() {
@@ -1297,7 +1004,7 @@ ${body}${turboDirective}`;
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path8.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path7.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -1313,7 +1020,7 @@ ${body}${turboDirective}`;
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path8.join)(
+    const filePath = (0, import_node_path7.join)(
       baseDir,
       _AntigravityCommand.getSettablePaths().relativeDirPath,
       relativeFilePath
@@ -1327,7 +1034,7 @@ ${body}${turboDirective}`;
     return new _AntigravityCommand({
       baseDir,
       relativeDirPath: _AntigravityCommand.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path8.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path7.basename)(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       fileContent,
@@ -1352,14 +1059,14 @@ ${body}${turboDirective}`;
 };
 
 // src/features/commands/claudecode-command.ts
-var import_node_path9 = require("path");
-var import_mini7 = require("zod/mini");
-var ClaudecodeCommandFrontmatterSchema = import_mini7.z.looseObject({
-  description: import_mini7.z.string(),
-  "allowed-tools": import_mini7.z.optional(import_mini7.z.union([import_mini7.z.string(), import_mini7.z.array(import_mini7.z.string())])),
-  "argument-hint": import_mini7.z.optional(import_mini7.z.string()),
-  model: import_mini7.z.optional(import_mini7.z.string()),
-  "disable-model-invocation": import_mini7.z.optional(import_mini7.z.boolean())
+var import_node_path8 = require("path");
+var import_mini6 = require("zod/mini");
+var ClaudecodeCommandFrontmatterSchema = import_mini6.z.looseObject({
+  description: import_mini6.z.string(),
+  "allowed-tools": import_mini6.z.optional(import_mini6.z.union([import_mini6.z.string(), import_mini6.z.array(import_mini6.z.string())])),
+  "argument-hint": import_mini6.z.optional(import_mini6.z.string()),
+  model: import_mini6.z.optional(import_mini6.z.string()),
+  "disable-model-invocation": import_mini6.z.optional(import_mini6.z.boolean())
 });
 var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
   frontmatter;
@@ -1369,7 +1076,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
       const result = ClaudecodeCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path9.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path8.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -1382,7 +1089,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path9.join)(".claude", "commands")
+      relativeDirPath: (0, import_node_path8.join)(".claude", "commands")
     };
   }
   getBody() {
@@ -1445,7 +1152,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path9.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path8.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -1463,7 +1170,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path9.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path8.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = ClaudecodeCommandFrontmatterSchema.safeParse(frontmatter);
@@ -1473,7 +1180,7 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
     return new _ClaudecodeCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path9.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path8.basename)(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1496,16 +1203,16 @@ var ClaudecodeCommand = class _ClaudecodeCommand extends ToolCommand {
 };
 
 // src/features/commands/cline-command.ts
-var import_node_path10 = require("path");
+var import_node_path9 = require("path");
 var ClineCommand = class _ClineCommand extends ToolCommand {
   static getSettablePaths({ global } = {}) {
     if (global) {
       return {
-        relativeDirPath: (0, import_node_path10.join)("Documents", "Cline", "Workflows")
+        relativeDirPath: (0, import_node_path9.join)("Documents", "Cline", "Workflows")
       };
     }
     return {
-      relativeDirPath: (0, import_node_path10.join)(".clinerules", "workflows")
+      relativeDirPath: (0, import_node_path9.join)(".clinerules", "workflows")
     };
   }
   toRulesyncCommand() {
@@ -1557,13 +1264,13 @@ var ClineCommand = class _ClineCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path10.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path9.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _ClineCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path10.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path9.basename)(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -1584,14 +1291,14 @@ var ClineCommand = class _ClineCommand extends ToolCommand {
 };
 
 // src/features/commands/codexcli-command.ts
-var import_node_path11 = require("path");
+var import_node_path10 = require("path");
 var CodexcliCommand = class _CodexcliCommand extends ToolCommand {
   static getSettablePaths({ global } = {}) {
     if (!global) {
       throw new Error("CodexcliCommand only supports global mode. Please pass { global: true }.");
     }
     return {
-      relativeDirPath: (0, import_node_path11.join)(".codex", "prompts")
+      relativeDirPath: (0, import_node_path10.join)(".codex", "prompts")
     };
   }
   toRulesyncCommand() {
@@ -1644,13 +1351,13 @@ var CodexcliCommand = class _CodexcliCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path11.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path10.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _CodexcliCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path11.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path10.basename)(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -1671,11 +1378,11 @@ var CodexcliCommand = class _CodexcliCommand extends ToolCommand {
 };
 
 // src/features/commands/copilot-command.ts
-var import_node_path12 = require("path");
-var import_mini8 = require("zod/mini");
-var CopilotCommandFrontmatterSchema = import_mini8.z.looseObject({
-  mode: import_mini8.z.optional(import_mini8.z.string()),
-  description: import_mini8.z.string()
+var import_node_path11 = require("path");
+var import_mini7 = require("zod/mini");
+var CopilotCommandFrontmatterSchema = import_mini7.z.looseObject({
+  mode: import_mini7.z.optional(import_mini7.z.string()),
+  description: import_mini7.z.string()
 });
 var CopilotCommand = class _CopilotCommand extends ToolCommand {
   frontmatter;
@@ -1685,7 +1392,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
       const result = CopilotCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path12.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path11.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -1698,7 +1405,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
   }
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path12.join)(".github", "prompts")
+      relativeDirPath: (0, import_node_path11.join)(".github", "prompts")
     };
   }
   getBody() {
@@ -1738,7 +1445,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path12.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path11.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -1773,7 +1480,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const filePath = (0, import_node_path12.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path11.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = CopilotCommandFrontmatterSchema.safeParse(frontmatter);
@@ -1783,7 +1490,7 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
     return new _CopilotCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path12.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path11.basename)(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1812,11 +1519,11 @@ var CopilotCommand = class _CopilotCommand extends ToolCommand {
 };
 
 // src/features/commands/cursor-command.ts
-var import_node_path13 = require("path");
+var import_node_path12 = require("path");
 var CursorCommand = class _CursorCommand extends ToolCommand {
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path13.join)(".cursor", "commands")
+      relativeDirPath: (0, import_node_path12.join)(".cursor", "commands")
     };
   }
   toRulesyncCommand() {
@@ -1869,13 +1576,13 @@ var CursorCommand = class _CursorCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path13.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path12.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _CursorCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path13.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path12.basename)(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -1896,11 +1603,11 @@ var CursorCommand = class _CursorCommand extends ToolCommand {
 };
 
 // src/features/commands/factorydroid-command.ts
-var import_node_path14 = require("path");
+var import_node_path13 = require("path");
 var FactorydroidCommand = class _FactorydroidCommand extends SimulatedCommand {
   static getSettablePaths(_options) {
     return {
-      relativeDirPath: (0, import_node_path14.join)(".factory", "commands")
+      relativeDirPath: (0, import_node_path13.join)(".factory", "commands")
     };
   }
   static fromRulesyncCommand({
@@ -1920,7 +1627,7 @@ var FactorydroidCommand = class _FactorydroidCommand extends SimulatedCommand {
     global = false
   }) {
     const paths = _FactorydroidCommand.getSettablePaths({ global });
-    const filePath = (0, import_node_path14.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path13.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = SimulatedCommandFrontmatterSchema.safeParse(frontmatter);
@@ -1930,7 +1637,7 @@ var FactorydroidCommand = class _FactorydroidCommand extends SimulatedCommand {
     return new _FactorydroidCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path14.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path13.basename)(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -1954,12 +1661,12 @@ var FactorydroidCommand = class _FactorydroidCommand extends SimulatedCommand {
 };
 
 // src/features/commands/geminicli-command.ts
-var import_node_path15 = require("path");
+var import_node_path14 = require("path");
 var import_smol_toml = require("smol-toml");
-var import_mini9 = require("zod/mini");
-var GeminiCliCommandFrontmatterSchema = import_mini9.z.looseObject({
-  description: import_mini9.z.optional(import_mini9.z.string()),
-  prompt: import_mini9.z.string()
+var import_mini8 = require("zod/mini");
+var GeminiCliCommandFrontmatterSchema = import_mini8.z.looseObject({
+  description: import_mini8.z.optional(import_mini8.z.string()),
+  prompt: import_mini8.z.string()
 });
 var GeminiCliCommand = class _GeminiCliCommand extends ToolCommand {
   frontmatter;
@@ -1972,7 +1679,7 @@ var GeminiCliCommand = class _GeminiCliCommand extends ToolCommand {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path15.join)(".gemini", "commands")
+      relativeDirPath: (0, import_node_path14.join)(".gemini", "commands")
     };
   }
   parseTomlContent(content) {
@@ -1981,7 +1688,7 @@ var GeminiCliCommand = class _GeminiCliCommand extends ToolCommand {
       const result = GeminiCliCommandFrontmatterSchema.safeParse(parsed);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path15.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path14.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
       return {
@@ -1990,7 +1697,7 @@ var GeminiCliCommand = class _GeminiCliCommand extends ToolCommand {
       };
     } catch (error) {
       throw new Error(
-        `Failed to parse TOML command file (${(0, import_node_path15.join)(this.relativeDirPath, this.relativeFilePath)}): ${formatError(error)}`,
+        `Failed to parse TOML command file (${(0, import_node_path14.join)(this.relativeDirPath, this.relativeFilePath)}): ${formatError(error)}`,
         { cause: error }
       );
     }
@@ -2057,12 +1764,12 @@ ${geminiFrontmatter.prompt}
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path15.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path14.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     return new _GeminiCliCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path15.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path14.basename)(relativeFilePath),
       fileContent,
       validate
     });
@@ -2099,11 +1806,11 @@ prompt = ""`;
 };
 
 // src/features/commands/kilo-command.ts
-var import_node_path16 = require("path");
+var import_node_path15 = require("path");
 var KiloCommand = class _KiloCommand extends ToolCommand {
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path16.join)(".kilocode", "workflows")
+      relativeDirPath: (0, import_node_path15.join)(".kilocode", "workflows")
     };
   }
   toRulesyncCommand() {
@@ -2153,13 +1860,13 @@ var KiloCommand = class _KiloCommand extends ToolCommand {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const filePath = (0, import_node_path16.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path15.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _KiloCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path16.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path15.basename)(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -2180,11 +1887,11 @@ var KiloCommand = class _KiloCommand extends ToolCommand {
 };
 
 // src/features/commands/kiro-command.ts
-var import_node_path17 = require("path");
+var import_node_path16 = require("path");
 var KiroCommand = class _KiroCommand extends ToolCommand {
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path17.join)(".kiro", "prompts")
+      relativeDirPath: (0, import_node_path16.join)(".kiro", "prompts")
     };
   }
   toRulesyncCommand() {
@@ -2234,13 +1941,13 @@ var KiroCommand = class _KiroCommand extends ToolCommand {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const filePath = (0, import_node_path17.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path16.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { body: content } = parseFrontmatter(fileContent);
     return new _KiroCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path17.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path16.basename)(relativeFilePath),
       fileContent: content.trim(),
       validate
     });
@@ -2261,13 +1968,13 @@ var KiroCommand = class _KiroCommand extends ToolCommand {
 };
 
 // src/features/commands/opencode-command.ts
-var import_node_path18 = require("path");
-var import_mini10 = require("zod/mini");
-var OpenCodeCommandFrontmatterSchema = import_mini10.z.looseObject({
-  description: import_mini10.z.string(),
-  agent: (0, import_mini10.optional)(import_mini10.z.string()),
-  subtask: (0, import_mini10.optional)(import_mini10.z.boolean()),
-  model: (0, import_mini10.optional)(import_mini10.z.string())
+var import_node_path17 = require("path");
+var import_mini9 = require("zod/mini");
+var OpenCodeCommandFrontmatterSchema = import_mini9.z.looseObject({
+  description: import_mini9.z.string(),
+  agent: (0, import_mini9.optional)(import_mini9.z.string()),
+  subtask: (0, import_mini9.optional)(import_mini9.z.boolean()),
+  model: (0, import_mini9.optional)(import_mini9.z.string())
 });
 var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
   frontmatter;
@@ -2277,7 +1984,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
       const result = OpenCodeCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path18.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path17.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -2290,7 +1997,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
   }
   static getSettablePaths({ global } = {}) {
     return {
-      relativeDirPath: global ? (0, import_node_path18.join)(".config", "opencode", "command") : (0, import_node_path18.join)(".opencode", "command")
+      relativeDirPath: global ? (0, import_node_path17.join)(".config", "opencode", "command") : (0, import_node_path17.join)(".opencode", "command")
     };
   }
   getBody() {
@@ -2351,7 +2058,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
     return {
       success: false,
       error: new Error(
-        `Invalid frontmatter in ${(0, import_node_path18.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path17.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
       )
     };
   }
@@ -2362,7 +2069,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path18.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path17.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = OpenCodeCommandFrontmatterSchema.safeParse(frontmatter);
@@ -2372,7 +2079,7 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
     return new _OpenCodeCommand({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
-      relativeFilePath: (0, import_node_path18.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path17.basename)(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -2401,18 +2108,18 @@ var OpenCodeCommand = class _OpenCodeCommand extends ToolCommand {
 };
 
 // src/features/commands/roo-command.ts
-var import_node_path19 = require("path");
-var import_mini11 = require("zod/mini");
-var RooCommandFrontmatterSchema = import_mini11.z.looseObject({
-  description: import_mini11.z.string(),
-  "argument-hint": (0, import_mini11.optional)(import_mini11.z.string())
+var import_node_path18 = require("path");
+var import_mini10 = require("zod/mini");
+var RooCommandFrontmatterSchema = import_mini10.z.looseObject({
+  description: import_mini10.z.string(),
+  "argument-hint": (0, import_mini10.optional)(import_mini10.z.string())
 });
 var RooCommand = class _RooCommand extends ToolCommand {
   frontmatter;
   body;
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path19.join)(".roo", "commands")
+      relativeDirPath: (0, import_node_path18.join)(".roo", "commands")
     };
   }
   constructor({ frontmatter, body, ...rest }) {
@@ -2420,7 +2127,7 @@ var RooCommand = class _RooCommand extends ToolCommand {
       const result = RooCommandFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path19.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path18.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -2491,7 +2198,7 @@ var RooCommand = class _RooCommand extends ToolCommand {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path19.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path18.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -2507,7 +2214,7 @@ var RooCommand = class _RooCommand extends ToolCommand {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path19.join)(baseDir, _RooCommand.getSettablePaths().relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path18.join)(baseDir, _RooCommand.getSettablePaths().relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = RooCommandFrontmatterSchema.safeParse(frontmatter);
@@ -2517,7 +2224,7 @@ var RooCommand = class _RooCommand extends ToolCommand {
     return new _RooCommand({
       baseDir,
       relativeDirPath: _RooCommand.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path19.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path18.basename)(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       fileContent,
@@ -2558,7 +2265,7 @@ var commandsProcessorToolTargetTuple = [
   "opencode",
   "roo"
 ];
-var CommandsProcessorToolTargetSchema = import_mini12.z.enum(commandsProcessorToolTargetTuple);
+var CommandsProcessorToolTargetSchema = import_mini11.z.enum(commandsProcessorToolTargetTuple);
 var toolCommandFactories = /* @__PURE__ */ new Map([
   [
     "agentsmd",
@@ -2740,11 +2447,11 @@ var CommandsProcessor = class extends FeatureProcessor {
    */
   async loadRulesyncFiles() {
     const rulesyncCommandPaths = await findFilesByGlobs(
-      (0, import_node_path20.join)(RulesyncCommand.getSettablePaths().relativeDirPath, "*.md")
+      (0, import_node_path19.join)(RulesyncCommand.getSettablePaths().relativeDirPath, "*.md")
     );
     const rulesyncCommands = await Promise.all(
       rulesyncCommandPaths.map(
-        (path3) => RulesyncCommand.fromFile({ relativeFilePath: (0, import_node_path20.basename)(path3) })
+        (path4) => RulesyncCommand.fromFile({ relativeFilePath: (0, import_node_path19.basename)(path4) })
       )
     );
     logger.debug(`Successfully loaded ${rulesyncCommands.length} rulesync commands`);
@@ -2760,14 +2467,14 @@ var CommandsProcessor = class extends FeatureProcessor {
     const factory = this.getFactory(this.toolTarget);
     const paths = factory.class.getSettablePaths({ global: this.global });
     const commandFilePaths = await findFilesByGlobs(
-      (0, import_node_path20.join)(this.baseDir, paths.relativeDirPath, `*.${factory.meta.extension}`)
+      (0, import_node_path19.join)(this.baseDir, paths.relativeDirPath, `*.${factory.meta.extension}`)
     );
     if (forDeletion) {
       const toolCommands2 = commandFilePaths.map(
-        (path3) => factory.class.forDeletion({
+        (path4) => factory.class.forDeletion({
           baseDir: this.baseDir,
           relativeDirPath: paths.relativeDirPath,
-          relativeFilePath: (0, import_node_path20.basename)(path3),
+          relativeFilePath: (0, import_node_path19.basename)(path4),
           global: this.global
         })
       ).filter((cmd) => cmd.isDeletable());
@@ -2776,9 +2483,9 @@ var CommandsProcessor = class extends FeatureProcessor {
     }
     const toolCommands = await Promise.all(
       commandFilePaths.map(
-        (path3) => factory.class.fromFile({
+        (path4) => factory.class.fromFile({
           baseDir: this.baseDir,
-          relativeFilePath: (0, import_node_path20.basename)(path3),
+          relativeFilePath: (0, import_node_path19.basename)(path4),
           global: this.global
         })
       )
@@ -2823,26 +2530,26 @@ var CommandsProcessor = class extends FeatureProcessor {
 };
 
 // src/features/hooks/hooks-processor.ts
-var import_mini14 = require("zod/mini");
+var import_mini13 = require("zod/mini");
 
 // src/types/hooks.ts
-var import_mini13 = require("zod/mini");
+var import_mini12 = require("zod/mini");
 var CONTROL_CHARS = ["\n", "\r", "\0"];
 var hasControlChars = (val) => CONTROL_CHARS.some((char) => val.includes(char));
-var safeString = import_mini13.z.pipe(
-  import_mini13.z.string(),
-  import_mini13.z.custom(
+var safeString = import_mini12.z.pipe(
+  import_mini12.z.string(),
+  import_mini12.z.custom(
     (val) => typeof val === "string" && !hasControlChars(val),
     "must not contain newline, carriage return, or NUL characters"
   )
 );
-var HookDefinitionSchema = import_mini13.z.looseObject({
-  command: import_mini13.z.optional(safeString),
-  type: import_mini13.z.optional(import_mini13.z.enum(["command", "prompt"])),
-  timeout: import_mini13.z.optional(import_mini13.z.number()),
-  matcher: import_mini13.z.optional(safeString),
-  prompt: import_mini13.z.optional(import_mini13.z.string()),
-  loop_limit: import_mini13.z.optional(import_mini13.z.nullable(import_mini13.z.number()))
+var HookDefinitionSchema = import_mini12.z.looseObject({
+  command: import_mini12.z.optional(safeString),
+  type: import_mini12.z.optional(import_mini12.z.enum(["command", "prompt"])),
+  timeout: import_mini12.z.optional(import_mini12.z.number()),
+  matcher: import_mini12.z.optional(safeString),
+  prompt: import_mini12.z.optional(import_mini12.z.string()),
+  loop_limit: import_mini12.z.optional(import_mini12.z.nullable(import_mini12.z.number()))
 });
 var CURSOR_HOOK_EVENTS = [
   "sessionStart",
@@ -2901,14 +2608,14 @@ var FACTORYDROID_HOOK_EVENTS = [
   "notification",
   "setup"
 ];
-var hooksRecordSchema = import_mini13.z.record(import_mini13.z.string(), import_mini13.z.array(HookDefinitionSchema));
-var HooksConfigSchema = import_mini13.z.looseObject({
-  version: import_mini13.z.optional(import_mini13.z.number()),
+var hooksRecordSchema = import_mini12.z.record(import_mini12.z.string(), import_mini12.z.array(HookDefinitionSchema));
+var HooksConfigSchema = import_mini12.z.looseObject({
+  version: import_mini12.z.optional(import_mini12.z.number()),
   hooks: hooksRecordSchema,
-  cursor: import_mini13.z.optional(import_mini13.z.looseObject({ hooks: import_mini13.z.optional(hooksRecordSchema) })),
-  claudecode: import_mini13.z.optional(import_mini13.z.looseObject({ hooks: import_mini13.z.optional(hooksRecordSchema) })),
-  opencode: import_mini13.z.optional(import_mini13.z.looseObject({ hooks: import_mini13.z.optional(hooksRecordSchema) })),
-  factorydroid: import_mini13.z.optional(import_mini13.z.looseObject({ hooks: import_mini13.z.optional(hooksRecordSchema) }))
+  cursor: import_mini12.z.optional(import_mini12.z.looseObject({ hooks: import_mini12.z.optional(hooksRecordSchema) })),
+  claudecode: import_mini12.z.optional(import_mini12.z.looseObject({ hooks: import_mini12.z.optional(hooksRecordSchema) })),
+  opencode: import_mini12.z.optional(import_mini12.z.looseObject({ hooks: import_mini12.z.optional(hooksRecordSchema) })),
+  factorydroid: import_mini12.z.optional(import_mini12.z.looseObject({ hooks: import_mini12.z.optional(hooksRecordSchema) }))
 });
 var CANONICAL_TO_CLAUDE_EVENT_NAMES = {
   sessionStart: "SessionStart",
@@ -2978,14 +2685,14 @@ var CANONICAL_TO_OPENCODE_EVENT_NAMES = {
 };
 
 // src/features/hooks/claudecode-hooks.ts
-var import_node_path22 = require("path");
+var import_node_path21 = require("path");
 
 // src/types/tool-file.ts
 var ToolFile = class extends AiFile {
 };
 
 // src/features/hooks/rulesync-hooks.ts
-var import_node_path21 = require("path");
+var import_node_path20 = require("path");
 var RulesyncHooks = class _RulesyncHooks extends RulesyncFile {
   json;
   constructor(params) {
@@ -3016,7 +2723,7 @@ var RulesyncHooks = class _RulesyncHooks extends RulesyncFile {
     validate = true
   }) {
     const paths = _RulesyncHooks.getSettablePaths();
-    const filePath = (0, import_node_path21.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = (0, import_node_path20.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     if (!await fileExists(filePath)) {
       throw new Error(`No ${RULESYNC_HOOKS_RELATIVE_FILE_PATH} found.`);
     }
@@ -3174,7 +2881,7 @@ var ClaudecodeHooks = class _ClaudecodeHooks extends ToolHooks {
     global = false
   }) {
     const paths = _ClaudecodeHooks.getSettablePaths({ global });
-    const filePath = (0, import_node_path22.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = (0, import_node_path21.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const fileContent = await readFileContentOrNull(filePath) ?? '{"hooks":{}}';
     return new _ClaudecodeHooks({
       baseDir,
@@ -3191,7 +2898,7 @@ var ClaudecodeHooks = class _ClaudecodeHooks extends ToolHooks {
     global = false
   }) {
     const paths = _ClaudecodeHooks.getSettablePaths({ global });
-    const filePath = (0, import_node_path22.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = (0, import_node_path21.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const existingContent = await readOrInitializeFileContent(
       filePath,
       JSON.stringify({}, null, 2)
@@ -3223,7 +2930,7 @@ var ClaudecodeHooks = class _ClaudecodeHooks extends ToolHooks {
       settings = JSON.parse(this.getFileContent());
     } catch (error) {
       throw new Error(
-        `Failed to parse Claude hooks content in ${(0, import_node_path22.join)(this.getRelativeDirPath(), this.getRelativeFilePath())}: ${formatError(error)}`,
+        `Failed to parse Claude hooks content in ${(0, import_node_path21.join)(this.getRelativeDirPath(), this.getRelativeFilePath())}: ${formatError(error)}`,
         {
           cause: error
         }
@@ -3253,7 +2960,7 @@ var ClaudecodeHooks = class _ClaudecodeHooks extends ToolHooks {
 };
 
 // src/features/hooks/cursor-hooks.ts
-var import_node_path23 = require("path");
+var import_node_path22 = require("path");
 var CursorHooks = class _CursorHooks extends ToolHooks {
   constructor(params) {
     const { rulesyncHooks: _r, ...rest } = params;
@@ -3274,7 +2981,7 @@ var CursorHooks = class _CursorHooks extends ToolHooks {
   }) {
     const paths = _CursorHooks.getSettablePaths();
     const fileContent = await readFileContent(
-      (0, import_node_path23.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)
+      (0, import_node_path22.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)
     );
     return new _CursorHooks({
       baseDir,
@@ -3354,7 +3061,7 @@ var CursorHooks = class _CursorHooks extends ToolHooks {
 };
 
 // src/features/hooks/factorydroid-hooks.ts
-var import_node_path24 = require("path");
+var import_node_path23 = require("path");
 function canonicalToFactorydroidHooks(config) {
   const supported = new Set(FACTORYDROID_HOOK_EVENTS);
   const sharedHooks = {};
@@ -3459,7 +3166,7 @@ var FactorydroidHooks = class _FactorydroidHooks extends ToolHooks {
     global = false
   }) {
     const paths = _FactorydroidHooks.getSettablePaths({ global });
-    const filePath = (0, import_node_path24.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = (0, import_node_path23.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const fileContent = await readFileContentOrNull(filePath) ?? '{"hooks":{}}';
     return new _FactorydroidHooks({
       baseDir,
@@ -3476,7 +3183,7 @@ var FactorydroidHooks = class _FactorydroidHooks extends ToolHooks {
     global = false
   }) {
     const paths = _FactorydroidHooks.getSettablePaths({ global });
-    const filePath = (0, import_node_path24.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const filePath = (0, import_node_path23.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const existingContent = await readOrInitializeFileContent(
       filePath,
       JSON.stringify({}, null, 2)
@@ -3508,7 +3215,7 @@ var FactorydroidHooks = class _FactorydroidHooks extends ToolHooks {
       settings = JSON.parse(this.getFileContent());
     } catch (error) {
       throw new Error(
-        `Failed to parse Factory Droid hooks content in ${(0, import_node_path24.join)(this.getRelativeDirPath(), this.getRelativeFilePath())}: ${formatError(error)}`,
+        `Failed to parse Factory Droid hooks content in ${(0, import_node_path23.join)(this.getRelativeDirPath(), this.getRelativeFilePath())}: ${formatError(error)}`,
         {
           cause: error
         }
@@ -3538,7 +3245,7 @@ var FactorydroidHooks = class _FactorydroidHooks extends ToolHooks {
 };
 
 // src/features/hooks/opencode-hooks.ts
-var import_node_path25 = require("path");
+var import_node_path24 = require("path");
 var NAMED_HOOKS = /* @__PURE__ */ new Set(["tool.execute.before", "tool.execute.after"]);
 function escapeForTemplateLiteral(command) {
   return command.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
@@ -3636,7 +3343,7 @@ var OpencodeHooks = class _OpencodeHooks extends ToolHooks {
   }
   static getSettablePaths(options) {
     return {
-      relativeDirPath: options?.global ? (0, import_node_path25.join)(".config", "opencode", "plugins") : (0, import_node_path25.join)(".opencode", "plugins"),
+      relativeDirPath: options?.global ? (0, import_node_path24.join)(".config", "opencode", "plugins") : (0, import_node_path24.join)(".opencode", "plugins"),
       relativeFilePath: "rulesync-hooks.js"
     };
   }
@@ -3647,7 +3354,7 @@ var OpencodeHooks = class _OpencodeHooks extends ToolHooks {
   }) {
     const paths = _OpencodeHooks.getSettablePaths({ global });
     const fileContent = await readFileContent(
-      (0, import_node_path25.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)
+      (0, import_node_path24.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)
     );
     return new _OpencodeHooks({
       baseDir,
@@ -3697,7 +3404,7 @@ var OpencodeHooks = class _OpencodeHooks extends ToolHooks {
 
 // src/features/hooks/hooks-processor.ts
 var hooksProcessorToolTargetTuple = ["cursor", "claudecode", "opencode", "factorydroid"];
-var HooksProcessorToolTargetSchema = import_mini14.z.enum(hooksProcessorToolTargetTuple);
+var HooksProcessorToolTargetSchema = import_mini13.z.enum(hooksProcessorToolTargetTuple);
 var toolHooksFactories = /* @__PURE__ */ new Map([
   [
     "cursor",
@@ -3873,13 +3580,13 @@ var HooksProcessor = class extends FeatureProcessor {
 };
 
 // src/features/ignore/ignore-processor.ts
-var import_mini15 = require("zod/mini");
+var import_mini14 = require("zod/mini");
 
 // src/features/ignore/augmentcode-ignore.ts
-var import_node_path27 = require("path");
+var import_node_path26 = require("path");
 
 // src/features/ignore/rulesync-ignore.ts
-var import_node_path26 = require("path");
+var import_node_path25 = require("path");
 var RulesyncIgnore = class _RulesyncIgnore extends RulesyncFile {
   validate() {
     return { success: true, error: null };
@@ -3899,12 +3606,12 @@ var RulesyncIgnore = class _RulesyncIgnore extends RulesyncFile {
   static async fromFile() {
     const baseDir = process.cwd();
     const paths = this.getSettablePaths();
-    const recommendedPath = (0, import_node_path26.join)(
+    const recommendedPath = (0, import_node_path25.join)(
       baseDir,
       paths.recommended.relativeDirPath,
       paths.recommended.relativeFilePath
     );
-    const legacyPath = (0, import_node_path26.join)(baseDir, paths.legacy.relativeDirPath, paths.legacy.relativeFilePath);
+    const legacyPath = (0, import_node_path25.join)(baseDir, paths.legacy.relativeDirPath, paths.legacy.relativeFilePath);
     if (await fileExists(recommendedPath)) {
       const fileContent2 = await readFileContent(recommendedPath);
       return new _RulesyncIgnore({
@@ -4020,7 +3727,7 @@ var AugmentcodeIgnore = class _AugmentcodeIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path27.join)(
+      (0, import_node_path26.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4051,7 +3758,7 @@ var AugmentcodeIgnore = class _AugmentcodeIgnore extends ToolIgnore {
 
 // src/features/ignore/claudecode-ignore.ts
 var import_es_toolkit2 = require("es-toolkit");
-var import_node_path28 = require("path");
+var import_node_path27 = require("path");
 var ClaudecodeIgnore = class _ClaudecodeIgnore extends ToolIgnore {
   constructor(params) {
     super(params);
@@ -4093,7 +3800,7 @@ var ClaudecodeIgnore = class _ClaudecodeIgnore extends ToolIgnore {
     const fileContent = rulesyncIgnore.getFileContent();
     const patterns = fileContent.split(/\r?\n|\r/).map((line) => line.trim()).filter((line) => line.length > 0 && !line.startsWith("#"));
     const deniedValues = patterns.map((pattern) => `Read(${pattern})`);
-    const filePath = (0, import_node_path28.join)(
+    const filePath = (0, import_node_path27.join)(
       baseDir,
       this.getSettablePaths().relativeDirPath,
       this.getSettablePaths().relativeFilePath
@@ -4129,7 +3836,7 @@ var ClaudecodeIgnore = class _ClaudecodeIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path28.join)(
+      (0, import_node_path27.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4159,7 +3866,7 @@ var ClaudecodeIgnore = class _ClaudecodeIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/cline-ignore.ts
-var import_node_path29 = require("path");
+var import_node_path28 = require("path");
 var ClineIgnore = class _ClineIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4196,7 +3903,7 @@ var ClineIgnore = class _ClineIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path29.join)(
+      (0, import_node_path28.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4226,7 +3933,7 @@ var ClineIgnore = class _ClineIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/cursor-ignore.ts
-var import_node_path30 = require("path");
+var import_node_path29 = require("path");
 var CursorIgnore = class _CursorIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4259,7 +3966,7 @@ var CursorIgnore = class _CursorIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path30.join)(
+      (0, import_node_path29.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4289,7 +3996,7 @@ var CursorIgnore = class _CursorIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/geminicli-ignore.ts
-var import_node_path31 = require("path");
+var import_node_path30 = require("path");
 var GeminiCliIgnore = class _GeminiCliIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4316,7 +4023,7 @@ var GeminiCliIgnore = class _GeminiCliIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path31.join)(
+      (0, import_node_path30.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4346,7 +4053,7 @@ var GeminiCliIgnore = class _GeminiCliIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/junie-ignore.ts
-var import_node_path32 = require("path");
+var import_node_path31 = require("path");
 var JunieIgnore = class _JunieIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4373,7 +4080,7 @@ var JunieIgnore = class _JunieIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path32.join)(
+      (0, import_node_path31.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4403,7 +4110,7 @@ var JunieIgnore = class _JunieIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/kilo-ignore.ts
-var import_node_path33 = require("path");
+var import_node_path32 = require("path");
 var KiloIgnore = class _KiloIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4440,7 +4147,7 @@ var KiloIgnore = class _KiloIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path33.join)(
+      (0, import_node_path32.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4470,7 +4177,7 @@ var KiloIgnore = class _KiloIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/kiro-ignore.ts
-var import_node_path34 = require("path");
+var import_node_path33 = require("path");
 var KiroIgnore = class _KiroIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4497,7 +4204,7 @@ var KiroIgnore = class _KiroIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path34.join)(
+      (0, import_node_path33.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4527,7 +4234,7 @@ var KiroIgnore = class _KiroIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/qwencode-ignore.ts
-var import_node_path35 = require("path");
+var import_node_path34 = require("path");
 var QwencodeIgnore = class _QwencodeIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4554,7 +4261,7 @@ var QwencodeIgnore = class _QwencodeIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path35.join)(
+      (0, import_node_path34.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4584,7 +4291,7 @@ var QwencodeIgnore = class _QwencodeIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/roo-ignore.ts
-var import_node_path36 = require("path");
+var import_node_path35 = require("path");
 var RooIgnore = class _RooIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4611,7 +4318,7 @@ var RooIgnore = class _RooIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path36.join)(
+      (0, import_node_path35.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4641,7 +4348,7 @@ var RooIgnore = class _RooIgnore extends ToolIgnore {
 };
 
 // src/features/ignore/windsurf-ignore.ts
-var import_node_path37 = require("path");
+var import_node_path36 = require("path");
 var WindsurfIgnore = class _WindsurfIgnore extends ToolIgnore {
   static getSettablePaths() {
     return {
@@ -4668,7 +4375,7 @@ var WindsurfIgnore = class _WindsurfIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path37.join)(
+      (0, import_node_path36.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4699,7 +4406,7 @@ var WindsurfIgnore = class _WindsurfIgnore extends ToolIgnore {
 
 // src/features/ignore/zed-ignore.ts
 var import_es_toolkit3 = require("es-toolkit");
-var import_node_path38 = require("path");
+var import_node_path37 = require("path");
 var ZedIgnore = class _ZedIgnore extends ToolIgnore {
   constructor(params) {
     super(params);
@@ -4735,7 +4442,7 @@ var ZedIgnore = class _ZedIgnore extends ToolIgnore {
   }) {
     const fileContent = rulesyncIgnore.getFileContent();
     const patterns = fileContent.split(/\r?\n|\r/).map((line) => line.trim()).filter((line) => line.length > 0 && !line.startsWith("#"));
-    const filePath = (0, import_node_path38.join)(
+    const filePath = (0, import_node_path37.join)(
       baseDir,
       this.getSettablePaths().relativeDirPath,
       this.getSettablePaths().relativeFilePath
@@ -4762,7 +4469,7 @@ var ZedIgnore = class _ZedIgnore extends ToolIgnore {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path38.join)(
+      (0, import_node_path37.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -4807,7 +4514,7 @@ var ignoreProcessorToolTargets = [
   "windsurf",
   "zed"
 ];
-var IgnoreProcessorToolTargetSchema = import_mini15.z.enum(ignoreProcessorToolTargets);
+var IgnoreProcessorToolTargetSchema = import_mini14.z.enum(ignoreProcessorToolTargets);
 var toolIgnoreFactories = /* @__PURE__ */ new Map([
   ["augmentcode", { class: AugmentcodeIgnore }],
   ["claudecode", { class: ClaudecodeIgnore }],
@@ -4944,49 +4651,49 @@ var IgnoreProcessor = class extends FeatureProcessor {
 };
 
 // src/features/mcp/mcp-processor.ts
-var import_mini19 = require("zod/mini");
+var import_mini18 = require("zod/mini");
 
 // src/features/mcp/claudecode-mcp.ts
-var import_node_path40 = require("path");
+var import_node_path39 = require("path");
 
 // src/features/mcp/rulesync-mcp.ts
 var import_object = require("es-toolkit/object");
-var import_node_path39 = require("path");
-var import_mini17 = require("zod/mini");
+var import_node_path38 = require("path");
+var import_mini16 = require("zod/mini");
 
 // src/types/mcp.ts
-var import_mini16 = require("zod/mini");
-var McpServerSchema = import_mini16.z.object({
-  type: import_mini16.z.optional(import_mini16.z.enum(["stdio", "sse", "http"])),
-  command: import_mini16.z.optional(import_mini16.z.union([import_mini16.z.string(), import_mini16.z.array(import_mini16.z.string())])),
-  args: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  url: import_mini16.z.optional(import_mini16.z.string()),
-  httpUrl: import_mini16.z.optional(import_mini16.z.string()),
-  env: import_mini16.z.optional(import_mini16.z.record(import_mini16.z.string(), import_mini16.z.string())),
-  disabled: import_mini16.z.optional(import_mini16.z.boolean()),
-  networkTimeout: import_mini16.z.optional(import_mini16.z.number()),
-  timeout: import_mini16.z.optional(import_mini16.z.number()),
-  trust: import_mini16.z.optional(import_mini16.z.boolean()),
-  cwd: import_mini16.z.optional(import_mini16.z.string()),
-  transport: import_mini16.z.optional(import_mini16.z.enum(["stdio", "sse", "http"])),
-  alwaysAllow: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  tools: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  kiroAutoApprove: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  kiroAutoBlock: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  headers: import_mini16.z.optional(import_mini16.z.record(import_mini16.z.string(), import_mini16.z.string())),
-  enabledTools: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string())),
-  disabledTools: import_mini16.z.optional(import_mini16.z.array(import_mini16.z.string()))
+var import_mini15 = require("zod/mini");
+var McpServerSchema = import_mini15.z.object({
+  type: import_mini15.z.optional(import_mini15.z.enum(["stdio", "sse", "http"])),
+  command: import_mini15.z.optional(import_mini15.z.union([import_mini15.z.string(), import_mini15.z.array(import_mini15.z.string())])),
+  args: import_mini15.z.optional(import_mini15.z.array(import_mini15.z.string())),
+  url: import_mini15.z.optional(import_mini15.z.string()),
+  httpUrl: import_mini15.z.optional(import_mini15.z.string()),
+  env: import_mini15.z.optional(import_mini15.z.record(import_mini15.z.string(), import_mini15.z.string())),
+  disabled: import_mini15.z.optional(import_mini15.z.boolean()),
+  networkTimeout: import_mini15.z.optional(import_mini15.z.number()),
+  timeout: import_mini15.z.optional(import_mini15.z.number()),
+  trust: import_mini15.z.optional(import_mini15.z.boolean()),
+  cwd: import_mini15.z.optional(import_mini15.z.string()),
+  transport: import_mini15.z.optional(import_mini15.z.enum(["stdio", "sse", "http"])),
+  alwaysAllow: import_mini15.z.optional(import_mini15.z.array(import_mini15.z.string())),
+  tools: import_mini15.z.optional(import_mini15.z.array(import_mini15.z.string())),
+  kiroAutoApprove: import_mini15.z.optional(import_mini15.z.array(import_mini15.z.string())),
+  kiroAutoBlock: import_mini15.z.optional(import_mini15.z.array(import_mini15.z.string())),
+  headers: import_mini15.z.optional(import_mini15.z.record(import_mini15.z.string(), import_mini15.z.string())),
+  enabledTools: import_mini15.z.optional(import_mini15.z.array(import_mini15.z.string())),
+  disabledTools: import_mini15.z.optional(import_mini15.z.array(import_mini15.z.string()))
 });
-var McpServersSchema = import_mini16.z.record(import_mini16.z.string(), McpServerSchema);
+var McpServersSchema = import_mini15.z.record(import_mini15.z.string(), McpServerSchema);
 
 // src/features/mcp/rulesync-mcp.ts
-var RulesyncMcpServerSchema = import_mini17.z.extend(McpServerSchema, {
-  targets: import_mini17.z.optional(RulesyncTargetsSchema),
-  description: import_mini17.z.optional(import_mini17.z.string()),
-  exposed: import_mini17.z.optional(import_mini17.z.boolean())
+var RulesyncMcpServerSchema = import_mini16.z.extend(McpServerSchema, {
+  targets: import_mini16.z.optional(RulesyncTargetsSchema),
+  description: import_mini16.z.optional(import_mini16.z.string()),
+  exposed: import_mini16.z.optional(import_mini16.z.boolean())
 });
-var RulesyncMcpConfigSchema = import_mini17.z.object({
-  mcpServers: import_mini17.z.record(import_mini17.z.string(), RulesyncMcpServerSchema)
+var RulesyncMcpConfigSchema = import_mini16.z.object({
+  mcpServers: import_mini16.z.record(import_mini16.z.string(), RulesyncMcpServerSchema)
 });
 var RulesyncMcp = class _RulesyncMcp extends RulesyncFile {
   json;
@@ -5022,12 +4729,12 @@ var RulesyncMcp = class _RulesyncMcp extends RulesyncFile {
   static async fromFile({ validate = true }) {
     const baseDir = process.cwd();
     const paths = this.getSettablePaths();
-    const recommendedPath = (0, import_node_path39.join)(
+    const recommendedPath = (0, import_node_path38.join)(
       baseDir,
       paths.recommended.relativeDirPath,
       paths.recommended.relativeFilePath
     );
-    const legacyPath = (0, import_node_path39.join)(baseDir, paths.legacy.relativeDirPath, paths.legacy.relativeFilePath);
+    const legacyPath = (0, import_node_path38.join)(baseDir, paths.legacy.relativeDirPath, paths.legacy.relativeFilePath);
     if (await fileExists(recommendedPath)) {
       const fileContent2 = await readFileContent(recommendedPath);
       return new _RulesyncMcp({
@@ -5172,7 +4879,7 @@ var ClaudecodeMcp = class _ClaudecodeMcp extends ToolMcp {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const fileContent = await readFileContentOrNull((0, import_node_path40.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
+    const fileContent = await readFileContentOrNull((0, import_node_path39.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
     const json = JSON.parse(fileContent);
     const newJson = { ...json, mcpServers: json.mcpServers ?? {} };
     return new _ClaudecodeMcp({
@@ -5191,7 +4898,7 @@ var ClaudecodeMcp = class _ClaudecodeMcp extends ToolMcp {
   }) {
     const paths = this.getSettablePaths({ global });
     const fileContent = await readOrInitializeFileContent(
-      (0, import_node_path40.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath),
+      (0, import_node_path39.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath),
       JSON.stringify({ mcpServers: {} }, null, 2)
     );
     const json = JSON.parse(fileContent);
@@ -5230,7 +4937,7 @@ var ClaudecodeMcp = class _ClaudecodeMcp extends ToolMcp {
 };
 
 // src/features/mcp/cline-mcp.ts
-var import_node_path41 = require("path");
+var import_node_path40 = require("path");
 var ClineMcp = class _ClineMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5251,7 +4958,7 @@ var ClineMcp = class _ClineMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path41.join)(
+      (0, import_node_path40.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5300,7 +5007,7 @@ var ClineMcp = class _ClineMcp extends ToolMcp {
 };
 
 // src/features/mcp/codexcli-mcp.ts
-var import_node_path42 = require("path");
+var import_node_path41 = require("path");
 var smolToml = __toESM(require("smol-toml"), 1);
 function convertFromCodexFormat(codexMcp) {
   const result = {};
@@ -5381,7 +5088,7 @@ var CodexcliMcp = class _CodexcliMcp extends ToolMcp {
   }) {
     const paths = this.getSettablePaths({ global });
     const fileContent = await readFileContent(
-      (0, import_node_path42.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)
+      (0, import_node_path41.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)
     );
     return new _CodexcliMcp({
       baseDir,
@@ -5398,7 +5105,7 @@ var CodexcliMcp = class _CodexcliMcp extends ToolMcp {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const configTomlFilePath = (0, import_node_path42.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
+    const configTomlFilePath = (0, import_node_path41.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath);
     const configTomlFileContent = await readOrInitializeFileContent(
       configTomlFilePath,
       smolToml.stringify({})
@@ -5455,7 +5162,7 @@ var CodexcliMcp = class _CodexcliMcp extends ToolMcp {
 };
 
 // src/features/mcp/copilot-mcp.ts
-var import_node_path43 = require("path");
+var import_node_path42 = require("path");
 function convertToCopilotFormat(mcpServers) {
   return { servers: mcpServers };
 }
@@ -5482,7 +5189,7 @@ var CopilotMcp = class _CopilotMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path43.join)(
+      (0, import_node_path42.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5535,7 +5242,7 @@ var CopilotMcp = class _CopilotMcp extends ToolMcp {
 };
 
 // src/features/mcp/cursor-mcp.ts
-var import_node_path44 = require("path");
+var import_node_path43 = require("path");
 var CURSOR_ENV_VAR_PATTERN = /\$\{env:([^}]+)\}/g;
 function isMcpServers(value) {
   return value !== void 0 && value !== null && typeof value === "object";
@@ -5596,7 +5303,7 @@ var CursorMcp = class _CursorMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path44.join)(
+      (0, import_node_path43.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5664,7 +5371,7 @@ var CursorMcp = class _CursorMcp extends ToolMcp {
 };
 
 // src/features/mcp/factorydroid-mcp.ts
-var import_node_path45 = require("path");
+var import_node_path44 = require("path");
 var FactorydroidMcp = class _FactorydroidMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5685,7 +5392,7 @@ var FactorydroidMcp = class _FactorydroidMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path45.join)(
+      (0, import_node_path44.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5745,7 +5452,7 @@ var FactorydroidMcp = class _FactorydroidMcp extends ToolMcp {
 };
 
 // src/features/mcp/geminicli-mcp.ts
-var import_node_path46 = require("path");
+var import_node_path45 = require("path");
 var GeminiCliMcp = class _GeminiCliMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5773,7 +5480,7 @@ var GeminiCliMcp = class _GeminiCliMcp extends ToolMcp {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const fileContent = await readFileContentOrNull((0, import_node_path46.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
+    const fileContent = await readFileContentOrNull((0, import_node_path45.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
     const json = JSON.parse(fileContent);
     const newJson = { ...json, mcpServers: json.mcpServers ?? {} };
     return new _GeminiCliMcp({
@@ -5792,7 +5499,7 @@ var GeminiCliMcp = class _GeminiCliMcp extends ToolMcp {
   }) {
     const paths = this.getSettablePaths({ global });
     const fileContent = await readOrInitializeFileContent(
-      (0, import_node_path46.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath),
+      (0, import_node_path45.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath),
       JSON.stringify({ mcpServers: {} }, null, 2)
     );
     const json = JSON.parse(fileContent);
@@ -5837,7 +5544,7 @@ var GeminiCliMcp = class _GeminiCliMcp extends ToolMcp {
 };
 
 // src/features/mcp/junie-mcp.ts
-var import_node_path47 = require("path");
+var import_node_path46 = require("path");
 var JunieMcp = class _JunieMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5849,7 +5556,7 @@ var JunieMcp = class _JunieMcp extends ToolMcp {
   }
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path47.join)(".junie", "mcp"),
+      relativeDirPath: (0, import_node_path46.join)(".junie", "mcp"),
       relativeFilePath: "mcp.json"
     };
   }
@@ -5858,7 +5565,7 @@ var JunieMcp = class _JunieMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path47.join)(
+      (0, import_node_path46.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -5907,7 +5614,7 @@ var JunieMcp = class _JunieMcp extends ToolMcp {
 };
 
 // src/features/mcp/kilo-mcp.ts
-var import_node_path48 = require("path");
+var import_node_path47 = require("path");
 var KiloMcp = class _KiloMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5928,7 +5635,7 @@ var KiloMcp = class _KiloMcp extends ToolMcp {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const fileContent = await readFileContentOrNull((0, import_node_path48.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
+    const fileContent = await readFileContentOrNull((0, import_node_path47.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
     return new _KiloMcp({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
@@ -5976,7 +5683,7 @@ var KiloMcp = class _KiloMcp extends ToolMcp {
 };
 
 // src/features/mcp/kiro-mcp.ts
-var import_node_path49 = require("path");
+var import_node_path48 = require("path");
 var KiroMcp = class _KiroMcp extends ToolMcp {
   json;
   constructor(params) {
@@ -5988,7 +5695,7 @@ var KiroMcp = class _KiroMcp extends ToolMcp {
   }
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path49.join)(".kiro", "settings"),
+      relativeDirPath: (0, import_node_path48.join)(".kiro", "settings"),
       relativeFilePath: "mcp.json"
     };
   }
@@ -5997,7 +5704,7 @@ var KiroMcp = class _KiroMcp extends ToolMcp {
     validate = true
   }) {
     const paths = this.getSettablePaths();
-    const fileContent = await readFileContentOrNull((0, import_node_path49.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
+    const fileContent = await readFileContentOrNull((0, import_node_path48.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcpServers":{}}';
     return new _KiroMcp({
       baseDir,
       relativeDirPath: paths.relativeDirPath,
@@ -6045,29 +5752,29 @@ var KiroMcp = class _KiroMcp extends ToolMcp {
 };
 
 // src/features/mcp/opencode-mcp.ts
-var import_node_path50 = require("path");
-var import_mini18 = require("zod/mini");
-var OpencodeMcpLocalServerSchema = import_mini18.z.object({
-  type: import_mini18.z.literal("local"),
-  command: import_mini18.z.array(import_mini18.z.string()),
-  environment: import_mini18.z.optional(import_mini18.z.record(import_mini18.z.string(), import_mini18.z.string())),
-  enabled: import_mini18.z._default(import_mini18.z.boolean(), true),
-  cwd: import_mini18.z.optional(import_mini18.z.string())
+var import_node_path49 = require("path");
+var import_mini17 = require("zod/mini");
+var OpencodeMcpLocalServerSchema = import_mini17.z.object({
+  type: import_mini17.z.literal("local"),
+  command: import_mini17.z.array(import_mini17.z.string()),
+  environment: import_mini17.z.optional(import_mini17.z.record(import_mini17.z.string(), import_mini17.z.string())),
+  enabled: import_mini17.z._default(import_mini17.z.boolean(), true),
+  cwd: import_mini17.z.optional(import_mini17.z.string())
 });
-var OpencodeMcpRemoteServerSchema = import_mini18.z.object({
-  type: import_mini18.z.literal("remote"),
-  url: import_mini18.z.string(),
-  headers: import_mini18.z.optional(import_mini18.z.record(import_mini18.z.string(), import_mini18.z.string())),
-  enabled: import_mini18.z._default(import_mini18.z.boolean(), true)
+var OpencodeMcpRemoteServerSchema = import_mini17.z.object({
+  type: import_mini17.z.literal("remote"),
+  url: import_mini17.z.string(),
+  headers: import_mini17.z.optional(import_mini17.z.record(import_mini17.z.string(), import_mini17.z.string())),
+  enabled: import_mini17.z._default(import_mini17.z.boolean(), true)
 });
-var OpencodeMcpServerSchema = import_mini18.z.union([
+var OpencodeMcpServerSchema = import_mini17.z.union([
   OpencodeMcpLocalServerSchema,
   OpencodeMcpRemoteServerSchema
 ]);
-var OpencodeConfigSchema = import_mini18.z.looseObject({
-  $schema: import_mini18.z.optional(import_mini18.z.string()),
-  mcp: import_mini18.z.optional(import_mini18.z.record(import_mini18.z.string(), OpencodeMcpServerSchema)),
-  tools: import_mini18.z.optional(import_mini18.z.record(import_mini18.z.string(), import_mini18.z.boolean()))
+var OpencodeConfigSchema = import_mini17.z.looseObject({
+  $schema: import_mini17.z.optional(import_mini17.z.string()),
+  mcp: import_mini17.z.optional(import_mini17.z.record(import_mini17.z.string(), OpencodeMcpServerSchema)),
+  tools: import_mini17.z.optional(import_mini17.z.record(import_mini17.z.string(), import_mini17.z.boolean()))
 });
 function convertFromOpencodeFormat(opencodeMcp, tools) {
   return Object.fromEntries(
@@ -6185,7 +5892,7 @@ var OpencodeMcp = class _OpencodeMcp extends ToolMcp {
   static getSettablePaths({ global } = {}) {
     if (global) {
       return {
-        relativeDirPath: (0, import_node_path50.join)(".config", "opencode"),
+        relativeDirPath: (0, import_node_path49.join)(".config", "opencode"),
         relativeFilePath: "opencode.json"
       };
     }
@@ -6200,7 +5907,7 @@ var OpencodeMcp = class _OpencodeMcp extends ToolMcp {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const fileContent = await readFileContentOrNull((0, import_node_path50.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcp":{}}';
+    const fileContent = await readFileContentOrNull((0, import_node_path49.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath)) ?? '{"mcp":{}}';
     const json = JSON.parse(fileContent);
     const newJson = { ...json, mcp: json.mcp ?? {} };
     return new _OpencodeMcp({
@@ -6219,18 +5926,18 @@ var OpencodeMcp = class _OpencodeMcp extends ToolMcp {
   }) {
     const paths = this.getSettablePaths({ global });
     const fileContent = await readOrInitializeFileContent(
-      (0, import_node_path50.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath),
+      (0, import_node_path49.join)(baseDir, paths.relativeDirPath, paths.relativeFilePath),
       JSON.stringify({ mcp: {} }, null, 2)
     );
     const json = JSON.parse(fileContent);
-    const { mcp: convertedMcp, tools: mcpTools } = convertToOpencodeFormat(
+    const { mcp: convertedMcp, tools: mcpTools2 } = convertToOpencodeFormat(
       rulesyncMcp.getMcpServers()
     );
     const { tools: _existingTools, ...jsonWithoutTools } = json;
     const newJson = {
       ...jsonWithoutTools,
       mcp: convertedMcp,
-      ...Object.keys(mcpTools).length > 0 && { tools: mcpTools }
+      ...Object.keys(mcpTools2).length > 0 && { tools: mcpTools2 }
     };
     return new _OpencodeMcp({
       baseDir,
@@ -6272,7 +5979,7 @@ var OpencodeMcp = class _OpencodeMcp extends ToolMcp {
 };
 
 // src/features/mcp/roo-mcp.ts
-var import_node_path51 = require("path");
+var import_node_path50 = require("path");
 function isRooMcpServers(value) {
   return value !== void 0 && value !== null && typeof value === "object";
 }
@@ -6324,7 +6031,7 @@ var RooMcp = class _RooMcp extends ToolMcp {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path51.join)(
+      (0, import_node_path50.join)(
         baseDir,
         this.getSettablePaths().relativeDirPath,
         this.getSettablePaths().relativeFilePath
@@ -6395,7 +6102,7 @@ var mcpProcessorToolTargetTuple = [
   "opencode",
   "roo"
 ];
-var McpProcessorToolTargetSchema = import_mini19.z.enum(mcpProcessorToolTargetTuple);
+var McpProcessorToolTargetSchema = import_mini18.z.enum(mcpProcessorToolTargetTuple);
 var toolMcpFactories = /* @__PURE__ */ new Map([
   [
     "claudecode",
@@ -6698,24 +6405,24 @@ var McpProcessor = class extends FeatureProcessor {
 
 // src/features/rules/rules-processor.ts
 var import_toon = require("@toon-format/toon");
-var import_node_path109 = require("path");
-var import_mini49 = require("zod/mini");
+var import_node_path108 = require("path");
+var import_mini48 = require("zod/mini");
 
 // src/constants/general.ts
 var SKILL_FILE_NAME = "SKILL.md";
 
 // src/features/skills/agentsmd-skill.ts
-var import_node_path55 = require("path");
+var import_node_path54 = require("path");
 
 // src/features/skills/simulated-skill.ts
-var import_node_path54 = require("path");
-var import_mini20 = require("zod/mini");
+var import_node_path53 = require("path");
+var import_mini19 = require("zod/mini");
 
 // src/features/skills/tool-skill.ts
-var import_node_path53 = require("path");
+var import_node_path52 = require("path");
 
 // src/types/ai-dir.ts
-var import_node_path52 = __toESM(require("path"), 1);
+var import_node_path51 = __toESM(require("path"), 1);
 var AiDir = class {
   /**
    * @example "."
@@ -6749,7 +6456,7 @@ var AiDir = class {
     otherFiles = [],
     global = false
   }) {
-    if (dirName.includes(import_node_path52.default.sep) || dirName.includes("/") || dirName.includes("\\")) {
+    if (dirName.includes(import_node_path51.default.sep) || dirName.includes("/") || dirName.includes("\\")) {
       throw new Error(`Directory name cannot contain path separators: dirName="${dirName}"`);
     }
     this.baseDir = baseDir;
@@ -6772,11 +6479,11 @@ var AiDir = class {
     return this.dirName;
   }
   getDirPath() {
-    const fullPath = import_node_path52.default.join(this.baseDir, this.relativeDirPath, this.dirName);
-    const resolvedFull = (0, import_node_path52.resolve)(fullPath);
-    const resolvedBase = (0, import_node_path52.resolve)(this.baseDir);
-    const rel = (0, import_node_path52.relative)(resolvedBase, resolvedFull);
-    if (rel.startsWith("..") || import_node_path52.default.isAbsolute(rel)) {
+    const fullPath = import_node_path51.default.join(this.baseDir, this.relativeDirPath, this.dirName);
+    const resolvedFull = (0, import_node_path51.resolve)(fullPath);
+    const resolvedBase = (0, import_node_path51.resolve)(this.baseDir);
+    const rel = (0, import_node_path51.relative)(resolvedBase, resolvedFull);
+    if (rel.startsWith("..") || import_node_path51.default.isAbsolute(rel)) {
       throw new Error(
         `Path traversal detected: Final path escapes baseDir. baseDir="${this.baseDir}", relativeDirPath="${this.relativeDirPath}", dirName="${this.dirName}"`
       );
@@ -6790,7 +6497,7 @@ var AiDir = class {
     return this.otherFiles;
   }
   getRelativePathFromCwd() {
-    return import_node_path52.default.join(this.relativeDirPath, this.dirName);
+    return import_node_path51.default.join(this.relativeDirPath, this.dirName);
   }
   getGlobal() {
     return this.global;
@@ -6809,15 +6516,15 @@ var AiDir = class {
    * @returns Array of files with their relative paths and buffers
    */
   static async collectOtherFiles(baseDir, relativeDirPath, dirName, excludeFileName) {
-    const dirPath = (0, import_node_path52.join)(baseDir, relativeDirPath, dirName);
-    const glob = (0, import_node_path52.join)(dirPath, "**", "*");
+    const dirPath = (0, import_node_path51.join)(baseDir, relativeDirPath, dirName);
+    const glob = (0, import_node_path51.join)(dirPath, "**", "*");
     const filePaths = await findFilesByGlobs(glob, { type: "file" });
-    const filteredPaths = filePaths.filter((filePath) => (0, import_node_path52.basename)(filePath) !== excludeFileName);
+    const filteredPaths = filePaths.filter((filePath) => (0, import_node_path51.basename)(filePath) !== excludeFileName);
     const files = await Promise.all(
       filteredPaths.map(async (filePath) => {
         const fileBuffer = await readFileBuffer(filePath);
         return {
-          relativeFilePathToDirPath: (0, import_node_path52.relative)(dirPath, filePath),
+          relativeFilePathToDirPath: (0, import_node_path51.relative)(dirPath, filePath),
           fileBuffer
         };
       })
@@ -6908,8 +6615,8 @@ var ToolSkill = class extends AiDir {
   }) {
     const settablePaths = getSettablePaths({ global });
     const actualRelativeDirPath = relativeDirPath ?? settablePaths.relativeDirPath;
-    const skillDirPath = (0, import_node_path53.join)(baseDir, actualRelativeDirPath, dirName);
-    const skillFilePath = (0, import_node_path53.join)(skillDirPath, SKILL_FILE_NAME);
+    const skillDirPath = (0, import_node_path52.join)(baseDir, actualRelativeDirPath, dirName);
+    const skillFilePath = (0, import_node_path52.join)(skillDirPath, SKILL_FILE_NAME);
     if (!await fileExists(skillFilePath)) {
       throw new Error(`${SKILL_FILE_NAME} not found in ${skillDirPath}`);
     }
@@ -6933,16 +6640,16 @@ var ToolSkill = class extends AiDir {
   }
   requireMainFileFrontmatter() {
     if (!this.mainFile?.frontmatter) {
-      throw new Error(`Frontmatter is not defined in ${(0, import_node_path53.join)(this.relativeDirPath, this.dirName)}`);
+      throw new Error(`Frontmatter is not defined in ${(0, import_node_path52.join)(this.relativeDirPath, this.dirName)}`);
     }
     return this.mainFile.frontmatter;
   }
 };
 
 // src/features/skills/simulated-skill.ts
-var SimulatedSkillFrontmatterSchema = import_mini20.z.looseObject({
-  name: import_mini20.z.string(),
-  description: import_mini20.z.string()
+var SimulatedSkillFrontmatterSchema = import_mini19.z.looseObject({
+  name: import_mini19.z.string(),
+  description: import_mini19.z.string()
 });
 var SimulatedSkill = class extends ToolSkill {
   frontmatter;
@@ -6973,7 +6680,7 @@ var SimulatedSkill = class extends ToolSkill {
       const result = SimulatedSkillFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path54.join)(relativeDirPath, dirName)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path53.join)(relativeDirPath, dirName)}: ${formatError(result.error)}`
         );
       }
     }
@@ -7031,8 +6738,8 @@ var SimulatedSkill = class extends ToolSkill {
   }) {
     const settablePaths = this.getSettablePaths();
     const actualRelativeDirPath = relativeDirPath ?? settablePaths.relativeDirPath;
-    const skillDirPath = (0, import_node_path54.join)(baseDir, actualRelativeDirPath, dirName);
-    const skillFilePath = (0, import_node_path54.join)(skillDirPath, SKILL_FILE_NAME);
+    const skillDirPath = (0, import_node_path53.join)(baseDir, actualRelativeDirPath, dirName);
+    const skillFilePath = (0, import_node_path53.join)(skillDirPath, SKILL_FILE_NAME);
     if (!await fileExists(skillFilePath)) {
       throw new Error(`${SKILL_FILE_NAME} not found in ${skillDirPath}`);
     }
@@ -7109,7 +6816,7 @@ var AgentsmdSkill = class _AgentsmdSkill extends SimulatedSkill {
       throw new Error("AgentsmdSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path55.join)(".agents", "skills")
+      relativeDirPath: (0, import_node_path54.join)(".agents", "skills")
     };
   }
   static async fromDir(params) {
@@ -7136,11 +6843,11 @@ var AgentsmdSkill = class _AgentsmdSkill extends SimulatedSkill {
 };
 
 // src/features/skills/factorydroid-skill.ts
-var import_node_path56 = require("path");
+var import_node_path55 = require("path");
 var FactorydroidSkill = class _FactorydroidSkill extends SimulatedSkill {
   static getSettablePaths(_options) {
     return {
-      relativeDirPath: (0, import_node_path56.join)(".factory", "skills")
+      relativeDirPath: (0, import_node_path55.join)(".factory", "skills")
     };
   }
   static async fromDir(params) {
@@ -7167,11 +6874,11 @@ var FactorydroidSkill = class _FactorydroidSkill extends SimulatedSkill {
 };
 
 // src/features/skills/skills-processor.ts
-var import_node_path72 = require("path");
-var import_mini34 = require("zod/mini");
+var import_node_path71 = require("path");
+var import_mini33 = require("zod/mini");
 
 // src/types/dir-feature-processor.ts
-var import_node_path57 = require("path");
+var import_node_path56 = require("path");
 var DirFeatureProcessor = class {
   baseDir;
   dryRun;
@@ -7202,7 +6909,7 @@ var DirFeatureProcessor = class {
       const mainFile = aiDir.getMainFile();
       let mainFileContent;
       if (mainFile) {
-        const mainFilePath = (0, import_node_path57.join)(dirPath, mainFile.name);
+        const mainFilePath = (0, import_node_path56.join)(dirPath, mainFile.name);
         const content = stringifyFrontmatter(mainFile.body, mainFile.frontmatter);
         mainFileContent = addTrailingNewline(content);
         const existingContent = await readFileContentOrNull(mainFilePath);
@@ -7216,7 +6923,7 @@ var DirFeatureProcessor = class {
         const contentWithNewline = addTrailingNewline(file.fileBuffer.toString("utf-8"));
         otherFileContents.push(contentWithNewline);
         if (!dirHasChanges) {
-          const filePath = (0, import_node_path57.join)(dirPath, file.relativeFilePathToDirPath);
+          const filePath = (0, import_node_path56.join)(dirPath, file.relativeFilePathToDirPath);
           const existingContent = await readFileContentOrNull(filePath);
           if (existingContent !== contentWithNewline) {
             dirHasChanges = true;
@@ -7230,22 +6937,22 @@ var DirFeatureProcessor = class {
       if (this.dryRun) {
         logger.info(`[DRY RUN] Would create directory: ${dirPath}`);
         if (mainFile) {
-          logger.info(`[DRY RUN] Would write: ${(0, import_node_path57.join)(dirPath, mainFile.name)}`);
-          changedPaths.push((0, import_node_path57.join)(relativeDir, mainFile.name));
+          logger.info(`[DRY RUN] Would write: ${(0, import_node_path56.join)(dirPath, mainFile.name)}`);
+          changedPaths.push((0, import_node_path56.join)(relativeDir, mainFile.name));
         }
         for (const file of otherFiles) {
-          logger.info(`[DRY RUN] Would write: ${(0, import_node_path57.join)(dirPath, file.relativeFilePathToDirPath)}`);
-          changedPaths.push((0, import_node_path57.join)(relativeDir, file.relativeFilePathToDirPath));
+          logger.info(`[DRY RUN] Would write: ${(0, import_node_path56.join)(dirPath, file.relativeFilePathToDirPath)}`);
+          changedPaths.push((0, import_node_path56.join)(relativeDir, file.relativeFilePathToDirPath));
         }
       } else {
         await ensureDir(dirPath);
         if (mainFile && mainFileContent) {
-          const mainFilePath = (0, import_node_path57.join)(dirPath, mainFile.name);
+          const mainFilePath = (0, import_node_path56.join)(dirPath, mainFile.name);
           await writeFileContent(mainFilePath, mainFileContent);
-          changedPaths.push((0, import_node_path57.join)(relativeDir, mainFile.name));
+          changedPaths.push((0, import_node_path56.join)(relativeDir, mainFile.name));
         }
         for (const [i, file] of otherFiles.entries()) {
-          const filePath = (0, import_node_path57.join)(dirPath, file.relativeFilePathToDirPath);
+          const filePath = (0, import_node_path56.join)(dirPath, file.relativeFilePathToDirPath);
           const content = otherFileContents[i];
           if (content === void 0) {
             throw new Error(
@@ -7253,7 +6960,7 @@ var DirFeatureProcessor = class {
             );
           }
           await writeFileContent(filePath, content);
-          changedPaths.push((0, import_node_path57.join)(relativeDir, file.relativeFilePathToDirPath));
+          changedPaths.push((0, import_node_path56.join)(relativeDir, file.relativeFilePathToDirPath));
         }
       }
       changedCount++;
@@ -7285,37 +6992,37 @@ var DirFeatureProcessor = class {
 };
 
 // src/features/skills/agentsskills-skill.ts
-var import_node_path59 = require("path");
-var import_mini22 = require("zod/mini");
-
-// src/features/skills/rulesync-skill.ts
 var import_node_path58 = require("path");
 var import_mini21 = require("zod/mini");
-var RulesyncSkillFrontmatterSchemaInternal = import_mini21.z.looseObject({
-  name: import_mini21.z.string(),
-  description: import_mini21.z.string(),
-  targets: import_mini21.z._default(RulesyncTargetsSchema, ["*"]),
-  claudecode: import_mini21.z.optional(
-    import_mini21.z.looseObject({
-      "allowed-tools": import_mini21.z.optional(import_mini21.z.array(import_mini21.z.string()))
+
+// src/features/skills/rulesync-skill.ts
+var import_node_path57 = require("path");
+var import_mini20 = require("zod/mini");
+var RulesyncSkillFrontmatterSchemaInternal = import_mini20.z.looseObject({
+  name: import_mini20.z.string(),
+  description: import_mini20.z.string(),
+  targets: import_mini20.z._default(RulesyncTargetsSchema, ["*"]),
+  claudecode: import_mini20.z.optional(
+    import_mini20.z.looseObject({
+      "allowed-tools": import_mini20.z.optional(import_mini20.z.array(import_mini20.z.string()))
     })
   ),
-  codexcli: import_mini21.z.optional(
-    import_mini21.z.looseObject({
-      "short-description": import_mini21.z.optional(import_mini21.z.string())
+  codexcli: import_mini20.z.optional(
+    import_mini20.z.looseObject({
+      "short-description": import_mini20.z.optional(import_mini20.z.string())
     })
   ),
-  opencode: import_mini21.z.optional(
-    import_mini21.z.looseObject({
-      "allowed-tools": import_mini21.z.optional(import_mini21.z.array(import_mini21.z.string()))
+  opencode: import_mini20.z.optional(
+    import_mini20.z.looseObject({
+      "allowed-tools": import_mini20.z.optional(import_mini20.z.array(import_mini20.z.string()))
     })
   ),
-  copilot: import_mini21.z.optional(
-    import_mini21.z.looseObject({
-      license: import_mini21.z.optional(import_mini21.z.string())
+  copilot: import_mini20.z.optional(
+    import_mini20.z.looseObject({
+      license: import_mini20.z.optional(import_mini20.z.string())
     })
   ),
-  roo: import_mini21.z.optional(import_mini21.z.looseObject({}))
+  roo: import_mini20.z.optional(import_mini20.z.looseObject({}))
 });
 var RulesyncSkillFrontmatterSchema = RulesyncSkillFrontmatterSchemaInternal;
 var RulesyncSkill = class _RulesyncSkill extends AiDir {
@@ -7355,7 +7062,7 @@ var RulesyncSkill = class _RulesyncSkill extends AiDir {
   }
   getFrontmatter() {
     if (!this.mainFile?.frontmatter) {
-      throw new Error(`Frontmatter is not defined in ${(0, import_node_path58.join)(this.relativeDirPath, this.dirName)}`);
+      throw new Error(`Frontmatter is not defined in ${(0, import_node_path57.join)(this.relativeDirPath, this.dirName)}`);
     }
     const result = RulesyncSkillFrontmatterSchema.parse(this.mainFile.frontmatter);
     return result;
@@ -7381,8 +7088,8 @@ var RulesyncSkill = class _RulesyncSkill extends AiDir {
     dirName,
     global = false
   }) {
-    const skillDirPath = (0, import_node_path58.join)(baseDir, relativeDirPath, dirName);
-    const skillFilePath = (0, import_node_path58.join)(skillDirPath, SKILL_FILE_NAME);
+    const skillDirPath = (0, import_node_path57.join)(baseDir, relativeDirPath, dirName);
+    const skillFilePath = (0, import_node_path57.join)(skillDirPath, SKILL_FILE_NAME);
     if (!await fileExists(skillFilePath)) {
       throw new Error(`${SKILL_FILE_NAME} not found in ${skillDirPath}`);
     }
@@ -7412,14 +7119,14 @@ var RulesyncSkill = class _RulesyncSkill extends AiDir {
 };
 
 // src/features/skills/agentsskills-skill.ts
-var AgentsSkillsSkillFrontmatterSchema = import_mini22.z.looseObject({
-  name: import_mini22.z.string(),
-  description: import_mini22.z.string()
+var AgentsSkillsSkillFrontmatterSchema = import_mini21.z.looseObject({
+  name: import_mini21.z.string(),
+  description: import_mini21.z.string()
 });
 var AgentsSkillsSkill = class _AgentsSkillsSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path59.join)(".agents", "skills"),
+    relativeDirPath = (0, import_node_path58.join)(".agents", "skills"),
     dirName,
     frontmatter,
     body,
@@ -7451,7 +7158,7 @@ var AgentsSkillsSkill = class _AgentsSkillsSkill extends ToolSkill {
       throw new Error("AgentsSkillsSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path59.join)(".agents", "skills")
+      relativeDirPath: (0, import_node_path58.join)(".agents", "skills")
     };
   }
   getFrontmatter() {
@@ -7530,9 +7237,9 @@ var AgentsSkillsSkill = class _AgentsSkillsSkill extends ToolSkill {
     });
     const result = AgentsSkillsSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path59.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path58.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path59.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path58.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _AgentsSkillsSkill({
@@ -7567,16 +7274,16 @@ var AgentsSkillsSkill = class _AgentsSkillsSkill extends ToolSkill {
 };
 
 // src/features/skills/antigravity-skill.ts
-var import_node_path60 = require("path");
-var import_mini23 = require("zod/mini");
-var AntigravitySkillFrontmatterSchema = import_mini23.z.looseObject({
-  name: import_mini23.z.string(),
-  description: import_mini23.z.string()
+var import_node_path59 = require("path");
+var import_mini22 = require("zod/mini");
+var AntigravitySkillFrontmatterSchema = import_mini22.z.looseObject({
+  name: import_mini22.z.string(),
+  description: import_mini22.z.string()
 });
 var AntigravitySkill = class _AntigravitySkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path60.join)(".agent", "skills"),
+    relativeDirPath = (0, import_node_path59.join)(".agent", "skills"),
     dirName,
     frontmatter,
     body,
@@ -7608,11 +7315,11 @@ var AntigravitySkill = class _AntigravitySkill extends ToolSkill {
   } = {}) {
     if (global) {
       return {
-        relativeDirPath: (0, import_node_path60.join)(".gemini", "antigravity", "skills")
+        relativeDirPath: (0, import_node_path59.join)(".gemini", "antigravity", "skills")
       };
     }
     return {
-      relativeDirPath: (0, import_node_path60.join)(".agent", "skills")
+      relativeDirPath: (0, import_node_path59.join)(".agent", "skills")
     };
   }
   getFrontmatter() {
@@ -7691,9 +7398,9 @@ var AntigravitySkill = class _AntigravitySkill extends ToolSkill {
     });
     const result = AntigravitySkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path60.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path59.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path60.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path59.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _AntigravitySkill({
@@ -7727,17 +7434,17 @@ var AntigravitySkill = class _AntigravitySkill extends ToolSkill {
 };
 
 // src/features/skills/claudecode-skill.ts
-var import_node_path61 = require("path");
-var import_mini24 = require("zod/mini");
-var ClaudecodeSkillFrontmatterSchema = import_mini24.z.looseObject({
-  name: import_mini24.z.string(),
-  description: import_mini24.z.string(),
-  "allowed-tools": import_mini24.z.optional(import_mini24.z.array(import_mini24.z.string()))
+var import_node_path60 = require("path");
+var import_mini23 = require("zod/mini");
+var ClaudecodeSkillFrontmatterSchema = import_mini23.z.looseObject({
+  name: import_mini23.z.string(),
+  description: import_mini23.z.string(),
+  "allowed-tools": import_mini23.z.optional(import_mini23.z.array(import_mini23.z.string()))
 });
 var ClaudecodeSkill = class _ClaudecodeSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path61.join)(".claude", "skills"),
+    relativeDirPath = (0, import_node_path60.join)(".claude", "skills"),
     dirName,
     frontmatter,
     body,
@@ -7768,7 +7475,7 @@ var ClaudecodeSkill = class _ClaudecodeSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path61.join)(".claude", "skills")
+      relativeDirPath: (0, import_node_path60.join)(".claude", "skills")
     };
   }
   getFrontmatter() {
@@ -7853,9 +7560,9 @@ var ClaudecodeSkill = class _ClaudecodeSkill extends ToolSkill {
     });
     const result = ClaudecodeSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path61.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path60.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path61.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path60.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _ClaudecodeSkill({
@@ -7889,21 +7596,21 @@ var ClaudecodeSkill = class _ClaudecodeSkill extends ToolSkill {
 };
 
 // src/features/skills/codexcli-skill.ts
-var import_node_path62 = require("path");
-var import_mini25 = require("zod/mini");
-var CodexCliSkillFrontmatterSchema = import_mini25.z.looseObject({
-  name: import_mini25.z.string(),
-  description: import_mini25.z.string(),
-  metadata: import_mini25.z.optional(
-    import_mini25.z.looseObject({
-      "short-description": import_mini25.z.optional(import_mini25.z.string())
+var import_node_path61 = require("path");
+var import_mini24 = require("zod/mini");
+var CodexCliSkillFrontmatterSchema = import_mini24.z.looseObject({
+  name: import_mini24.z.string(),
+  description: import_mini24.z.string(),
+  metadata: import_mini24.z.optional(
+    import_mini24.z.looseObject({
+      "short-description": import_mini24.z.optional(import_mini24.z.string())
     })
   )
 });
 var CodexCliSkill = class _CodexCliSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path62.join)(".codex", "skills"),
+    relativeDirPath = (0, import_node_path61.join)(".codex", "skills"),
     dirName,
     frontmatter,
     body,
@@ -7934,7 +7641,7 @@ var CodexCliSkill = class _CodexCliSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path62.join)(".codex", "skills")
+      relativeDirPath: (0, import_node_path61.join)(".codex", "skills")
     };
   }
   getFrontmatter() {
@@ -8023,9 +7730,9 @@ var CodexCliSkill = class _CodexCliSkill extends ToolSkill {
     });
     const result = CodexCliSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path62.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path61.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path62.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path61.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _CodexCliSkill({
@@ -8059,17 +7766,17 @@ var CodexCliSkill = class _CodexCliSkill extends ToolSkill {
 };
 
 // src/features/skills/copilot-skill.ts
-var import_node_path63 = require("path");
-var import_mini26 = require("zod/mini");
-var CopilotSkillFrontmatterSchema = import_mini26.z.looseObject({
-  name: import_mini26.z.string(),
-  description: import_mini26.z.string(),
-  license: import_mini26.z.optional(import_mini26.z.string())
+var import_node_path62 = require("path");
+var import_mini25 = require("zod/mini");
+var CopilotSkillFrontmatterSchema = import_mini25.z.looseObject({
+  name: import_mini25.z.string(),
+  description: import_mini25.z.string(),
+  license: import_mini25.z.optional(import_mini25.z.string())
 });
 var CopilotSkill = class _CopilotSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path63.join)(".github", "skills"),
+    relativeDirPath = (0, import_node_path62.join)(".github", "skills"),
     dirName,
     frontmatter,
     body,
@@ -8101,7 +7808,7 @@ var CopilotSkill = class _CopilotSkill extends ToolSkill {
       throw new Error("CopilotSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path63.join)(".github", "skills")
+      relativeDirPath: (0, import_node_path62.join)(".github", "skills")
     };
   }
   getFrontmatter() {
@@ -8186,9 +7893,9 @@ var CopilotSkill = class _CopilotSkill extends ToolSkill {
     });
     const result = CopilotSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path63.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path62.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path63.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path62.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _CopilotSkill({
@@ -8223,16 +7930,16 @@ var CopilotSkill = class _CopilotSkill extends ToolSkill {
 };
 
 // src/features/skills/cursor-skill.ts
-var import_node_path64 = require("path");
-var import_mini27 = require("zod/mini");
-var CursorSkillFrontmatterSchema = import_mini27.z.looseObject({
-  name: import_mini27.z.string(),
-  description: import_mini27.z.string()
+var import_node_path63 = require("path");
+var import_mini26 = require("zod/mini");
+var CursorSkillFrontmatterSchema = import_mini26.z.looseObject({
+  name: import_mini26.z.string(),
+  description: import_mini26.z.string()
 });
 var CursorSkill = class _CursorSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path64.join)(".cursor", "skills"),
+    relativeDirPath = (0, import_node_path63.join)(".cursor", "skills"),
     dirName,
     frontmatter,
     body,
@@ -8261,7 +7968,7 @@ var CursorSkill = class _CursorSkill extends ToolSkill {
   }
   static getSettablePaths(_options) {
     return {
-      relativeDirPath: (0, import_node_path64.join)(".cursor", "skills")
+      relativeDirPath: (0, import_node_path63.join)(".cursor", "skills")
     };
   }
   getFrontmatter() {
@@ -8340,9 +8047,9 @@ var CursorSkill = class _CursorSkill extends ToolSkill {
     });
     const result = CursorSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path64.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path63.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path64.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path63.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _CursorSkill({
@@ -8377,11 +8084,11 @@ var CursorSkill = class _CursorSkill extends ToolSkill {
 };
 
 // src/features/skills/geminicli-skill.ts
-var import_node_path65 = require("path");
-var import_mini28 = require("zod/mini");
-var GeminiCliSkillFrontmatterSchema = import_mini28.z.looseObject({
-  name: import_mini28.z.string(),
-  description: import_mini28.z.string()
+var import_node_path64 = require("path");
+var import_mini27 = require("zod/mini");
+var GeminiCliSkillFrontmatterSchema = import_mini27.z.looseObject({
+  name: import_mini27.z.string(),
+  description: import_mini27.z.string()
 });
 var GeminiCliSkill = class _GeminiCliSkill extends ToolSkill {
   constructor({
@@ -8417,7 +8124,7 @@ var GeminiCliSkill = class _GeminiCliSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path65.join)(".gemini", "skills")
+      relativeDirPath: (0, import_node_path64.join)(".gemini", "skills")
     };
   }
   getFrontmatter() {
@@ -8496,9 +8203,9 @@ var GeminiCliSkill = class _GeminiCliSkill extends ToolSkill {
     });
     const result = GeminiCliSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path65.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path64.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path65.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path64.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _GeminiCliSkill({
@@ -8533,16 +8240,16 @@ var GeminiCliSkill = class _GeminiCliSkill extends ToolSkill {
 };
 
 // src/features/skills/kilo-skill.ts
-var import_node_path66 = require("path");
-var import_mini29 = require("zod/mini");
-var KiloSkillFrontmatterSchema = import_mini29.z.looseObject({
-  name: import_mini29.z.string(),
-  description: import_mini29.z.string()
+var import_node_path65 = require("path");
+var import_mini28 = require("zod/mini");
+var KiloSkillFrontmatterSchema = import_mini28.z.looseObject({
+  name: import_mini28.z.string(),
+  description: import_mini28.z.string()
 });
 var KiloSkill = class _KiloSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path66.join)(".kilocode", "skills"),
+    relativeDirPath = (0, import_node_path65.join)(".kilocode", "skills"),
     dirName,
     frontmatter,
     body,
@@ -8573,7 +8280,7 @@ var KiloSkill = class _KiloSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path66.join)(".kilocode", "skills")
+      relativeDirPath: (0, import_node_path65.join)(".kilocode", "skills")
     };
   }
   getFrontmatter() {
@@ -8660,13 +8367,13 @@ var KiloSkill = class _KiloSkill extends ToolSkill {
     });
     const result = KiloSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path66.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path65.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path66.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path65.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     if (result.data.name !== loaded.dirName) {
-      const skillFilePath = (0, import_node_path66.join)(
+      const skillFilePath = (0, import_node_path65.join)(
         loaded.baseDir,
         loaded.relativeDirPath,
         loaded.dirName,
@@ -8707,16 +8414,16 @@ var KiloSkill = class _KiloSkill extends ToolSkill {
 };
 
 // src/features/skills/kiro-skill.ts
-var import_node_path67 = require("path");
-var import_mini30 = require("zod/mini");
-var KiroSkillFrontmatterSchema = import_mini30.z.looseObject({
-  name: import_mini30.z.string(),
-  description: import_mini30.z.string()
+var import_node_path66 = require("path");
+var import_mini29 = require("zod/mini");
+var KiroSkillFrontmatterSchema = import_mini29.z.looseObject({
+  name: import_mini29.z.string(),
+  description: import_mini29.z.string()
 });
 var KiroSkill = class _KiroSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path67.join)(".kiro", "skills"),
+    relativeDirPath = (0, import_node_path66.join)(".kiro", "skills"),
     dirName,
     frontmatter,
     body,
@@ -8748,7 +8455,7 @@ var KiroSkill = class _KiroSkill extends ToolSkill {
       throw new Error("KiroSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path67.join)(".kiro", "skills")
+      relativeDirPath: (0, import_node_path66.join)(".kiro", "skills")
     };
   }
   getFrontmatter() {
@@ -8835,13 +8542,13 @@ var KiroSkill = class _KiroSkill extends ToolSkill {
     });
     const result = KiroSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path67.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path66.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path67.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path66.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     if (result.data.name !== loaded.dirName) {
-      const skillFilePath = (0, import_node_path67.join)(
+      const skillFilePath = (0, import_node_path66.join)(
         loaded.baseDir,
         loaded.relativeDirPath,
         loaded.dirName,
@@ -8883,17 +8590,17 @@ var KiroSkill = class _KiroSkill extends ToolSkill {
 };
 
 // src/features/skills/opencode-skill.ts
-var import_node_path68 = require("path");
-var import_mini31 = require("zod/mini");
-var OpenCodeSkillFrontmatterSchema = import_mini31.z.looseObject({
-  name: import_mini31.z.string(),
-  description: import_mini31.z.string(),
-  "allowed-tools": import_mini31.z.optional(import_mini31.z.array(import_mini31.z.string()))
+var import_node_path67 = require("path");
+var import_mini30 = require("zod/mini");
+var OpenCodeSkillFrontmatterSchema = import_mini30.z.looseObject({
+  name: import_mini30.z.string(),
+  description: import_mini30.z.string(),
+  "allowed-tools": import_mini30.z.optional(import_mini30.z.array(import_mini30.z.string()))
 });
 var OpenCodeSkill = class _OpenCodeSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path68.join)(".opencode", "skill"),
+    relativeDirPath = (0, import_node_path67.join)(".opencode", "skill"),
     dirName,
     frontmatter,
     body,
@@ -8922,7 +8629,7 @@ var OpenCodeSkill = class _OpenCodeSkill extends ToolSkill {
   }
   static getSettablePaths({ global = false } = {}) {
     return {
-      relativeDirPath: global ? (0, import_node_path68.join)(".config", "opencode", "skill") : (0, import_node_path68.join)(".opencode", "skill")
+      relativeDirPath: global ? (0, import_node_path67.join)(".config", "opencode", "skill") : (0, import_node_path67.join)(".opencode", "skill")
     };
   }
   getFrontmatter() {
@@ -9007,9 +8714,9 @@ var OpenCodeSkill = class _OpenCodeSkill extends ToolSkill {
     });
     const result = OpenCodeSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path68.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path67.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path68.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path67.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _OpenCodeSkill({
@@ -9043,16 +8750,16 @@ var OpenCodeSkill = class _OpenCodeSkill extends ToolSkill {
 };
 
 // src/features/skills/replit-skill.ts
-var import_node_path69 = require("path");
-var import_mini32 = require("zod/mini");
-var ReplitSkillFrontmatterSchema = import_mini32.z.looseObject({
-  name: import_mini32.z.string(),
-  description: import_mini32.z.string()
+var import_node_path68 = require("path");
+var import_mini31 = require("zod/mini");
+var ReplitSkillFrontmatterSchema = import_mini31.z.looseObject({
+  name: import_mini31.z.string(),
+  description: import_mini31.z.string()
 });
 var ReplitSkill = class _ReplitSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path69.join)(".agents", "skills"),
+    relativeDirPath = (0, import_node_path68.join)(".agents", "skills"),
     dirName,
     frontmatter,
     body,
@@ -9084,7 +8791,7 @@ var ReplitSkill = class _ReplitSkill extends ToolSkill {
       throw new Error("ReplitSkill does not support global mode.");
     }
     return {
-      relativeDirPath: (0, import_node_path69.join)(".agents", "skills")
+      relativeDirPath: (0, import_node_path68.join)(".agents", "skills")
     };
   }
   getFrontmatter() {
@@ -9163,9 +8870,9 @@ var ReplitSkill = class _ReplitSkill extends ToolSkill {
     });
     const result = ReplitSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path69.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path68.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path69.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path68.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     return new _ReplitSkill({
@@ -9200,16 +8907,16 @@ var ReplitSkill = class _ReplitSkill extends ToolSkill {
 };
 
 // src/features/skills/roo-skill.ts
-var import_node_path70 = require("path");
-var import_mini33 = require("zod/mini");
-var RooSkillFrontmatterSchema = import_mini33.z.looseObject({
-  name: import_mini33.z.string(),
-  description: import_mini33.z.string()
+var import_node_path69 = require("path");
+var import_mini32 = require("zod/mini");
+var RooSkillFrontmatterSchema = import_mini32.z.looseObject({
+  name: import_mini32.z.string(),
+  description: import_mini32.z.string()
 });
 var RooSkill = class _RooSkill extends ToolSkill {
   constructor({
     baseDir = process.cwd(),
-    relativeDirPath = (0, import_node_path70.join)(".roo", "skills"),
+    relativeDirPath = (0, import_node_path69.join)(".roo", "skills"),
     dirName,
     frontmatter,
     body,
@@ -9240,7 +8947,7 @@ var RooSkill = class _RooSkill extends ToolSkill {
     global: _global = false
   } = {}) {
     return {
-      relativeDirPath: (0, import_node_path70.join)(".roo", "skills")
+      relativeDirPath: (0, import_node_path69.join)(".roo", "skills")
     };
   }
   getFrontmatter() {
@@ -9327,13 +9034,13 @@ var RooSkill = class _RooSkill extends ToolSkill {
     });
     const result = RooSkillFrontmatterSchema.safeParse(loaded.frontmatter);
     if (!result.success) {
-      const skillDirPath = (0, import_node_path70.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
+      const skillDirPath = (0, import_node_path69.join)(loaded.baseDir, loaded.relativeDirPath, loaded.dirName);
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path70.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path69.join)(skillDirPath, SKILL_FILE_NAME)}: ${formatError(result.error)}`
       );
     }
     if (result.data.name !== loaded.dirName) {
-      const skillFilePath = (0, import_node_path70.join)(
+      const skillFilePath = (0, import_node_path69.join)(
         loaded.baseDir,
         loaded.relativeDirPath,
         loaded.dirName,
@@ -9374,17 +9081,17 @@ var RooSkill = class _RooSkill extends ToolSkill {
 };
 
 // src/features/skills/skills-utils.ts
-var import_node_path71 = require("path");
+var import_node_path70 = require("path");
 async function getLocalSkillDirNames(baseDir) {
-  const skillsDir = (0, import_node_path71.join)(baseDir, RULESYNC_SKILLS_RELATIVE_DIR_PATH);
+  const skillsDir = (0, import_node_path70.join)(baseDir, RULESYNC_SKILLS_RELATIVE_DIR_PATH);
   const names = /* @__PURE__ */ new Set();
   if (!await directoryExists(skillsDir)) {
     return names;
   }
-  const dirPaths = await findFilesByGlobs((0, import_node_path71.join)(skillsDir, "*"), { type: "dir" });
+  const dirPaths = await findFilesByGlobs((0, import_node_path70.join)(skillsDir, "*"), { type: "dir" });
   for (const dirPath of dirPaths) {
-    const name = (0, import_node_path71.basename)(dirPath);
-    if (name === (0, import_node_path71.basename)(RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH)) continue;
+    const name = (0, import_node_path70.basename)(dirPath);
+    if (name === (0, import_node_path70.basename)(RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH)) continue;
     names.add(name);
   }
   return names;
@@ -9408,7 +9115,7 @@ var skillsProcessorToolTargetTuple = [
   "replit",
   "roo"
 ];
-var SkillsProcessorToolTargetSchema = import_mini34.z.enum(skillsProcessorToolTargetTuple);
+var SkillsProcessorToolTargetSchema = import_mini33.z.enum(skillsProcessorToolTargetTuple);
 var toolSkillFactories = /* @__PURE__ */ new Map([
   [
     "agentsmd",
@@ -9602,11 +9309,11 @@ var SkillsProcessor = class extends DirFeatureProcessor {
       )
     );
     const localSkillNames = new Set(localDirNames);
-    const curatedDirPath = (0, import_node_path72.join)(this.baseDir, RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH);
+    const curatedDirPath = (0, import_node_path71.join)(this.baseDir, RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH);
     let curatedSkills = [];
     if (await directoryExists(curatedDirPath)) {
-      const curatedDirPaths = await findFilesByGlobs((0, import_node_path72.join)(curatedDirPath, "*"), { type: "dir" });
-      const curatedDirNames = curatedDirPaths.map((path3) => (0, import_node_path72.basename)(path3));
+      const curatedDirPaths = await findFilesByGlobs((0, import_node_path71.join)(curatedDirPath, "*"), { type: "dir" });
+      const curatedDirNames = curatedDirPaths.map((path4) => (0, import_node_path71.basename)(path4));
       const nonConflicting = curatedDirNames.filter((name) => {
         if (localSkillNames.has(name)) {
           logger.debug(`Skipping curated skill "${name}": local skill takes precedence.`);
@@ -9639,9 +9346,9 @@ var SkillsProcessor = class extends DirFeatureProcessor {
   async loadToolDirs() {
     const factory = this.getFactory(this.toolTarget);
     const paths = factory.class.getSettablePaths({ global: this.global });
-    const skillsDirPath = (0, import_node_path72.join)(this.baseDir, paths.relativeDirPath);
-    const dirPaths = await findFilesByGlobs((0, import_node_path72.join)(skillsDirPath, "*"), { type: "dir" });
-    const dirNames = dirPaths.map((path3) => (0, import_node_path72.basename)(path3));
+    const skillsDirPath = (0, import_node_path71.join)(this.baseDir, paths.relativeDirPath);
+    const dirPaths = await findFilesByGlobs((0, import_node_path71.join)(skillsDirPath, "*"), { type: "dir" });
+    const dirNames = dirPaths.map((path4) => (0, import_node_path71.basename)(path4));
     const toolSkills = await Promise.all(
       dirNames.map(
         (dirName) => factory.class.fromDir({
@@ -9657,9 +9364,9 @@ var SkillsProcessor = class extends DirFeatureProcessor {
   async loadToolDirsToDelete() {
     const factory = this.getFactory(this.toolTarget);
     const paths = factory.class.getSettablePaths({ global: this.global });
-    const skillsDirPath = (0, import_node_path72.join)(this.baseDir, paths.relativeDirPath);
-    const dirPaths = await findFilesByGlobs((0, import_node_path72.join)(skillsDirPath, "*"), { type: "dir" });
-    const dirNames = dirPaths.map((path3) => (0, import_node_path72.basename)(path3));
+    const skillsDirPath = (0, import_node_path71.join)(this.baseDir, paths.relativeDirPath);
+    const dirPaths = await findFilesByGlobs((0, import_node_path71.join)(skillsDirPath, "*"), { type: "dir" });
+    const dirNames = dirPaths.map((path4) => (0, import_node_path71.basename)(path4));
     const toolSkills = dirNames.map(
       (dirName) => factory.class.forDeletion({
         baseDir: this.baseDir,
@@ -9720,11 +9427,11 @@ var SkillsProcessor = class extends DirFeatureProcessor {
 };
 
 // src/features/subagents/agentsmd-subagent.ts
-var import_node_path74 = require("path");
+var import_node_path73 = require("path");
 
 // src/features/subagents/simulated-subagent.ts
-var import_node_path73 = require("path");
-var import_mini35 = require("zod/mini");
+var import_node_path72 = require("path");
+var import_mini34 = require("zod/mini");
 
 // src/features/subagents/tool-subagent.ts
 var ToolSubagent = class extends ToolFile {
@@ -9767,9 +9474,9 @@ var ToolSubagent = class extends ToolFile {
 };
 
 // src/features/subagents/simulated-subagent.ts
-var SimulatedSubagentFrontmatterSchema = import_mini35.z.object({
-  name: import_mini35.z.string(),
-  description: import_mini35.z.string()
+var SimulatedSubagentFrontmatterSchema = import_mini34.z.object({
+  name: import_mini34.z.string(),
+  description: import_mini34.z.string()
 });
 var SimulatedSubagent = class extends ToolSubagent {
   frontmatter;
@@ -9779,7 +9486,7 @@ var SimulatedSubagent = class extends ToolSubagent {
       const result = SimulatedSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path73.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path72.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -9830,7 +9537,7 @@ var SimulatedSubagent = class extends ToolSubagent {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path73.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path72.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -9840,7 +9547,7 @@ var SimulatedSubagent = class extends ToolSubagent {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path73.join)(baseDir, this.getSettablePaths().relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path72.join)(baseDir, this.getSettablePaths().relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = SimulatedSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -9850,7 +9557,7 @@ var SimulatedSubagent = class extends ToolSubagent {
     return {
       baseDir,
       relativeDirPath: this.getSettablePaths().relativeDirPath,
-      relativeFilePath: (0, import_node_path73.basename)(relativeFilePath),
+      relativeFilePath: (0, import_node_path72.basename)(relativeFilePath),
       frontmatter: result.data,
       body: content.trim(),
       validate
@@ -9876,7 +9583,7 @@ var SimulatedSubagent = class extends ToolSubagent {
 var AgentsmdSubagent = class _AgentsmdSubagent extends SimulatedSubagent {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path74.join)(".agents", "subagents")
+      relativeDirPath: (0, import_node_path73.join)(".agents", "subagents")
     };
   }
   static async fromFile(params) {
@@ -9899,11 +9606,11 @@ var AgentsmdSubagent = class _AgentsmdSubagent extends SimulatedSubagent {
 };
 
 // src/features/subagents/codexcli-subagent.ts
-var import_node_path75 = require("path");
+var import_node_path74 = require("path");
 var CodexCliSubagent = class _CodexCliSubagent extends SimulatedSubagent {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path75.join)(".codex", "subagents")
+      relativeDirPath: (0, import_node_path74.join)(".codex", "subagents")
     };
   }
   static async fromFile(params) {
@@ -9926,11 +9633,11 @@ var CodexCliSubagent = class _CodexCliSubagent extends SimulatedSubagent {
 };
 
 // src/features/subagents/factorydroid-subagent.ts
-var import_node_path76 = require("path");
+var import_node_path75 = require("path");
 var FactorydroidSubagent = class _FactorydroidSubagent extends SimulatedSubagent {
   static getSettablePaths(_options) {
     return {
-      relativeDirPath: (0, import_node_path76.join)(".factory", "droids")
+      relativeDirPath: (0, import_node_path75.join)(".factory", "droids")
     };
   }
   static async fromFile(params) {
@@ -9953,11 +9660,11 @@ var FactorydroidSubagent = class _FactorydroidSubagent extends SimulatedSubagent
 };
 
 // src/features/subagents/geminicli-subagent.ts
-var import_node_path77 = require("path");
+var import_node_path76 = require("path");
 var GeminiCliSubagent = class _GeminiCliSubagent extends SimulatedSubagent {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path77.join)(".gemini", "subagents")
+      relativeDirPath: (0, import_node_path76.join)(".gemini", "subagents")
     };
   }
   static async fromFile(params) {
@@ -9980,11 +9687,11 @@ var GeminiCliSubagent = class _GeminiCliSubagent extends SimulatedSubagent {
 };
 
 // src/features/subagents/roo-subagent.ts
-var import_node_path78 = require("path");
+var import_node_path77 = require("path");
 var RooSubagent = class _RooSubagent extends SimulatedSubagent {
   static getSettablePaths() {
     return {
-      relativeDirPath: (0, import_node_path78.join)(".roo", "subagents")
+      relativeDirPath: (0, import_node_path77.join)(".roo", "subagents")
     };
   }
   static async fromFile(params) {
@@ -10007,20 +9714,20 @@ var RooSubagent = class _RooSubagent extends SimulatedSubagent {
 };
 
 // src/features/subagents/subagents-processor.ts
-var import_node_path85 = require("path");
-var import_mini42 = require("zod/mini");
+var import_node_path84 = require("path");
+var import_mini41 = require("zod/mini");
 
 // src/features/subagents/claudecode-subagent.ts
-var import_node_path80 = require("path");
-var import_mini37 = require("zod/mini");
-
-// src/features/subagents/rulesync-subagent.ts
 var import_node_path79 = require("path");
 var import_mini36 = require("zod/mini");
-var RulesyncSubagentFrontmatterSchema = import_mini36.z.looseObject({
-  targets: import_mini36.z._default(RulesyncTargetsSchema, ["*"]),
-  name: import_mini36.z.string(),
-  description: import_mini36.z.string()
+
+// src/features/subagents/rulesync-subagent.ts
+var import_node_path78 = require("path");
+var import_mini35 = require("zod/mini");
+var RulesyncSubagentFrontmatterSchema = import_mini35.z.looseObject({
+  targets: import_mini35.z._default(RulesyncTargetsSchema, ["*"]),
+  name: import_mini35.z.string(),
+  description: import_mini35.z.string()
 });
 var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
   frontmatter;
@@ -10029,7 +9736,7 @@ var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
     const parseResult = RulesyncSubagentFrontmatterSchema.safeParse(frontmatter);
     if (!parseResult.success && rest.validate !== false) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path79.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
+        `Invalid frontmatter in ${(0, import_node_path78.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
       );
     }
     const parsedFrontmatter = parseResult.success ? { ...frontmatter, ...parseResult.data } : { ...frontmatter, targets: frontmatter?.targets ?? ["*"] };
@@ -10062,7 +9769,7 @@ var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path79.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path78.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -10071,14 +9778,14 @@ var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
     relativeFilePath
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path79.join)(process.cwd(), RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, relativeFilePath)
+      (0, import_node_path78.join)(process.cwd(), RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, relativeFilePath)
     );
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = RulesyncSubagentFrontmatterSchema.safeParse(frontmatter);
     if (!result.success) {
       throw new Error(`Invalid frontmatter in ${relativeFilePath}: ${formatError(result.error)}`);
     }
-    const filename = (0, import_node_path79.basename)(relativeFilePath);
+    const filename = (0, import_node_path78.basename)(relativeFilePath);
     return new _RulesyncSubagent({
       baseDir: process.cwd(),
       relativeDirPath: this.getSettablePaths().relativeDirPath,
@@ -10090,13 +9797,13 @@ var RulesyncSubagent = class _RulesyncSubagent extends RulesyncFile {
 };
 
 // src/features/subagents/claudecode-subagent.ts
-var ClaudecodeSubagentFrontmatterSchema = import_mini37.z.looseObject({
-  name: import_mini37.z.string(),
-  description: import_mini37.z.string(),
-  model: import_mini37.z.optional(import_mini37.z.string()),
-  tools: import_mini37.z.optional(import_mini37.z.union([import_mini37.z.string(), import_mini37.z.array(import_mini37.z.string())])),
-  permissionMode: import_mini37.z.optional(import_mini37.z.string()),
-  skills: import_mini37.z.optional(import_mini37.z.union([import_mini37.z.string(), import_mini37.z.array(import_mini37.z.string())]))
+var ClaudecodeSubagentFrontmatterSchema = import_mini36.z.looseObject({
+  name: import_mini36.z.string(),
+  description: import_mini36.z.string(),
+  model: import_mini36.z.optional(import_mini36.z.string()),
+  tools: import_mini36.z.optional(import_mini36.z.union([import_mini36.z.string(), import_mini36.z.array(import_mini36.z.string())])),
+  permissionMode: import_mini36.z.optional(import_mini36.z.string()),
+  skills: import_mini36.z.optional(import_mini36.z.union([import_mini36.z.string(), import_mini36.z.array(import_mini36.z.string())]))
 });
 var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
   frontmatter;
@@ -10106,7 +9813,7 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
       const result = ClaudecodeSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path80.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path79.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -10118,7 +9825,7 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path80.join)(".claude", "agents")
+      relativeDirPath: (0, import_node_path79.join)(".claude", "agents")
     };
   }
   getFrontmatter() {
@@ -10194,7 +9901,7 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path80.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path79.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -10212,7 +9919,7 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path80.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path79.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = ClaudecodeSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -10247,13 +9954,13 @@ var ClaudecodeSubagent = class _ClaudecodeSubagent extends ToolSubagent {
 };
 
 // src/features/subagents/copilot-subagent.ts
-var import_node_path81 = require("path");
-var import_mini38 = require("zod/mini");
+var import_node_path80 = require("path");
+var import_mini37 = require("zod/mini");
 var REQUIRED_TOOL = "agent/runSubagent";
-var CopilotSubagentFrontmatterSchema = import_mini38.z.looseObject({
-  name: import_mini38.z.string(),
-  description: import_mini38.z.string(),
-  tools: import_mini38.z.optional(import_mini38.z.union([import_mini38.z.string(), import_mini38.z.array(import_mini38.z.string())]))
+var CopilotSubagentFrontmatterSchema = import_mini37.z.looseObject({
+  name: import_mini37.z.string(),
+  description: import_mini37.z.string(),
+  tools: import_mini37.z.optional(import_mini37.z.union([import_mini37.z.string(), import_mini37.z.array(import_mini37.z.string())]))
 });
 var normalizeTools = (tools) => {
   if (!tools) {
@@ -10273,7 +9980,7 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
       const result = CopilotSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path81.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path80.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -10285,7 +9992,7 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path81.join)(".github", "agents")
+      relativeDirPath: (0, import_node_path80.join)(".github", "agents")
     };
   }
   getFrontmatter() {
@@ -10359,7 +10066,7 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path81.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path80.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -10377,7 +10084,7 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path81.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path80.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = CopilotSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -10413,11 +10120,11 @@ var CopilotSubagent = class _CopilotSubagent extends ToolSubagent {
 };
 
 // src/features/subagents/cursor-subagent.ts
-var import_node_path82 = require("path");
-var import_mini39 = require("zod/mini");
-var CursorSubagentFrontmatterSchema = import_mini39.z.looseObject({
-  name: import_mini39.z.string(),
-  description: import_mini39.z.string()
+var import_node_path81 = require("path");
+var import_mini38 = require("zod/mini");
+var CursorSubagentFrontmatterSchema = import_mini38.z.looseObject({
+  name: import_mini38.z.string(),
+  description: import_mini38.z.string()
 });
 var CursorSubagent = class _CursorSubagent extends ToolSubagent {
   frontmatter;
@@ -10427,7 +10134,7 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
       const result = CursorSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path82.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path81.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -10439,7 +10146,7 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path82.join)(".cursor", "agents")
+      relativeDirPath: (0, import_node_path81.join)(".cursor", "agents")
     };
   }
   getFrontmatter() {
@@ -10506,7 +10213,7 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path82.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path81.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -10524,7 +10231,7 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path82.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path81.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = CursorSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -10560,23 +10267,23 @@ var CursorSubagent = class _CursorSubagent extends ToolSubagent {
 };
 
 // src/features/subagents/kiro-subagent.ts
-var import_node_path83 = require("path");
-var import_mini40 = require("zod/mini");
-var KiroCliSubagentJsonSchema = import_mini40.z.looseObject({
-  name: import_mini40.z.string(),
-  description: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.string())),
-  prompt: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.string())),
-  tools: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.array(import_mini40.z.string()))),
-  toolAliases: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.record(import_mini40.z.string(), import_mini40.z.string()))),
-  toolSettings: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.unknown())),
-  toolSchema: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.unknown())),
-  hooks: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.record(import_mini40.z.string(), import_mini40.z.array(import_mini40.z.unknown())))),
-  model: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.string())),
-  mcpServers: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.record(import_mini40.z.string(), import_mini40.z.unknown()))),
-  useLegacyMcpJson: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.boolean())),
-  resources: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.array(import_mini40.z.string()))),
-  allowedTools: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.array(import_mini40.z.string()))),
-  includeMcpJson: import_mini40.z.optional(import_mini40.z.nullable(import_mini40.z.boolean()))
+var import_node_path82 = require("path");
+var import_mini39 = require("zod/mini");
+var KiroCliSubagentJsonSchema = import_mini39.z.looseObject({
+  name: import_mini39.z.string(),
+  description: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.string())),
+  prompt: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.string())),
+  tools: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.array(import_mini39.z.string()))),
+  toolAliases: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.record(import_mini39.z.string(), import_mini39.z.string()))),
+  toolSettings: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.unknown())),
+  toolSchema: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.unknown())),
+  hooks: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.record(import_mini39.z.string(), import_mini39.z.array(import_mini39.z.unknown())))),
+  model: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.string())),
+  mcpServers: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.record(import_mini39.z.string(), import_mini39.z.unknown()))),
+  useLegacyMcpJson: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.boolean())),
+  resources: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.array(import_mini39.z.string()))),
+  allowedTools: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.array(import_mini39.z.string()))),
+  includeMcpJson: import_mini39.z.optional(import_mini39.z.nullable(import_mini39.z.boolean()))
 });
 var KiroSubagent = class _KiroSubagent extends ToolSubagent {
   body;
@@ -10588,7 +10295,7 @@ var KiroSubagent = class _KiroSubagent extends ToolSubagent {
   }
   static getSettablePaths(_options = {}) {
     return {
-      relativeDirPath: (0, import_node_path83.join)(".kiro", "agents")
+      relativeDirPath: (0, import_node_path82.join)(".kiro", "agents")
     };
   }
   getBody() {
@@ -10668,7 +10375,7 @@ var KiroSubagent = class _KiroSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path83.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path82.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     return new _KiroSubagent({
       baseDir,
@@ -10697,12 +10404,12 @@ var KiroSubagent = class _KiroSubagent extends ToolSubagent {
 };
 
 // src/features/subagents/opencode-subagent.ts
-var import_node_path84 = require("path");
-var import_mini41 = require("zod/mini");
-var OpenCodeSubagentFrontmatterSchema = import_mini41.z.looseObject({
-  description: import_mini41.z.string(),
-  mode: import_mini41.z._default(import_mini41.z.string(), "subagent"),
-  name: import_mini41.z.optional(import_mini41.z.string())
+var import_node_path83 = require("path");
+var import_mini40 = require("zod/mini");
+var OpenCodeSubagentFrontmatterSchema = import_mini40.z.looseObject({
+  description: import_mini40.z.string(),
+  mode: import_mini40.z._default(import_mini40.z.string(), "subagent"),
+  name: import_mini40.z.optional(import_mini40.z.string())
 });
 var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
   frontmatter;
@@ -10712,7 +10419,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
       const result = OpenCodeSubagentFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path84.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path83.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -10726,7 +10433,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
     global = false
   } = {}) {
     return {
-      relativeDirPath: global ? (0, import_node_path84.join)(".config", "opencode", "agent") : (0, import_node_path84.join)(".opencode", "agent")
+      relativeDirPath: global ? (0, import_node_path83.join)(".config", "opencode", "agent") : (0, import_node_path83.join)(".opencode", "agent")
     };
   }
   getFrontmatter() {
@@ -10739,7 +10446,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
     const { description, mode, name, ...opencodeSection } = this.frontmatter;
     const rulesyncFrontmatter = {
       targets: ["*"],
-      name: name ?? (0, import_node_path84.basename)(this.getRelativeFilePath(), ".md"),
+      name: name ?? (0, import_node_path83.basename)(this.getRelativeFilePath(), ".md"),
       description,
       opencode: { mode, ...opencodeSection }
     };
@@ -10792,7 +10499,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
     return {
       success: false,
       error: new Error(
-        `Invalid frontmatter in ${(0, import_node_path84.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path83.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
       )
     };
   }
@@ -10809,7 +10516,7 @@ var OpenCodeSubagent = class _OpenCodeSubagent extends ToolSubagent {
     global = false
   }) {
     const paths = this.getSettablePaths({ global });
-    const filePath = (0, import_node_path84.join)(baseDir, paths.relativeDirPath, relativeFilePath);
+    const filePath = (0, import_node_path83.join)(baseDir, paths.relativeDirPath, relativeFilePath);
     const fileContent = await readFileContent(filePath);
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = OpenCodeSubagentFrontmatterSchema.safeParse(frontmatter);
@@ -10858,7 +10565,7 @@ var subagentsProcessorToolTargetTuple = [
   "opencode",
   "roo"
 ];
-var SubagentsProcessorToolTargetSchema = import_mini42.z.enum(subagentsProcessorToolTargetTuple);
+var SubagentsProcessorToolTargetSchema = import_mini41.z.enum(subagentsProcessorToolTargetTuple);
 var toolSubagentFactories = /* @__PURE__ */ new Map([
   [
     "agentsmd",
@@ -11020,7 +10727,7 @@ var SubagentsProcessor = class extends FeatureProcessor {
    * Load and parse rulesync subagent files from .rulesync/subagents/ directory
    */
   async loadRulesyncFiles() {
-    const subagentsDir = (0, import_node_path85.join)(this.baseDir, RulesyncSubagent.getSettablePaths().relativeDirPath);
+    const subagentsDir = (0, import_node_path84.join)(this.baseDir, RulesyncSubagent.getSettablePaths().relativeDirPath);
     const dirExists = await directoryExists(subagentsDir);
     if (!dirExists) {
       logger.debug(`Rulesync subagents directory not found: ${subagentsDir}`);
@@ -11035,7 +10742,7 @@ var SubagentsProcessor = class extends FeatureProcessor {
     logger.debug(`Found ${mdFiles.length} subagent files in ${subagentsDir}`);
     const rulesyncSubagents = [];
     for (const mdFile of mdFiles) {
-      const filepath = (0, import_node_path85.join)(subagentsDir, mdFile);
+      const filepath = (0, import_node_path84.join)(subagentsDir, mdFile);
       try {
         const rulesyncSubagent = await RulesyncSubagent.fromFile({
           relativeFilePath: mdFile,
@@ -11065,14 +10772,14 @@ var SubagentsProcessor = class extends FeatureProcessor {
     const factory = this.getFactory(this.toolTarget);
     const paths = factory.class.getSettablePaths({ global: this.global });
     const subagentFilePaths = await findFilesByGlobs(
-      (0, import_node_path85.join)(this.baseDir, paths.relativeDirPath, factory.meta.filePattern)
+      (0, import_node_path84.join)(this.baseDir, paths.relativeDirPath, factory.meta.filePattern)
     );
     if (forDeletion) {
       const toolSubagents2 = subagentFilePaths.map(
-        (path3) => factory.class.forDeletion({
+        (path4) => factory.class.forDeletion({
           baseDir: this.baseDir,
           relativeDirPath: paths.relativeDirPath,
-          relativeFilePath: (0, import_node_path85.basename)(path3),
+          relativeFilePath: (0, import_node_path84.basename)(path4),
           global: this.global
         })
       ).filter((subagent) => subagent.isDeletable());
@@ -11083,9 +10790,9 @@ var SubagentsProcessor = class extends FeatureProcessor {
     }
     const toolSubagents = await Promise.all(
       subagentFilePaths.map(
-        (path3) => factory.class.fromFile({
+        (path4) => factory.class.fromFile({
           baseDir: this.baseDir,
-          relativeFilePath: (0, import_node_path85.basename)(path3),
+          relativeFilePath: (0, import_node_path84.basename)(path4),
           global: this.global
         })
       )
@@ -11130,49 +10837,49 @@ var SubagentsProcessor = class extends FeatureProcessor {
 };
 
 // src/features/rules/agentsmd-rule.ts
-var import_node_path88 = require("path");
-
-// src/features/rules/tool-rule.ts
 var import_node_path87 = require("path");
 
-// src/features/rules/rulesync-rule.ts
+// src/features/rules/tool-rule.ts
 var import_node_path86 = require("path");
-var import_mini43 = require("zod/mini");
-var RulesyncRuleFrontmatterSchema = import_mini43.z.object({
-  root: import_mini43.z.optional(import_mini43.z.boolean()),
-  localRoot: import_mini43.z.optional(import_mini43.z.boolean()),
-  targets: import_mini43.z._default(RulesyncTargetsSchema, ["*"]),
-  description: import_mini43.z.optional(import_mini43.z.string()),
-  globs: import_mini43.z.optional(import_mini43.z.array(import_mini43.z.string())),
-  agentsmd: import_mini43.z.optional(
-    import_mini43.z.object({
+
+// src/features/rules/rulesync-rule.ts
+var import_node_path85 = require("path");
+var import_mini42 = require("zod/mini");
+var RulesyncRuleFrontmatterSchema = import_mini42.z.object({
+  root: import_mini42.z.optional(import_mini42.z.boolean()),
+  localRoot: import_mini42.z.optional(import_mini42.z.boolean()),
+  targets: import_mini42.z._default(RulesyncTargetsSchema, ["*"]),
+  description: import_mini42.z.optional(import_mini42.z.string()),
+  globs: import_mini42.z.optional(import_mini42.z.array(import_mini42.z.string())),
+  agentsmd: import_mini42.z.optional(
+    import_mini42.z.object({
       // @example "path/to/subproject"
-      subprojectPath: import_mini43.z.optional(import_mini43.z.string())
+      subprojectPath: import_mini42.z.optional(import_mini42.z.string())
     })
   ),
-  claudecode: import_mini43.z.optional(
-    import_mini43.z.object({
+  claudecode: import_mini42.z.optional(
+    import_mini42.z.object({
       // Glob patterns for conditional rules (takes precedence over globs)
       // @example ["src/**/*.ts", "tests/**/*.test.ts"]
-      paths: import_mini43.z.optional(import_mini43.z.array(import_mini43.z.string()))
+      paths: import_mini42.z.optional(import_mini42.z.array(import_mini42.z.string()))
     })
   ),
-  cursor: import_mini43.z.optional(
-    import_mini43.z.object({
-      alwaysApply: import_mini43.z.optional(import_mini43.z.boolean()),
-      description: import_mini43.z.optional(import_mini43.z.string()),
-      globs: import_mini43.z.optional(import_mini43.z.array(import_mini43.z.string()))
+  cursor: import_mini42.z.optional(
+    import_mini42.z.object({
+      alwaysApply: import_mini42.z.optional(import_mini42.z.boolean()),
+      description: import_mini42.z.optional(import_mini42.z.string()),
+      globs: import_mini42.z.optional(import_mini42.z.array(import_mini42.z.string()))
     })
   ),
-  copilot: import_mini43.z.optional(
-    import_mini43.z.object({
-      excludeAgent: import_mini43.z.optional(import_mini43.z.union([import_mini43.z.literal("code-review"), import_mini43.z.literal("coding-agent")]))
+  copilot: import_mini42.z.optional(
+    import_mini42.z.object({
+      excludeAgent: import_mini42.z.optional(import_mini42.z.union([import_mini42.z.literal("code-review"), import_mini42.z.literal("coding-agent")]))
     })
   ),
-  antigravity: import_mini43.z.optional(
-    import_mini43.z.looseObject({
-      trigger: import_mini43.z.optional(import_mini43.z.string()),
-      globs: import_mini43.z.optional(import_mini43.z.array(import_mini43.z.string()))
+  antigravity: import_mini42.z.optional(
+    import_mini42.z.looseObject({
+      trigger: import_mini42.z.optional(import_mini42.z.string()),
+      globs: import_mini42.z.optional(import_mini42.z.array(import_mini42.z.string()))
     })
   )
 });
@@ -11183,7 +10890,7 @@ var RulesyncRule = class _RulesyncRule extends RulesyncFile {
     const parseResult = RulesyncRuleFrontmatterSchema.safeParse(frontmatter);
     if (!parseResult.success && rest.validate !== false) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path86.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
+        `Invalid frontmatter in ${(0, import_node_path85.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(parseResult.error)}`
       );
     }
     const parsedFrontmatter = parseResult.success ? parseResult.data : { ...frontmatter, targets: frontmatter.targets ?? ["*"] };
@@ -11218,7 +10925,7 @@ var RulesyncRule = class _RulesyncRule extends RulesyncFile {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path86.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path85.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -11227,7 +10934,7 @@ var RulesyncRule = class _RulesyncRule extends RulesyncFile {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path86.join)(
+    const filePath = (0, import_node_path85.join)(
       process.cwd(),
       this.getSettablePaths().recommended.relativeDirPath,
       relativeFilePath
@@ -11329,7 +11036,7 @@ var ToolRule = class extends ToolFile {
     rulesyncRule,
     validate = true,
     rootPath = { relativeDirPath: ".", relativeFilePath: "AGENTS.md" },
-    nonRootPath = { relativeDirPath: (0, import_node_path87.join)(".agents", "memories") }
+    nonRootPath = { relativeDirPath: (0, import_node_path86.join)(".agents", "memories") }
   }) {
     const params = this.buildToolRuleParamsDefault({
       baseDir,
@@ -11340,7 +11047,7 @@ var ToolRule = class extends ToolFile {
     });
     const rulesyncFrontmatter = rulesyncRule.getFrontmatter();
     if (!rulesyncFrontmatter.root && rulesyncFrontmatter.agentsmd?.subprojectPath) {
-      params.relativeDirPath = (0, import_node_path87.join)(rulesyncFrontmatter.agentsmd.subprojectPath);
+      params.relativeDirPath = (0, import_node_path86.join)(rulesyncFrontmatter.agentsmd.subprojectPath);
       params.relativeFilePath = "AGENTS.md";
     }
     return params;
@@ -11389,7 +11096,7 @@ var ToolRule = class extends ToolFile {
   }
 };
 function buildToolPath(toolDir, subDir, excludeToolDir) {
-  return excludeToolDir ? subDir : (0, import_node_path87.join)(toolDir, subDir);
+  return excludeToolDir ? subDir : (0, import_node_path86.join)(toolDir, subDir);
 }
 
 // src/features/rules/agentsmd-rule.ts
@@ -11418,8 +11125,8 @@ var AgentsMdRule = class _AgentsMdRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "AGENTS.md";
-    const relativePath = isRoot ? "AGENTS.md" : (0, import_node_path88.join)(".agents", "memories", relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path88.join)(baseDir, relativePath));
+    const relativePath = isRoot ? "AGENTS.md" : (0, import_node_path87.join)(".agents", "memories", relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path87.join)(baseDir, relativePath));
     return new _AgentsMdRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : this.getSettablePaths().nonRoot.relativeDirPath,
@@ -11474,21 +11181,21 @@ var AgentsMdRule = class _AgentsMdRule extends ToolRule {
 };
 
 // src/features/rules/antigravity-rule.ts
-var import_node_path89 = require("path");
-var import_mini44 = require("zod/mini");
-var AntigravityRuleFrontmatterSchema = import_mini44.z.looseObject({
-  trigger: import_mini44.z.optional(
-    import_mini44.z.union([
-      import_mini44.z.literal("always_on"),
-      import_mini44.z.literal("glob"),
-      import_mini44.z.literal("manual"),
-      import_mini44.z.literal("model_decision"),
-      import_mini44.z.string()
+var import_node_path88 = require("path");
+var import_mini43 = require("zod/mini");
+var AntigravityRuleFrontmatterSchema = import_mini43.z.looseObject({
+  trigger: import_mini43.z.optional(
+    import_mini43.z.union([
+      import_mini43.z.literal("always_on"),
+      import_mini43.z.literal("glob"),
+      import_mini43.z.literal("manual"),
+      import_mini43.z.literal("model_decision"),
+      import_mini43.z.string()
       // accepts any string for forward compatibility
     ])
   ),
-  globs: import_mini44.z.optional(import_mini44.z.string()),
-  description: import_mini44.z.optional(import_mini44.z.string())
+  globs: import_mini43.z.optional(import_mini43.z.string()),
+  description: import_mini43.z.optional(import_mini43.z.string())
 });
 function parseGlobsString(globs) {
   if (!globs) {
@@ -11633,7 +11340,7 @@ var AntigravityRule = class _AntigravityRule extends ToolRule {
       const result = AntigravityRuleFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path89.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path88.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -11657,7 +11364,7 @@ var AntigravityRule = class _AntigravityRule extends ToolRule {
     relativeFilePath,
     validate = true
   }) {
-    const filePath = (0, import_node_path89.join)(
+    const filePath = (0, import_node_path88.join)(
       baseDir,
       this.getSettablePaths().nonRoot.relativeDirPath,
       relativeFilePath
@@ -11798,7 +11505,7 @@ var AntigravityRule = class _AntigravityRule extends ToolRule {
 };
 
 // src/features/rules/augmentcode-legacy-rule.ts
-var import_node_path90 = require("path");
+var import_node_path89 = require("path");
 var AugmentcodeLegacyRule = class _AugmentcodeLegacyRule extends ToolRule {
   toRulesyncRule() {
     const rulesyncFrontmatter = {
@@ -11859,8 +11566,8 @@ var AugmentcodeLegacyRule = class _AugmentcodeLegacyRule extends ToolRule {
   }) {
     const settablePaths = this.getSettablePaths();
     const isRoot = relativeFilePath === settablePaths.root.relativeFilePath;
-    const relativePath = isRoot ? settablePaths.root.relativeFilePath : (0, import_node_path90.join)(settablePaths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path90.join)(baseDir, relativePath));
+    const relativePath = isRoot ? settablePaths.root.relativeFilePath : (0, import_node_path89.join)(settablePaths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path89.join)(baseDir, relativePath));
     return new _AugmentcodeLegacyRule({
       baseDir,
       relativeDirPath: isRoot ? settablePaths.root.relativeDirPath : settablePaths.nonRoot.relativeDirPath,
@@ -11889,7 +11596,7 @@ var AugmentcodeLegacyRule = class _AugmentcodeLegacyRule extends ToolRule {
 };
 
 // src/features/rules/augmentcode-rule.ts
-var import_node_path91 = require("path");
+var import_node_path90 = require("path");
 var AugmentcodeRule = class _AugmentcodeRule extends ToolRule {
   toRulesyncRule() {
     return this.toRulesyncRuleDefault();
@@ -11921,7 +11628,7 @@ var AugmentcodeRule = class _AugmentcodeRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path91.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      (0, import_node_path90.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     const { body: content } = parseFrontmatter(fileContent);
     return new _AugmentcodeRule({
@@ -11957,7 +11664,7 @@ var AugmentcodeRule = class _AugmentcodeRule extends ToolRule {
 };
 
 // src/features/rules/claudecode-legacy-rule.ts
-var import_node_path92 = require("path");
+var import_node_path91 = require("path");
 var ClaudecodeLegacyRule = class _ClaudecodeLegacyRule extends ToolRule {
   static getSettablePaths({
     global,
@@ -11992,7 +11699,7 @@ var ClaudecodeLegacyRule = class _ClaudecodeLegacyRule extends ToolRule {
     if (isRoot) {
       const relativePath2 = paths.root.relativeFilePath;
       const fileContent2 = await readFileContent(
-        (0, import_node_path92.join)(baseDir, paths.root.relativeDirPath, relativePath2)
+        (0, import_node_path91.join)(baseDir, paths.root.relativeDirPath, relativePath2)
       );
       return new _ClaudecodeLegacyRule({
         baseDir,
@@ -12006,8 +11713,8 @@ var ClaudecodeLegacyRule = class _ClaudecodeLegacyRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path92.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path92.join)(baseDir, relativePath));
+    const relativePath = (0, import_node_path91.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path91.join)(baseDir, relativePath));
     return new _ClaudecodeLegacyRule({
       baseDir,
       relativeDirPath: paths.nonRoot.relativeDirPath,
@@ -12066,10 +11773,10 @@ var ClaudecodeLegacyRule = class _ClaudecodeLegacyRule extends ToolRule {
 };
 
 // src/features/rules/claudecode-rule.ts
-var import_node_path93 = require("path");
-var import_mini45 = require("zod/mini");
-var ClaudecodeRuleFrontmatterSchema = import_mini45.z.object({
-  paths: import_mini45.z.optional(import_mini45.z.array(import_mini45.z.string()))
+var import_node_path92 = require("path");
+var import_mini44 = require("zod/mini");
+var ClaudecodeRuleFrontmatterSchema = import_mini44.z.object({
+  paths: import_mini44.z.optional(import_mini44.z.array(import_mini44.z.string()))
 });
 var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
   frontmatter;
@@ -12101,7 +11808,7 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
       const result = ClaudecodeRuleFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path93.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path92.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -12129,7 +11836,7 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
     const isRoot = relativeFilePath === paths.root.relativeFilePath;
     if (isRoot) {
       const fileContent2 = await readFileContent(
-        (0, import_node_path93.join)(baseDir, paths.root.relativeDirPath, paths.root.relativeFilePath)
+        (0, import_node_path92.join)(baseDir, paths.root.relativeDirPath, paths.root.relativeFilePath)
       );
       return new _ClaudecodeRule({
         baseDir,
@@ -12144,13 +11851,13 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path93.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path93.join)(baseDir, relativePath));
+    const relativePath = (0, import_node_path92.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path92.join)(baseDir, relativePath));
     const { frontmatter, body: content } = parseFrontmatter(fileContent);
     const result = ClaudecodeRuleFrontmatterSchema.safeParse(frontmatter);
     if (!result.success) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path93.join)(baseDir, relativePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path92.join)(baseDir, relativePath)}: ${formatError(result.error)}`
       );
     }
     return new _ClaudecodeRule({
@@ -12257,7 +11964,7 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path93.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path92.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -12277,10 +11984,10 @@ var ClaudecodeRule = class _ClaudecodeRule extends ToolRule {
 };
 
 // src/features/rules/cline-rule.ts
-var import_node_path94 = require("path");
-var import_mini46 = require("zod/mini");
-var ClineRuleFrontmatterSchema = import_mini46.z.object({
-  description: import_mini46.z.string()
+var import_node_path93 = require("path");
+var import_mini45 = require("zod/mini");
+var ClineRuleFrontmatterSchema = import_mini45.z.object({
+  description: import_mini45.z.string()
 });
 var ClineRule = class _ClineRule extends ToolRule {
   static getSettablePaths(_options = {}) {
@@ -12323,7 +12030,7 @@ var ClineRule = class _ClineRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path94.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      (0, import_node_path93.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _ClineRule({
       baseDir,
@@ -12349,7 +12056,7 @@ var ClineRule = class _ClineRule extends ToolRule {
 };
 
 // src/features/rules/codexcli-rule.ts
-var import_node_path95 = require("path");
+var import_node_path94 = require("path");
 var CodexcliRule = class _CodexcliRule extends ToolRule {
   static getSettablePaths({
     global,
@@ -12384,7 +12091,7 @@ var CodexcliRule = class _CodexcliRule extends ToolRule {
     if (isRoot) {
       const relativePath2 = paths.root.relativeFilePath;
       const fileContent2 = await readFileContent(
-        (0, import_node_path95.join)(baseDir, paths.root.relativeDirPath, relativePath2)
+        (0, import_node_path94.join)(baseDir, paths.root.relativeDirPath, relativePath2)
       );
       return new _CodexcliRule({
         baseDir,
@@ -12398,8 +12105,8 @@ var CodexcliRule = class _CodexcliRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path95.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path95.join)(baseDir, relativePath));
+    const relativePath = (0, import_node_path94.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path94.join)(baseDir, relativePath));
     return new _CodexcliRule({
       baseDir,
       relativeDirPath: paths.nonRoot.relativeDirPath,
@@ -12458,12 +12165,12 @@ var CodexcliRule = class _CodexcliRule extends ToolRule {
 };
 
 // src/features/rules/copilot-rule.ts
-var import_node_path96 = require("path");
-var import_mini47 = require("zod/mini");
-var CopilotRuleFrontmatterSchema = import_mini47.z.object({
-  description: import_mini47.z.optional(import_mini47.z.string()),
-  applyTo: import_mini47.z.optional(import_mini47.z.string()),
-  excludeAgent: import_mini47.z.optional(import_mini47.z.union([import_mini47.z.literal("code-review"), import_mini47.z.literal("coding-agent")]))
+var import_node_path95 = require("path");
+var import_mini46 = require("zod/mini");
+var CopilotRuleFrontmatterSchema = import_mini46.z.object({
+  description: import_mini46.z.optional(import_mini46.z.string()),
+  applyTo: import_mini46.z.optional(import_mini46.z.string()),
+  excludeAgent: import_mini46.z.optional(import_mini46.z.union([import_mini46.z.literal("code-review"), import_mini46.z.literal("coding-agent")]))
 });
 var CopilotRule = class _CopilotRule extends ToolRule {
   frontmatter;
@@ -12484,7 +12191,7 @@ var CopilotRule = class _CopilotRule extends ToolRule {
       const result = CopilotRuleFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path96.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path95.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -12566,11 +12273,11 @@ var CopilotRule = class _CopilotRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "copilot-instructions.md";
-    const relativePath = isRoot ? (0, import_node_path96.join)(
+    const relativePath = isRoot ? (0, import_node_path95.join)(
       this.getSettablePaths().root.relativeDirPath,
       this.getSettablePaths().root.relativeFilePath
-    ) : (0, import_node_path96.join)(this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path96.join)(baseDir, relativePath));
+    ) : (0, import_node_path95.join)(this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path95.join)(baseDir, relativePath));
     if (isRoot) {
       return new _CopilotRule({
         baseDir,
@@ -12586,7 +12293,7 @@ var CopilotRule = class _CopilotRule extends ToolRule {
     const result = CopilotRuleFrontmatterSchema.safeParse(frontmatter);
     if (!result.success) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path96.join)(baseDir, relativeFilePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path95.join)(baseDir, relativeFilePath)}: ${formatError(result.error)}`
       );
     }
     return new _CopilotRule({
@@ -12626,7 +12333,7 @@ var CopilotRule = class _CopilotRule extends ToolRule {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path96.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path95.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -12646,12 +12353,12 @@ var CopilotRule = class _CopilotRule extends ToolRule {
 };
 
 // src/features/rules/cursor-rule.ts
-var import_node_path97 = require("path");
-var import_mini48 = require("zod/mini");
-var CursorRuleFrontmatterSchema = import_mini48.z.object({
-  description: import_mini48.z.optional(import_mini48.z.string()),
-  globs: import_mini48.z.optional(import_mini48.z.string()),
-  alwaysApply: import_mini48.z.optional(import_mini48.z.boolean())
+var import_node_path96 = require("path");
+var import_mini47 = require("zod/mini");
+var CursorRuleFrontmatterSchema = import_mini47.z.object({
+  description: import_mini47.z.optional(import_mini47.z.string()),
+  globs: import_mini47.z.optional(import_mini47.z.string()),
+  alwaysApply: import_mini47.z.optional(import_mini47.z.boolean())
 });
 var CursorRule = class _CursorRule extends ToolRule {
   frontmatter;
@@ -12668,7 +12375,7 @@ var CursorRule = class _CursorRule extends ToolRule {
       const result = CursorRuleFrontmatterSchema.safeParse(frontmatter);
       if (!result.success) {
         throw new Error(
-          `Invalid frontmatter in ${(0, import_node_path97.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path96.join)(rest.relativeDirPath, rest.relativeFilePath)}: ${formatError(result.error)}`
         );
       }
     }
@@ -12785,13 +12492,13 @@ var CursorRule = class _CursorRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path97.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      (0, import_node_path96.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     const { frontmatter, body: content } = _CursorRule.parseCursorFrontmatter(fileContent);
     const result = CursorRuleFrontmatterSchema.safeParse(frontmatter);
     if (!result.success) {
       throw new Error(
-        `Invalid frontmatter in ${(0, import_node_path97.join)(baseDir, relativeFilePath)}: ${formatError(result.error)}`
+        `Invalid frontmatter in ${(0, import_node_path96.join)(baseDir, relativeFilePath)}: ${formatError(result.error)}`
       );
     }
     return new _CursorRule({
@@ -12828,7 +12535,7 @@ var CursorRule = class _CursorRule extends ToolRule {
       return {
         success: false,
         error: new Error(
-          `Invalid frontmatter in ${(0, import_node_path97.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
+          `Invalid frontmatter in ${(0, import_node_path96.join)(this.relativeDirPath, this.relativeFilePath)}: ${formatError(result.error)}`
         )
       };
     }
@@ -12848,7 +12555,7 @@ var CursorRule = class _CursorRule extends ToolRule {
 };
 
 // src/features/rules/factorydroid-rule.ts
-var import_node_path98 = require("path");
+var import_node_path97 = require("path");
 var FactorydroidRule = class _FactorydroidRule extends ToolRule {
   constructor({ fileContent, root, ...rest }) {
     super({
@@ -12888,8 +12595,8 @@ var FactorydroidRule = class _FactorydroidRule extends ToolRule {
     const paths = this.getSettablePaths({ global });
     const isRoot = relativeFilePath === paths.root.relativeFilePath;
     if (isRoot) {
-      const relativePath2 = (0, import_node_path98.join)(paths.root.relativeDirPath, paths.root.relativeFilePath);
-      const fileContent2 = await readFileContent((0, import_node_path98.join)(baseDir, relativePath2));
+      const relativePath2 = (0, import_node_path97.join)(paths.root.relativeDirPath, paths.root.relativeFilePath);
+      const fileContent2 = await readFileContent((0, import_node_path97.join)(baseDir, relativePath2));
       return new _FactorydroidRule({
         baseDir,
         relativeDirPath: paths.root.relativeDirPath,
@@ -12902,8 +12609,8 @@ var FactorydroidRule = class _FactorydroidRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path98.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path98.join)(baseDir, relativePath));
+    const relativePath = (0, import_node_path97.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path97.join)(baseDir, relativePath));
     return new _FactorydroidRule({
       baseDir,
       relativeDirPath: paths.nonRoot.relativeDirPath,
@@ -12962,7 +12669,7 @@ var FactorydroidRule = class _FactorydroidRule extends ToolRule {
 };
 
 // src/features/rules/geminicli-rule.ts
-var import_node_path99 = require("path");
+var import_node_path98 = require("path");
 var GeminiCliRule = class _GeminiCliRule extends ToolRule {
   static getSettablePaths({
     global,
@@ -12997,7 +12704,7 @@ var GeminiCliRule = class _GeminiCliRule extends ToolRule {
     if (isRoot) {
       const relativePath2 = paths.root.relativeFilePath;
       const fileContent2 = await readFileContent(
-        (0, import_node_path99.join)(baseDir, paths.root.relativeDirPath, relativePath2)
+        (0, import_node_path98.join)(baseDir, paths.root.relativeDirPath, relativePath2)
       );
       return new _GeminiCliRule({
         baseDir,
@@ -13011,8 +12718,8 @@ var GeminiCliRule = class _GeminiCliRule extends ToolRule {
     if (!paths.nonRoot) {
       throw new Error(`nonRoot path is not set for ${relativeFilePath}`);
     }
-    const relativePath = (0, import_node_path99.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path99.join)(baseDir, relativePath));
+    const relativePath = (0, import_node_path98.join)(paths.nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path98.join)(baseDir, relativePath));
     return new _GeminiCliRule({
       baseDir,
       relativeDirPath: paths.nonRoot.relativeDirPath,
@@ -13071,7 +12778,7 @@ var GeminiCliRule = class _GeminiCliRule extends ToolRule {
 };
 
 // src/features/rules/junie-rule.ts
-var import_node_path100 = require("path");
+var import_node_path99 = require("path");
 var JunieRule = class _JunieRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13090,8 +12797,8 @@ var JunieRule = class _JunieRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "guidelines.md";
-    const relativePath = isRoot ? "guidelines.md" : (0, import_node_path100.join)(".junie", "memories", relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path100.join)(baseDir, relativePath));
+    const relativePath = isRoot ? "guidelines.md" : (0, import_node_path99.join)(".junie", "memories", relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path99.join)(baseDir, relativePath));
     return new _JunieRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : this.getSettablePaths().nonRoot.relativeDirPath,
@@ -13146,7 +12853,7 @@ var JunieRule = class _JunieRule extends ToolRule {
 };
 
 // src/features/rules/kilo-rule.ts
-var import_node_path101 = require("path");
+var import_node_path100 = require("path");
 var KiloRule = class _KiloRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13161,7 +12868,7 @@ var KiloRule = class _KiloRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path101.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      (0, import_node_path100.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _KiloRule({
       baseDir,
@@ -13213,7 +12920,7 @@ var KiloRule = class _KiloRule extends ToolRule {
 };
 
 // src/features/rules/kiro-rule.ts
-var import_node_path102 = require("path");
+var import_node_path101 = require("path");
 var KiroRule = class _KiroRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13228,7 +12935,7 @@ var KiroRule = class _KiroRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path102.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      (0, import_node_path101.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _KiroRule({
       baseDir,
@@ -13282,7 +12989,7 @@ var KiroRule = class _KiroRule extends ToolRule {
 };
 
 // src/features/rules/opencode-rule.ts
-var import_node_path103 = require("path");
+var import_node_path102 = require("path");
 var OpenCodeRule = class _OpenCodeRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13301,8 +13008,8 @@ var OpenCodeRule = class _OpenCodeRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "AGENTS.md";
-    const relativePath = isRoot ? "AGENTS.md" : (0, import_node_path103.join)(".opencode", "memories", relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path103.join)(baseDir, relativePath));
+    const relativePath = isRoot ? "AGENTS.md" : (0, import_node_path102.join)(".opencode", "memories", relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path102.join)(baseDir, relativePath));
     return new _OpenCodeRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : this.getSettablePaths().nonRoot.relativeDirPath,
@@ -13357,7 +13064,7 @@ var OpenCodeRule = class _OpenCodeRule extends ToolRule {
 };
 
 // src/features/rules/qwencode-rule.ts
-var import_node_path104 = require("path");
+var import_node_path103 = require("path");
 var QwencodeRule = class _QwencodeRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13376,8 +13083,8 @@ var QwencodeRule = class _QwencodeRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === "QWEN.md";
-    const relativePath = isRoot ? "QWEN.md" : (0, import_node_path104.join)(".qwen", "memories", relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path104.join)(baseDir, relativePath));
+    const relativePath = isRoot ? "QWEN.md" : (0, import_node_path103.join)(".qwen", "memories", relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path103.join)(baseDir, relativePath));
     return new _QwencodeRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : this.getSettablePaths().nonRoot.relativeDirPath,
@@ -13429,7 +13136,7 @@ var QwencodeRule = class _QwencodeRule extends ToolRule {
 };
 
 // src/features/rules/replit-rule.ts
-var import_node_path105 = require("path");
+var import_node_path104 = require("path");
 var ReplitRule = class _ReplitRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13451,7 +13158,7 @@ var ReplitRule = class _ReplitRule extends ToolRule {
     }
     const relativePath = paths.root.relativeFilePath;
     const fileContent = await readFileContent(
-      (0, import_node_path105.join)(baseDir, paths.root.relativeDirPath, relativePath)
+      (0, import_node_path104.join)(baseDir, paths.root.relativeDirPath, relativePath)
     );
     return new _ReplitRule({
       baseDir,
@@ -13517,7 +13224,7 @@ var ReplitRule = class _ReplitRule extends ToolRule {
 };
 
 // src/features/rules/roo-rule.ts
-var import_node_path106 = require("path");
+var import_node_path105 = require("path");
 var RooRule = class _RooRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13532,7 +13239,7 @@ var RooRule = class _RooRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path106.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      (0, import_node_path105.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _RooRule({
       baseDir,
@@ -13601,7 +13308,7 @@ var RooRule = class _RooRule extends ToolRule {
 };
 
 // src/features/rules/warp-rule.ts
-var import_node_path107 = require("path");
+var import_node_path106 = require("path");
 var WarpRule = class _WarpRule extends ToolRule {
   constructor({ fileContent, root, ...rest }) {
     super({
@@ -13627,8 +13334,8 @@ var WarpRule = class _WarpRule extends ToolRule {
     validate = true
   }) {
     const isRoot = relativeFilePath === this.getSettablePaths().root.relativeFilePath;
-    const relativePath = isRoot ? this.getSettablePaths().root.relativeFilePath : (0, import_node_path107.join)(this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath);
-    const fileContent = await readFileContent((0, import_node_path107.join)(baseDir, relativePath));
+    const relativePath = isRoot ? this.getSettablePaths().root.relativeFilePath : (0, import_node_path106.join)(this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath);
+    const fileContent = await readFileContent((0, import_node_path106.join)(baseDir, relativePath));
     return new _WarpRule({
       baseDir,
       relativeDirPath: isRoot ? this.getSettablePaths().root.relativeDirPath : ".warp",
@@ -13683,7 +13390,7 @@ var WarpRule = class _WarpRule extends ToolRule {
 };
 
 // src/features/rules/windsurf-rule.ts
-var import_node_path108 = require("path");
+var import_node_path107 = require("path");
 var WindsurfRule = class _WindsurfRule extends ToolRule {
   static getSettablePaths(_options = {}) {
     return {
@@ -13698,7 +13405,7 @@ var WindsurfRule = class _WindsurfRule extends ToolRule {
     validate = true
   }) {
     const fileContent = await readFileContent(
-      (0, import_node_path108.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
+      (0, import_node_path107.join)(baseDir, this.getSettablePaths().nonRoot.relativeDirPath, relativeFilePath)
     );
     return new _WindsurfRule({
       baseDir,
@@ -13773,8 +13480,8 @@ var rulesProcessorToolTargets = [
   "warp",
   "windsurf"
 ];
-var RulesProcessorToolTargetSchema = import_mini49.z.enum(rulesProcessorToolTargets);
-var formatRulePaths = (rules) => rules.map((r) => (0, import_node_path109.join)(r.getRelativeDirPath(), r.getRelativeFilePath())).join(", ");
+var RulesProcessorToolTargetSchema = import_mini48.z.enum(rulesProcessorToolTargets);
+var formatRulePaths = (rules) => rules.map((r) => (0, import_node_path108.join)(r.getRelativeDirPath(), r.getRelativeFilePath())).join(", ");
 var toolRuleFactories = /* @__PURE__ */ new Map([
   [
     "agentsmd",
@@ -14085,7 +13792,7 @@ var RulesProcessor = class extends FeatureProcessor {
     }).relativeDirPath;
     return this.skills.filter((skill) => skillClass.isTargetedByRulesyncSkill(skill)).map((skill) => {
       const frontmatter = skill.getFrontmatter();
-      const relativePath = (0, import_node_path109.join)(toolRelativeDirPath, skill.getDirName(), SKILL_FILE_NAME);
+      const relativePath = (0, import_node_path108.join)(toolRelativeDirPath, skill.getDirName(), SKILL_FILE_NAME);
       return {
         name: frontmatter.name,
         description: frontmatter.description,
@@ -14196,12 +13903,12 @@ var RulesProcessor = class extends FeatureProcessor {
    * Load and parse rulesync rule files from .rulesync/rules/ directory
    */
   async loadRulesyncFiles() {
-    const rulesyncBaseDir = (0, import_node_path109.join)(this.baseDir, RULESYNC_RULES_RELATIVE_DIR_PATH);
-    const files = await findFilesByGlobs((0, import_node_path109.join)(rulesyncBaseDir, "**", "*.md"));
+    const rulesyncBaseDir = (0, import_node_path108.join)(this.baseDir, RULESYNC_RULES_RELATIVE_DIR_PATH);
+    const files = await findFilesByGlobs((0, import_node_path108.join)(rulesyncBaseDir, "**", "*.md"));
     logger.debug(`Found ${files.length} rulesync files`);
     const rulesyncRules = await Promise.all(
       files.map((file) => {
-        const relativeFilePath = (0, import_node_path109.relative)(rulesyncBaseDir, file);
+        const relativeFilePath = (0, import_node_path108.relative)(rulesyncBaseDir, file);
         checkPathTraversal({ relativePath: relativeFilePath, intendedRootDir: rulesyncBaseDir });
         return RulesyncRule.fromFile({
           relativeFilePath
@@ -14259,7 +13966,7 @@ var RulesProcessor = class extends FeatureProcessor {
           return [];
         }
         const rootFilePaths = await findFilesByGlobs(
-          (0, import_node_path109.join)(
+          (0, import_node_path108.join)(
             this.baseDir,
             settablePaths.root.relativeDirPath ?? ".",
             settablePaths.root.relativeFilePath
@@ -14270,7 +13977,7 @@ var RulesProcessor = class extends FeatureProcessor {
             (filePath) => factory.class.forDeletion({
               baseDir: this.baseDir,
               relativeDirPath: settablePaths.root?.relativeDirPath ?? ".",
-              relativeFilePath: (0, import_node_path109.basename)(filePath),
+              relativeFilePath: (0, import_node_path108.basename)(filePath),
               global: this.global
             })
           ).filter((rule) => rule.isDeletable());
@@ -14279,7 +13986,7 @@ var RulesProcessor = class extends FeatureProcessor {
           rootFilePaths.map(
             (filePath) => factory.class.fromFile({
               baseDir: this.baseDir,
-              relativeFilePath: (0, import_node_path109.basename)(filePath),
+              relativeFilePath: (0, import_node_path108.basename)(filePath),
               global: this.global
             })
           )
@@ -14297,13 +14004,13 @@ var RulesProcessor = class extends FeatureProcessor {
           return [];
         }
         const localRootFilePaths = await findFilesByGlobs(
-          (0, import_node_path109.join)(this.baseDir, settablePaths.root.relativeDirPath ?? ".", "CLAUDE.local.md")
+          (0, import_node_path108.join)(this.baseDir, settablePaths.root.relativeDirPath ?? ".", "CLAUDE.local.md")
         );
         return localRootFilePaths.map(
           (filePath) => factory.class.forDeletion({
             baseDir: this.baseDir,
             relativeDirPath: settablePaths.root?.relativeDirPath ?? ".",
-            relativeFilePath: (0, import_node_path109.basename)(filePath),
+            relativeFilePath: (0, import_node_path108.basename)(filePath),
             global: this.global
           })
         ).filter((rule) => rule.isDeletable());
@@ -14313,13 +14020,13 @@ var RulesProcessor = class extends FeatureProcessor {
         if (!settablePaths.nonRoot) {
           return [];
         }
-        const nonRootBaseDir = (0, import_node_path109.join)(this.baseDir, settablePaths.nonRoot.relativeDirPath);
+        const nonRootBaseDir = (0, import_node_path108.join)(this.baseDir, settablePaths.nonRoot.relativeDirPath);
         const nonRootFilePaths = await findFilesByGlobs(
-          (0, import_node_path109.join)(nonRootBaseDir, "**", `*.${factory.meta.extension}`)
+          (0, import_node_path108.join)(nonRootBaseDir, "**", `*.${factory.meta.extension}`)
         );
         if (forDeletion) {
           return nonRootFilePaths.map((filePath) => {
-            const relativeFilePath = (0, import_node_path109.relative)(nonRootBaseDir, filePath);
+            const relativeFilePath = (0, import_node_path108.relative)(nonRootBaseDir, filePath);
             checkPathTraversal({
               relativePath: relativeFilePath,
               intendedRootDir: nonRootBaseDir
@@ -14334,7 +14041,7 @@ var RulesProcessor = class extends FeatureProcessor {
         }
         return await Promise.all(
           nonRootFilePaths.map((filePath) => {
-            const relativeFilePath = (0, import_node_path109.relative)(nonRootBaseDir, filePath);
+            const relativeFilePath = (0, import_node_path108.relative)(nonRootBaseDir, filePath);
             checkPathTraversal({ relativePath: relativeFilePath, intendedRootDir: nonRootBaseDir });
             return factory.class.fromFile({
               baseDir: this.baseDir,
@@ -14444,14 +14151,14 @@ s/<command> [arguments]
 This syntax employs a double slash (\`s/\`) to prevent conflicts with built-in slash commands.
 The \`s\` in \`s/\` stands for *simulate*. Because custom slash commands are not built-in, this syntax provides a pseudo way to invoke them.
 
-When users call a custom slash command, you have to look for the markdown file, \`${(0, import_node_path109.join)(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, "{command}.md")}\`, then execute the contents of that file as the block of operations.` : "";
+When users call a custom slash command, you have to look for the markdown file, \`${(0, import_node_path108.join)(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, "{command}.md")}\`, then execute the contents of that file as the block of operations.` : "";
     const subagentsSection = subagents ? `## Simulated Subagents
 
 Simulated subagents are specialized AI assistants that can be invoked to handle specific types of tasks. In this case, it can be appear something like custom slash commands simply. Simulated subagents can be called by custom slash commands.
 
-When users call a simulated subagent, it will look for the corresponding markdown file, \`${(0, import_node_path109.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, "{subagent}.md")}\`, and execute its contents as the block of operations.
+When users call a simulated subagent, it will look for the corresponding markdown file, \`${(0, import_node_path108.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, "{subagent}.md")}\`, and execute its contents as the block of operations.
 
-For example, if the user instructs \`Call planner subagent to plan the refactoring\`, you have to look for the markdown file, \`${(0, import_node_path109.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, "planner.md")}\`, and execute its contents as the block of operations.` : "";
+For example, if the user instructs \`Call planner subagent to plan the refactoring\`, you have to look for the markdown file, \`${(0, import_node_path108.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, "planner.md")}\`, and execute its contents as the block of operations.` : "";
     const skillsSection = skills ? this.generateSkillsSection(skills) : "";
     const result = [
       overview,
@@ -14478,7 +14185,1234 @@ ${toonContent}`;
   }
 };
 
+// src/lib/github-client.ts
+var import_request_error = require("@octokit/request-error");
+var import_rest = require("@octokit/rest");
+
+// src/types/fetch.ts
+var import_mini50 = require("zod/mini");
+
+// src/types/fetch-targets.ts
+var import_mini49 = require("zod/mini");
+var ALL_FETCH_TARGETS = ["rulesync", ...ALL_TOOL_TARGETS];
+var FetchTargetSchema = import_mini49.z.enum(ALL_FETCH_TARGETS);
+
+// src/types/fetch.ts
+var ConflictStrategySchema = import_mini50.z.enum(["skip", "overwrite"]);
+var GitHubFileTypeSchema = import_mini50.z.enum(["file", "dir", "symlink", "submodule"]);
+var GitHubFileEntrySchema = import_mini50.z.looseObject({
+  name: import_mini50.z.string(),
+  path: import_mini50.z.string(),
+  sha: import_mini50.z.string(),
+  size: import_mini50.z.number(),
+  type: GitHubFileTypeSchema,
+  download_url: import_mini50.z.nullable(import_mini50.z.string())
+});
+var FetchOptionsSchema = import_mini50.z.looseObject({
+  target: import_mini50.z.optional(FetchTargetSchema),
+  features: import_mini50.z.optional(import_mini50.z.array(import_mini50.z.enum(ALL_FEATURES_WITH_WILDCARD))),
+  ref: import_mini50.z.optional(import_mini50.z.string()),
+  path: import_mini50.z.optional(import_mini50.z.string()),
+  output: import_mini50.z.optional(import_mini50.z.string()),
+  conflict: import_mini50.z.optional(ConflictStrategySchema),
+  token: import_mini50.z.optional(import_mini50.z.string()),
+  verbose: import_mini50.z.optional(import_mini50.z.boolean()),
+  silent: import_mini50.z.optional(import_mini50.z.boolean())
+});
+var FetchFileStatusSchema = import_mini50.z.enum(["created", "overwritten", "skipped"]);
+var GitHubRepoInfoSchema = import_mini50.z.looseObject({
+  default_branch: import_mini50.z.string(),
+  private: import_mini50.z.boolean()
+});
+var GitHubReleaseAssetSchema = import_mini50.z.looseObject({
+  name: import_mini50.z.string(),
+  browser_download_url: import_mini50.z.string(),
+  size: import_mini50.z.number()
+});
+var GitHubReleaseSchema = import_mini50.z.looseObject({
+  tag_name: import_mini50.z.string(),
+  name: import_mini50.z.nullable(import_mini50.z.string()),
+  prerelease: import_mini50.z.boolean(),
+  draft: import_mini50.z.boolean(),
+  assets: import_mini50.z.array(GitHubReleaseAssetSchema)
+});
+
+// src/lib/github-client.ts
+var GitHubClientError = class extends Error {
+  constructor(message, statusCode, apiError) {
+    super(message);
+    this.statusCode = statusCode;
+    this.apiError = apiError;
+    this.name = "GitHubClientError";
+  }
+};
+function logGitHubAuthHints(error) {
+  logger.error(`GitHub API Error: ${error.message}`);
+  if (error.statusCode === 401 || error.statusCode === 403) {
+    logger.info(
+      "Tip: Set GITHUB_TOKEN or GH_TOKEN environment variable for private repositories or better rate limits."
+    );
+    logger.info(
+      "Tip: If you use GitHub CLI, you can use `GITHUB_TOKEN=$(gh auth token) rulesync fetch ...`"
+    );
+  }
+}
+var GitHubClient = class {
+  octokit;
+  hasToken;
+  constructor(config = {}) {
+    if (config.baseUrl && !config.baseUrl.startsWith("https://")) {
+      throw new GitHubClientError("GitHub API base URL must use HTTPS");
+    }
+    this.hasToken = !!config.token;
+    this.octokit = new import_rest.Octokit({
+      auth: config.token,
+      baseUrl: config.baseUrl
+    });
+  }
+  /**
+   * Get authentication token from various sources
+   */
+  static resolveToken(explicitToken) {
+    if (explicitToken) {
+      return explicitToken;
+    }
+    return process.env["GITHUB_TOKEN"] ?? process.env["GH_TOKEN"];
+  }
+  /**
+   * Get the default branch of a repository
+   */
+  async getDefaultBranch(owner, repo) {
+    const repoInfo = await this.getRepoInfo(owner, repo);
+    return repoInfo.default_branch;
+  }
+  /**
+   * Get repository information
+   */
+  async getRepoInfo(owner, repo) {
+    try {
+      const { data } = await this.octokit.repos.get({ owner, repo });
+      const parsed = GitHubRepoInfoSchema.safeParse(data);
+      if (!parsed.success) {
+        throw new GitHubClientError(
+          `Invalid repository info response: ${formatError(parsed.error)}`
+        );
+      }
+      return parsed.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+  /**
+   * List contents of a directory in a repository
+   */
+  async listDirectory(owner, repo, path4, ref) {
+    try {
+      const { data } = await this.octokit.repos.getContent({
+        owner,
+        repo,
+        path: path4,
+        ref
+      });
+      if (!Array.isArray(data)) {
+        throw new GitHubClientError(`Path "${path4}" is not a directory`);
+      }
+      const entries = [];
+      for (const item of data) {
+        const parsed = GitHubFileEntrySchema.safeParse(item);
+        if (parsed.success) {
+          entries.push(parsed.data);
+        }
+      }
+      return entries;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+  /**
+   * Get raw file content from a repository
+   */
+  async getFileContent(owner, repo, path4, ref) {
+    try {
+      const { data } = await this.octokit.repos.getContent({
+        owner,
+        repo,
+        path: path4,
+        ref,
+        mediaType: {
+          format: "raw"
+        }
+      });
+      if (typeof data === "string") {
+        return data;
+      }
+      if (!Array.isArray(data) && "content" in data && data.content) {
+        return Buffer.from(data.content, "base64").toString("utf-8");
+      }
+      throw new GitHubClientError(`Unexpected response format for file content`);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+  /**
+   * Check if a file exists and is within size limits
+   */
+  async getFileInfo(owner, repo, path4, ref) {
+    try {
+      const { data } = await this.octokit.repos.getContent({
+        owner,
+        repo,
+        path: path4,
+        ref
+      });
+      if (Array.isArray(data)) {
+        return null;
+      }
+      const parsed = GitHubFileEntrySchema.safeParse(data);
+      if (!parsed.success) {
+        return null;
+      }
+      if (parsed.data.size > MAX_FILE_SIZE) {
+        throw new GitHubClientError(
+          `File "${path4}" exceeds maximum size limit of ${MAX_FILE_SIZE / 1024 / 1024}MB`
+        );
+      }
+      return parsed.data;
+    } catch (error) {
+      if (error instanceof import_request_error.RequestError && error.status === 404) {
+        return null;
+      }
+      if (error instanceof GitHubClientError && error.statusCode === 404) {
+        return null;
+      }
+      throw this.handleError(error);
+    }
+  }
+  /**
+   * Validate that a repository exists and is accessible
+   */
+  async validateRepository(owner, repo) {
+    try {
+      await this.getRepoInfo(owner, repo);
+      return true;
+    } catch (error) {
+      if (error instanceof GitHubClientError && error.statusCode === 404) {
+        return false;
+      }
+      throw error;
+    }
+  }
+  /**
+   * Resolve a ref (branch, tag, or SHA) to a full commit SHA.
+   */
+  async resolveRefToSha(owner, repo, ref) {
+    try {
+      const { data } = await this.octokit.repos.getCommit({
+        owner,
+        repo,
+        ref
+      });
+      return data.sha;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+  /**
+   * Get the latest release from a repository
+   */
+  async getLatestRelease(owner, repo) {
+    try {
+      const { data } = await this.octokit.repos.getLatestRelease({ owner, repo });
+      const parsed = GitHubReleaseSchema.safeParse(data);
+      if (!parsed.success) {
+        throw new GitHubClientError(`Invalid release info response: ${formatError(parsed.error)}`);
+      }
+      return parsed.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+  /**
+   * Handle errors from Octokit and convert to GitHubClientError
+   */
+  handleError(error) {
+    if (error instanceof GitHubClientError) {
+      return error;
+    }
+    if (error instanceof import_request_error.RequestError) {
+      const responseData = error.response?.data;
+      const message = this.extractErrorMessage(responseData, error.message);
+      const apiError = message ? { message } : void 0;
+      const errorMessage = this.getErrorMessage(error.status, apiError);
+      return new GitHubClientError(errorMessage, error.status, apiError);
+    }
+    if (error instanceof Error) {
+      return new GitHubClientError(error.message);
+    }
+    return new GitHubClientError("Unknown error occurred");
+  }
+  /**
+   * Extract error message from response data
+   */
+  extractErrorMessage(data, fallback) {
+    if (typeof data === "object" && data !== null && "message" in data) {
+      const record = data;
+      const msg = record["message"];
+      if (typeof msg === "string") {
+        return msg;
+      }
+    }
+    return fallback;
+  }
+  /**
+   * Get human-readable error message for HTTP status codes
+   */
+  getErrorMessage(statusCode, apiError) {
+    const baseMessage = apiError?.message ?? `HTTP ${statusCode}`;
+    switch (statusCode) {
+      case 401:
+        return `Authentication failed: ${baseMessage}. Check your GitHub token.`;
+      case 403:
+        if (baseMessage.toLowerCase().includes("rate limit")) {
+          return `GitHub API rate limit exceeded. ${this.hasToken ? "Try again later." : "Consider using a GitHub token."}`;
+        }
+        return `Access forbidden: ${baseMessage}. Check repository permissions.`;
+      case 404:
+        return `Not found: ${baseMessage}`;
+      case 422:
+        return `Invalid request: ${baseMessage}`;
+      default:
+        return `GitHub API error: ${baseMessage}`;
+    }
+  }
+};
+
+// src/lib/github-utils.ts
+var MAX_RECURSION_DEPTH = 15;
+async function withSemaphore(semaphore, fn) {
+  await semaphore.acquire();
+  try {
+    return await fn();
+  } finally {
+    semaphore.release();
+  }
+}
+async function listDirectoryRecursive(params) {
+  const { client, owner, repo, path: path4, ref, depth = 0, semaphore } = params;
+  if (depth > MAX_RECURSION_DEPTH) {
+    throw new Error(
+      `Maximum recursion depth (${MAX_RECURSION_DEPTH}) exceeded while listing directory: ${path4}`
+    );
+  }
+  const entries = await withSemaphore(
+    semaphore,
+    () => client.listDirectory(owner, repo, path4, ref)
+  );
+  const files = [];
+  const directories = [];
+  for (const entry of entries) {
+    if (entry.type === "file") {
+      files.push(entry);
+    } else if (entry.type === "dir") {
+      directories.push(entry);
+    }
+  }
+  const subResults = await Promise.all(
+    directories.map(
+      (dir) => listDirectoryRecursive({
+        client,
+        owner,
+        repo,
+        path: dir.path,
+        ref,
+        depth: depth + 1,
+        semaphore
+      })
+    )
+  );
+  return [...files, ...subResults.flat()];
+}
+
+// src/types/git-provider.ts
+var import_mini51 = require("zod/mini");
+var ALL_GIT_PROVIDERS = ["github", "gitlab"];
+var GitProviderSchema = import_mini51.z.enum(ALL_GIT_PROVIDERS);
+
+// src/lib/source-parser.ts
+var GITHUB_HOSTS = /* @__PURE__ */ new Set(["github.com", "www.github.com"]);
+var GITLAB_HOSTS = /* @__PURE__ */ new Set(["gitlab.com", "www.gitlab.com"]);
+function parseSource(source) {
+  if (source.startsWith("http://") || source.startsWith("https://")) {
+    return parseUrl(source);
+  }
+  if (source.includes(":") && !source.includes("://")) {
+    const colonIndex = source.indexOf(":");
+    const prefix = source.substring(0, colonIndex);
+    const rest = source.substring(colonIndex + 1);
+    const provider = ALL_GIT_PROVIDERS.find((p) => p === prefix);
+    if (provider) {
+      return { provider, ...parseShorthand(rest) };
+    }
+    return { provider: "github", ...parseShorthand(source) };
+  }
+  return { provider: "github", ...parseShorthand(source) };
+}
+function parseUrl(url) {
+  const urlObj = new URL(url);
+  const host = urlObj.hostname.toLowerCase();
+  let provider;
+  if (GITHUB_HOSTS.has(host)) {
+    provider = "github";
+  } else if (GITLAB_HOSTS.has(host)) {
+    provider = "gitlab";
+  } else {
+    throw new Error(
+      `Unknown Git provider for host: ${host}. Supported providers: ${ALL_GIT_PROVIDERS.join(", ")}`
+    );
+  }
+  const segments = urlObj.pathname.split("/").filter(Boolean);
+  if (segments.length < 2) {
+    throw new Error(`Invalid ${provider} URL: ${url}. Expected format: https://${host}/owner/repo`);
+  }
+  const owner = segments[0];
+  const repo = segments[1]?.replace(/\.git$/, "");
+  if (segments.length > 2 && (segments[2] === "tree" || segments[2] === "blob")) {
+    const ref = segments[3];
+    const path4 = segments.length > 4 ? segments.slice(4).join("/") : void 0;
+    return {
+      provider,
+      owner: owner ?? "",
+      repo: repo ?? "",
+      ref,
+      path: path4
+    };
+  }
+  return {
+    provider,
+    owner: owner ?? "",
+    repo: repo ?? ""
+  };
+}
+function parseShorthand(source) {
+  let remaining = source;
+  let path4;
+  let ref;
+  const colonIndex = remaining.indexOf(":");
+  if (colonIndex !== -1) {
+    path4 = remaining.substring(colonIndex + 1);
+    if (!path4) {
+      throw new Error(`Invalid source: ${source}. Path cannot be empty after ":".`);
+    }
+    remaining = remaining.substring(0, colonIndex);
+  }
+  const atIndex = remaining.indexOf("@");
+  if (atIndex !== -1) {
+    ref = remaining.substring(atIndex + 1);
+    if (!ref) {
+      throw new Error(`Invalid source: ${source}. Ref cannot be empty after "@".`);
+    }
+    remaining = remaining.substring(0, atIndex);
+  }
+  const slashIndex = remaining.indexOf("/");
+  if (slashIndex === -1) {
+    throw new Error(
+      `Invalid source: ${source}. Expected format: owner/repo, owner/repo@ref, or owner/repo:path`
+    );
+  }
+  const owner = remaining.substring(0, slashIndex);
+  const repo = remaining.substring(slashIndex + 1);
+  if (!owner || !repo) {
+    throw new Error(`Invalid source: ${source}. Both owner and repo are required.`);
+  }
+  return {
+    owner,
+    repo,
+    ref,
+    path: path4
+  };
+}
+
+// src/lib/fetch.ts
+var FEATURE_PATHS = {
+  rules: ["rules"],
+  commands: ["commands"],
+  subagents: ["subagents"],
+  skills: ["skills"],
+  ignore: [RULESYNC_AIIGNORE_FILE_NAME],
+  mcp: [RULESYNC_MCP_FILE_NAME],
+  hooks: [RULESYNC_HOOKS_FILE_NAME]
+};
+function isToolTarget(target) {
+  return target !== "rulesync";
+}
+function validateFileSize(relativePath, size) {
+  if (size > MAX_FILE_SIZE) {
+    throw new GitHubClientError(
+      `File "${relativePath}" exceeds maximum size limit (${(size / 1024 / 1024).toFixed(2)}MB > ${MAX_FILE_SIZE / 1024 / 1024}MB)`
+    );
+  }
+}
+async function processFeatureConversion(params) {
+  const { processor, outputDir } = params;
+  const paths = [];
+  const toolFiles = await processor.loadToolFiles();
+  if (toolFiles.length === 0) {
+    return { paths: [] };
+  }
+  const rulesyncFiles = await processor.convertToolFilesToRulesyncFiles(toolFiles);
+  for (const file of rulesyncFiles) {
+    const relativePath = (0, import_node_path109.join)(file.getRelativeDirPath(), file.getRelativeFilePath());
+    const outputPath = (0, import_node_path109.join)(outputDir, relativePath);
+    await writeFileContent(outputPath, file.getFileContent());
+    paths.push(relativePath);
+  }
+  return { paths };
+}
+async function convertFetchedFilesToRulesync(params) {
+  const { tempDir, outputDir, target, features } = params;
+  const convertedPaths = [];
+  const featureConfigs = [
+    {
+      feature: "rules",
+      getTargets: () => RulesProcessor.getToolTargets({ global: false }),
+      createProcessor: () => new RulesProcessor({ baseDir: tempDir, toolTarget: target, global: false })
+    },
+    {
+      feature: "commands",
+      getTargets: () => CommandsProcessor.getToolTargets({ global: false, includeSimulated: false }),
+      createProcessor: () => new CommandsProcessor({ baseDir: tempDir, toolTarget: target, global: false })
+    },
+    {
+      feature: "subagents",
+      getTargets: () => SubagentsProcessor.getToolTargets({ global: false, includeSimulated: false }),
+      createProcessor: () => new SubagentsProcessor({ baseDir: tempDir, toolTarget: target, global: false })
+    },
+    {
+      feature: "ignore",
+      getTargets: () => IgnoreProcessor.getToolTargets(),
+      createProcessor: () => new IgnoreProcessor({ baseDir: tempDir, toolTarget: target })
+    },
+    {
+      feature: "mcp",
+      getTargets: () => McpProcessor.getToolTargets({ global: false }),
+      createProcessor: () => new McpProcessor({ baseDir: tempDir, toolTarget: target, global: false })
+    },
+    {
+      feature: "hooks",
+      getTargets: () => HooksProcessor.getToolTargets({ global: false }),
+      createProcessor: () => new HooksProcessor({ baseDir: tempDir, toolTarget: target, global: false })
+    }
+  ];
+  for (const config of featureConfigs) {
+    if (!features.includes(config.feature)) {
+      continue;
+    }
+    const supportedTargets = config.getTargets();
+    if (!supportedTargets.includes(target)) {
+      continue;
+    }
+    const processor = config.createProcessor();
+    const result = await processFeatureConversion({ processor, outputDir });
+    convertedPaths.push(...result.paths);
+  }
+  if (features.includes("skills")) {
+    logger.debug(
+      "Skills conversion is not yet supported in fetch command. Use import command instead."
+    );
+  }
+  return { converted: convertedPaths.length, convertedPaths };
+}
+function resolveFeatures(features) {
+  if (!features || features.length === 0 || features.includes("*")) {
+    return [...ALL_FEATURES];
+  }
+  return features.filter((f) => ALL_FEATURES.includes(f));
+}
+function hasStatusCode(error) {
+  if (typeof error !== "object" || error === null || !("statusCode" in error)) {
+    return false;
+  }
+  const maybeStatus = Object.getOwnPropertyDescriptor(error, "statusCode")?.value;
+  return typeof maybeStatus === "number";
+}
+function isNotFoundError(error) {
+  if (error instanceof GitHubClientError && error.statusCode === 404) {
+    return true;
+  }
+  if (hasStatusCode(error) && error.statusCode === 404) {
+    return true;
+  }
+  return false;
+}
+async function fetchFiles(params) {
+  const { source, options = {}, baseDir = process.cwd() } = params;
+  const parsed = parseSource(source);
+  if (parsed.provider === "gitlab") {
+    throw new Error(
+      "GitLab is not yet supported. Currently only GitHub repositories are supported."
+    );
+  }
+  const resolvedRef = options.ref ?? parsed.ref;
+  const resolvedPath = options.path ?? parsed.path ?? ".";
+  const outputDir = options.output ?? RULESYNC_RELATIVE_DIR_PATH;
+  const conflictStrategy = options.conflict ?? "overwrite";
+  const enabledFeatures = resolveFeatures(options.features);
+  const target = options.target ?? "rulesync";
+  checkPathTraversal({
+    relativePath: outputDir,
+    intendedRootDir: baseDir
+  });
+  const token = GitHubClient.resolveToken(options.token);
+  const client = new GitHubClient({ token });
+  logger.debug(`Validating repository: ${parsed.owner}/${parsed.repo}`);
+  const isValid = await client.validateRepository(parsed.owner, parsed.repo);
+  if (!isValid) {
+    throw new GitHubClientError(
+      `Repository not found: ${parsed.owner}/${parsed.repo}. Check the repository name and your access permissions.`,
+      404
+    );
+  }
+  const ref = resolvedRef ?? await client.getDefaultBranch(parsed.owner, parsed.repo);
+  logger.debug(`Using ref: ${ref}`);
+  if (isToolTarget(target)) {
+    return fetchAndConvertToolFiles({
+      client,
+      parsed,
+      ref,
+      resolvedPath,
+      enabledFeatures,
+      target,
+      outputDir,
+      baseDir,
+      conflictStrategy
+    });
+  }
+  const semaphore = new import_promise.Semaphore(FETCH_CONCURRENCY_LIMIT);
+  const filesToFetch = await collectFeatureFiles({
+    client,
+    owner: parsed.owner,
+    repo: parsed.repo,
+    basePath: resolvedPath,
+    ref,
+    enabledFeatures,
+    semaphore
+  });
+  if (filesToFetch.length === 0) {
+    logger.warn(`No files found matching enabled features: ${enabledFeatures.join(", ")}`);
+    return {
+      source: `${parsed.owner}/${parsed.repo}`,
+      ref,
+      files: [],
+      created: 0,
+      overwritten: 0,
+      skipped: 0
+    };
+  }
+  const outputBasePath = (0, import_node_path109.join)(baseDir, outputDir);
+  for (const { relativePath, size } of filesToFetch) {
+    checkPathTraversal({
+      relativePath,
+      intendedRootDir: outputBasePath
+    });
+    validateFileSize(relativePath, size);
+  }
+  const results = await Promise.all(
+    filesToFetch.map(async ({ remotePath, relativePath }) => {
+      const localPath = (0, import_node_path109.join)(outputBasePath, relativePath);
+      const exists = await fileExists(localPath);
+      if (exists && conflictStrategy === "skip") {
+        logger.debug(`Skipping existing file: ${relativePath}`);
+        return { relativePath, status: "skipped" };
+      }
+      const content = await withSemaphore(
+        semaphore,
+        () => client.getFileContent(parsed.owner, parsed.repo, remotePath, ref)
+      );
+      await writeFileContent(localPath, content);
+      const status = exists ? "overwritten" : "created";
+      logger.debug(`Wrote: ${relativePath} (${status})`);
+      return { relativePath, status };
+    })
+  );
+  const summary = {
+    source: `${parsed.owner}/${parsed.repo}`,
+    ref,
+    files: results,
+    created: results.filter((r) => r.status === "created").length,
+    overwritten: results.filter((r) => r.status === "overwritten").length,
+    skipped: results.filter((r) => r.status === "skipped").length
+  };
+  return summary;
+}
+async function collectFeatureFiles(params) {
+  const { client, owner, repo, basePath, ref, enabledFeatures, semaphore } = params;
+  const dirCache = /* @__PURE__ */ new Map();
+  async function getCachedDirectory(path4) {
+    let promise = dirCache.get(path4);
+    if (promise === void 0) {
+      promise = withSemaphore(semaphore, () => client.listDirectory(owner, repo, path4, ref));
+      dirCache.set(path4, promise);
+    }
+    return promise;
+  }
+  const tasks = enabledFeatures.flatMap(
+    (feature) => FEATURE_PATHS[feature].map((featurePath) => ({ feature, featurePath }))
+  );
+  const results = await Promise.all(
+    tasks.map(async ({ featurePath }) => {
+      const fullPath = basePath === "." || basePath === "" ? featurePath : (0, import_node_path109.join)(basePath, featurePath);
+      const collected = [];
+      try {
+        if (featurePath.includes(".")) {
+          try {
+            const entries = await getCachedDirectory(
+              basePath === "." || basePath === "" ? "." : basePath
+            );
+            const fileEntry = entries.find((e) => e.name === featurePath && e.type === "file");
+            if (fileEntry) {
+              collected.push({
+                remotePath: fileEntry.path,
+                relativePath: featurePath,
+                size: fileEntry.size
+              });
+            }
+          } catch (error) {
+            if (isNotFoundError(error)) {
+              logger.debug(`File not found: ${fullPath}`);
+            } else {
+              throw error;
+            }
+          }
+        } else {
+          const dirFiles = await listDirectoryRecursive({
+            client,
+            owner,
+            repo,
+            path: fullPath,
+            ref,
+            semaphore
+          });
+          for (const file of dirFiles) {
+            const relativePath = basePath === "." || basePath === "" ? file.path : file.path.substring(basePath.length + 1);
+            collected.push({
+              remotePath: file.path,
+              relativePath,
+              size: file.size
+            });
+          }
+        }
+      } catch (error) {
+        if (isNotFoundError(error)) {
+          logger.debug(`Feature not found: ${fullPath}`);
+          return collected;
+        }
+        throw error;
+      }
+      return collected;
+    })
+  );
+  return results.flat();
+}
+async function fetchAndConvertToolFiles(params) {
+  const {
+    client,
+    parsed,
+    ref,
+    resolvedPath,
+    enabledFeatures,
+    target,
+    outputDir,
+    baseDir,
+    conflictStrategy: _conflictStrategy
+  } = params;
+  const tempDir = await createTempDirectory();
+  logger.debug(`Created temp directory: ${tempDir}`);
+  const semaphore = new import_promise.Semaphore(FETCH_CONCURRENCY_LIMIT);
+  try {
+    const filesToFetch = await collectFeatureFiles({
+      client,
+      owner: parsed.owner,
+      repo: parsed.repo,
+      basePath: resolvedPath,
+      ref,
+      enabledFeatures,
+      semaphore
+    });
+    if (filesToFetch.length === 0) {
+      logger.warn(`No files found matching enabled features: ${enabledFeatures.join(", ")}`);
+      return {
+        source: `${parsed.owner}/${parsed.repo}`,
+        ref,
+        files: [],
+        created: 0,
+        overwritten: 0,
+        skipped: 0
+      };
+    }
+    for (const { relativePath, size } of filesToFetch) {
+      validateFileSize(relativePath, size);
+    }
+    const toolPaths = getToolPathMapping(target);
+    await Promise.all(
+      filesToFetch.map(async ({ remotePath, relativePath }) => {
+        const toolRelativePath = mapToToolPath(relativePath, toolPaths);
+        checkPathTraversal({
+          relativePath: toolRelativePath,
+          intendedRootDir: tempDir
+        });
+        const localPath = (0, import_node_path109.join)(tempDir, toolRelativePath);
+        const content = await withSemaphore(
+          semaphore,
+          () => client.getFileContent(parsed.owner, parsed.repo, remotePath, ref)
+        );
+        await writeFileContent(localPath, content);
+        logger.debug(`Fetched to temp: ${toolRelativePath}`);
+      })
+    );
+    const outputBasePath = (0, import_node_path109.join)(baseDir, outputDir);
+    const { converted, convertedPaths } = await convertFetchedFilesToRulesync({
+      tempDir,
+      outputDir: outputBasePath,
+      target,
+      features: enabledFeatures
+    });
+    const results = convertedPaths.map((relativePath) => ({
+      relativePath,
+      status: "created"
+    }));
+    logger.debug(`Converted ${converted} files from ${target} format to rulesync format`);
+    return {
+      source: `${parsed.owner}/${parsed.repo}`,
+      ref,
+      files: results,
+      created: results.filter((r) => r.status === "created").length,
+      overwritten: results.filter((r) => r.status === "overwritten").length,
+      skipped: results.filter((r) => r.status === "skipped").length
+    };
+  } finally {
+    await removeTempDirectory(tempDir);
+  }
+}
+function getToolPathMapping(target) {
+  const mapping = {};
+  const supportedRulesTargets = RulesProcessor.getToolTargets({ global: false });
+  if (supportedRulesTargets.includes(target)) {
+    const factory = RulesProcessor.getFactory(target);
+    if (factory) {
+      const paths = factory.class.getSettablePaths({ global: false });
+      mapping.rules = {
+        root: paths.root?.relativeFilePath,
+        nonRoot: paths.nonRoot?.relativeDirPath
+      };
+    }
+  }
+  const supportedCommandsTargets = CommandsProcessor.getToolTargets({
+    global: false,
+    includeSimulated: false
+  });
+  if (supportedCommandsTargets.includes(target)) {
+    const factory = CommandsProcessor.getFactory(target);
+    if (factory) {
+      const paths = factory.class.getSettablePaths({ global: false });
+      mapping.commands = paths.relativeDirPath;
+    }
+  }
+  const supportedSubagentsTargets = SubagentsProcessor.getToolTargets({
+    global: false,
+    includeSimulated: false
+  });
+  if (supportedSubagentsTargets.includes(target)) {
+    const factory = SubagentsProcessor.getFactory(target);
+    if (factory) {
+      const paths = factory.class.getSettablePaths({ global: false });
+      mapping.subagents = paths.relativeDirPath;
+    }
+  }
+  const supportedSkillsTargets = SkillsProcessor.getToolTargets({ global: false });
+  if (supportedSkillsTargets.includes(target)) {
+    const factory = SkillsProcessor.getFactory(target);
+    if (factory) {
+      const paths = factory.class.getSettablePaths({ global: false });
+      mapping.skills = paths.relativeDirPath;
+    }
+  }
+  return mapping;
+}
+function mapToToolPath(relativePath, toolPaths) {
+  if (relativePath.startsWith("rules/")) {
+    const restPath = relativePath.substring("rules/".length);
+    if (toolPaths.rules?.nonRoot) {
+      return (0, import_node_path109.join)(toolPaths.rules.nonRoot, restPath);
+    }
+  }
+  if (toolPaths.rules?.root && relativePath === toolPaths.rules.root) {
+    return relativePath;
+  }
+  if (relativePath.startsWith("commands/")) {
+    const restPath = relativePath.substring("commands/".length);
+    if (toolPaths.commands) {
+      return (0, import_node_path109.join)(toolPaths.commands, restPath);
+    }
+  }
+  if (relativePath.startsWith("subagents/")) {
+    const restPath = relativePath.substring("subagents/".length);
+    if (toolPaths.subagents) {
+      return (0, import_node_path109.join)(toolPaths.subagents, restPath);
+    }
+  }
+  if (relativePath.startsWith("skills/")) {
+    const restPath = relativePath.substring("skills/".length);
+    if (toolPaths.skills) {
+      return (0, import_node_path109.join)(toolPaths.skills, restPath);
+    }
+  }
+  return relativePath;
+}
+function formatFetchSummary(summary) {
+  const lines = [];
+  lines.push(`Fetched from ${summary.source}@${summary.ref}:`);
+  for (const file of summary.files) {
+    const icon = file.status === "skipped" ? "-" : "\u2713";
+    const statusText = file.status === "created" ? "(created)" : file.status === "overwritten" ? "(overwritten)" : "(skipped - already exists)";
+    lines.push(`  ${icon} ${file.relativePath} ${statusText}`);
+  }
+  const parts = [];
+  if (summary.created > 0) parts.push(`${summary.created} created`);
+  if (summary.overwritten > 0) parts.push(`${summary.overwritten} overwritten`);
+  if (summary.skipped > 0) parts.push(`${summary.skipped} skipped`);
+  lines.push("");
+  const summaryText = parts.length > 0 ? parts.join(", ") : "no files";
+  lines.push(`Summary: ${summaryText}`);
+  return lines.join("\n");
+}
+
+// src/cli/commands/fetch.ts
+async function fetchCommand(options) {
+  const { source, ...fetchOptions } = options;
+  logger.configure({
+    verbose: fetchOptions.verbose ?? false,
+    silent: fetchOptions.silent ?? false
+  });
+  logger.debug(`Fetching files from ${source}...`);
+  try {
+    const summary = await fetchFiles({
+      source,
+      options: fetchOptions
+    });
+    const output = formatFetchSummary(summary);
+    logger.success(output);
+    if (summary.created + summary.overwritten === 0 && summary.skipped === 0) {
+      logger.warn("No files were fetched.");
+    }
+  } catch (error) {
+    if (error instanceof GitHubClientError) {
+      logGitHubAuthHints(error);
+    } else {
+      logger.error(formatError(error));
+    }
+    process.exit(1);
+  }
+}
+
+// src/config/config-resolver.ts
+var import_jsonc_parser = require("jsonc-parser");
+var import_node_path110 = require("path");
+
+// src/config/config.ts
+var import_mini52 = require("zod/mini");
+var SourceEntrySchema = import_mini52.z.object({
+  source: import_mini52.z.string().check((0, import_mini52.minLength)(1, "source must be a non-empty string")),
+  skills: (0, import_mini52.optional)(import_mini52.z.array(import_mini52.z.string()))
+});
+var ConfigParamsSchema = import_mini52.z.object({
+  baseDirs: import_mini52.z.array(import_mini52.z.string()),
+  targets: RulesyncTargetsSchema,
+  features: RulesyncFeaturesSchema,
+  verbose: import_mini52.z.boolean(),
+  delete: import_mini52.z.boolean(),
+  // New non-experimental options
+  global: (0, import_mini52.optional)(import_mini52.z.boolean()),
+  silent: (0, import_mini52.optional)(import_mini52.z.boolean()),
+  simulateCommands: (0, import_mini52.optional)(import_mini52.z.boolean()),
+  simulateSubagents: (0, import_mini52.optional)(import_mini52.z.boolean()),
+  simulateSkills: (0, import_mini52.optional)(import_mini52.z.boolean()),
+  dryRun: (0, import_mini52.optional)(import_mini52.z.boolean()),
+  check: (0, import_mini52.optional)(import_mini52.z.boolean()),
+  // Declarative skill sources
+  sources: (0, import_mini52.optional)(import_mini52.z.array(SourceEntrySchema))
+});
+var PartialConfigParamsSchema = import_mini52.z.partial(ConfigParamsSchema);
+var ConfigFileSchema = import_mini52.z.object({
+  $schema: (0, import_mini52.optional)(import_mini52.z.string()),
+  ...import_mini52.z.partial(ConfigParamsSchema).shape
+});
+var RequiredConfigParamsSchema = import_mini52.z.required(ConfigParamsSchema);
+var CONFLICTING_TARGET_PAIRS = [
+  ["augmentcode", "augmentcode-legacy"],
+  ["claudecode", "claudecode-legacy"]
+];
+var LEGACY_TARGETS = ["augmentcode-legacy", "claudecode-legacy"];
+var Config = class {
+  baseDirs;
+  targets;
+  features;
+  verbose;
+  delete;
+  global;
+  silent;
+  simulateCommands;
+  simulateSubagents;
+  simulateSkills;
+  dryRun;
+  check;
+  sources;
+  constructor({
+    baseDirs,
+    targets,
+    features,
+    verbose,
+    delete: isDelete,
+    global,
+    silent,
+    simulateCommands,
+    simulateSubagents,
+    simulateSkills,
+    dryRun,
+    check,
+    sources
+  }) {
+    this.validateConflictingTargets(targets);
+    if (dryRun && check) {
+      throw new Error("--dry-run and --check cannot be used together");
+    }
+    this.baseDirs = baseDirs;
+    this.targets = targets;
+    this.features = features;
+    this.verbose = verbose;
+    this.delete = isDelete;
+    this.global = global ?? false;
+    this.silent = silent ?? false;
+    this.simulateCommands = simulateCommands ?? false;
+    this.simulateSubagents = simulateSubagents ?? false;
+    this.simulateSkills = simulateSkills ?? false;
+    this.dryRun = dryRun ?? false;
+    this.check = check ?? false;
+    this.sources = sources ?? [];
+  }
+  validateConflictingTargets(targets) {
+    for (const [target1, target2] of CONFLICTING_TARGET_PAIRS) {
+      const hasTarget1 = targets.includes(target1);
+      const hasTarget2 = targets.includes(target2);
+      if (hasTarget1 && hasTarget2) {
+        throw new Error(
+          `Conflicting targets: '${target1}' and '${target2}' cannot be used together. Please choose one.`
+        );
+      }
+    }
+  }
+  getBaseDirs() {
+    return this.baseDirs;
+  }
+  getTargets() {
+    if (this.targets.includes("*")) {
+      return ALL_TOOL_TARGETS.filter(
+        // eslint-disable-next-line no-type-assertion/no-type-assertion
+        (target) => !LEGACY_TARGETS.includes(target)
+      );
+    }
+    return this.targets.filter((target) => target !== "*");
+  }
+  getFeatures(target) {
+    if (!Array.isArray(this.features)) {
+      const perTargetFeatures = this.features;
+      if (target) {
+        const targetFeatures = perTargetFeatures[target];
+        if (!targetFeatures || targetFeatures.length === 0) {
+          return [];
+        }
+        if (targetFeatures.includes("*")) {
+          return [...ALL_FEATURES];
+        }
+        return targetFeatures.filter((feature) => feature !== "*");
+      }
+      const allFeatures = [];
+      for (const features of Object.values(perTargetFeatures)) {
+        if (features && features.length > 0) {
+          if (features.includes("*")) {
+            return [...ALL_FEATURES];
+          }
+          for (const feature of features) {
+            if (feature !== "*" && !allFeatures.includes(feature)) {
+              allFeatures.push(feature);
+            }
+          }
+        }
+      }
+      return allFeatures;
+    }
+    if (this.features.includes("*")) {
+      return [...ALL_FEATURES];
+    }
+    return this.features.filter((feature) => feature !== "*");
+  }
+  /**
+   * Check if per-target features configuration is being used.
+   */
+  hasPerTargetFeatures() {
+    return !Array.isArray(this.features);
+  }
+  getVerbose() {
+    return this.verbose;
+  }
+  getDelete() {
+    return this.delete;
+  }
+  getGlobal() {
+    return this.global;
+  }
+  getSilent() {
+    return this.silent;
+  }
+  getSimulateCommands() {
+    return this.simulateCommands;
+  }
+  getSimulateSubagents() {
+    return this.simulateSubagents;
+  }
+  getSimulateSkills() {
+    return this.simulateSkills;
+  }
+  getDryRun() {
+    return this.dryRun;
+  }
+  getCheck() {
+    return this.check;
+  }
+  getSources() {
+    return this.sources;
+  }
+  /**
+   * Returns true if either dry-run or check mode is enabled.
+   * In both modes, no files should be written.
+   */
+  isPreviewMode() {
+    return this.dryRun || this.check;
+  }
+};
+
+// src/config/config-resolver.ts
+var getDefaults = () => ({
+  targets: ["agentsmd"],
+  features: ["rules"],
+  verbose: false,
+  delete: false,
+  baseDirs: [process.cwd()],
+  configPath: RULESYNC_CONFIG_RELATIVE_FILE_PATH,
+  global: false,
+  silent: false,
+  simulateCommands: false,
+  simulateSubagents: false,
+  simulateSkills: false,
+  dryRun: false,
+  check: false,
+  sources: []
+});
+var loadConfigFromFile = async (filePath) => {
+  if (!await fileExists(filePath)) {
+    return {};
+  }
+  try {
+    const fileContent = await readFileContent(filePath);
+    const jsonData = (0, import_jsonc_parser.parse)(fileContent);
+    const parsed = ConfigFileSchema.parse(jsonData);
+    const { $schema: _schema, ...configParams } = parsed;
+    return configParams;
+  } catch (error) {
+    logger.error(`Failed to load config file "${filePath}": ${formatError(error)}`);
+    throw error;
+  }
+};
+var mergeConfigs = (baseConfig, localConfig) => {
+  return {
+    targets: localConfig.targets ?? baseConfig.targets,
+    features: localConfig.features ?? baseConfig.features,
+    verbose: localConfig.verbose ?? baseConfig.verbose,
+    delete: localConfig.delete ?? baseConfig.delete,
+    baseDirs: localConfig.baseDirs ?? baseConfig.baseDirs,
+    global: localConfig.global ?? baseConfig.global,
+    silent: localConfig.silent ?? baseConfig.silent,
+    simulateCommands: localConfig.simulateCommands ?? baseConfig.simulateCommands,
+    simulateSubagents: localConfig.simulateSubagents ?? baseConfig.simulateSubagents,
+    simulateSkills: localConfig.simulateSkills ?? baseConfig.simulateSkills,
+    dryRun: localConfig.dryRun ?? baseConfig.dryRun,
+    check: localConfig.check ?? baseConfig.check,
+    sources: localConfig.sources ?? baseConfig.sources
+  };
+};
+var ConfigResolver = class {
+  static async resolve({
+    targets,
+    features,
+    verbose,
+    delete: isDelete,
+    baseDirs,
+    configPath = getDefaults().configPath,
+    global,
+    silent,
+    simulateCommands,
+    simulateSubagents,
+    simulateSkills,
+    dryRun,
+    check
+  }) {
+    const validatedConfigPath = resolvePath(configPath, process.cwd());
+    const baseConfig = await loadConfigFromFile(validatedConfigPath);
+    const configDir = (0, import_node_path110.dirname)(validatedConfigPath);
+    const localConfigPath = (0, import_node_path110.join)(configDir, RULESYNC_LOCAL_CONFIG_RELATIVE_FILE_PATH);
+    const localConfig = await loadConfigFromFile(localConfigPath);
+    const configByFile = mergeConfigs(baseConfig, localConfig);
+    const resolvedGlobal = global ?? configByFile.global ?? getDefaults().global;
+    const resolvedSimulateCommands = simulateCommands ?? configByFile.simulateCommands ?? getDefaults().simulateCommands;
+    const resolvedSimulateSubagents = simulateSubagents ?? configByFile.simulateSubagents ?? getDefaults().simulateSubagents;
+    const resolvedSimulateSkills = simulateSkills ?? configByFile.simulateSkills ?? getDefaults().simulateSkills;
+    const configParams = {
+      targets: targets ?? configByFile.targets ?? getDefaults().targets,
+      features: features ?? configByFile.features ?? getDefaults().features,
+      verbose: verbose ?? configByFile.verbose ?? getDefaults().verbose,
+      delete: isDelete ?? configByFile.delete ?? getDefaults().delete,
+      baseDirs: getBaseDirsInLightOfGlobal({
+        baseDirs: baseDirs ?? configByFile.baseDirs ?? getDefaults().baseDirs,
+        global: resolvedGlobal
+      }),
+      global: resolvedGlobal,
+      silent: silent ?? configByFile.silent ?? getDefaults().silent,
+      simulateCommands: resolvedSimulateCommands,
+      simulateSubagents: resolvedSimulateSubagents,
+      simulateSkills: resolvedSimulateSkills,
+      dryRun: dryRun ?? configByFile.dryRun ?? getDefaults().dryRun,
+      check: check ?? configByFile.check ?? getDefaults().check,
+      sources: configByFile.sources ?? getDefaults().sources
+    };
+    return new Config(configParams);
+  }
+};
+function getBaseDirsInLightOfGlobal({
+  baseDirs,
+  global
+}) {
+  if (global) {
+    return [getHomeDirectory()];
+  }
+  const resolvedBaseDirs = baseDirs.map((baseDir) => (0, import_node_path110.resolve)(baseDir));
+  resolvedBaseDirs.forEach((baseDir) => {
+    validateBaseDir(baseDir);
+  });
+  return resolvedBaseDirs;
+}
+
 // src/lib/generate.ts
+var import_es_toolkit4 = require("es-toolkit");
+var import_node_path111 = require("path");
 async function processFeatureGeneration(params) {
   const { config, processor, toolFiles } = params;
   let totalCount = 0;
@@ -14523,7 +15457,7 @@ async function processEmptyFeatureGeneration(params) {
   return { count: totalCount, paths: [], hasDiff };
 }
 async function checkRulesyncDirExists(params) {
-  return fileExists((0, import_node_path110.join)(params.baseDir, RULESYNC_RELATIVE_DIR_PATH));
+  return fileExists((0, import_node_path111.join)(params.baseDir, RULESYNC_RELATIVE_DIR_PATH));
 }
 async function generate(params) {
   const { config } = params;
@@ -14833,6 +15767,324 @@ async function generateHooksCore(params) {
   return { count: totalCount, paths: allPaths, hasDiff };
 }
 
+// src/utils/result.ts
+function calculateTotalCount(result) {
+  return result.rulesCount + result.ignoreCount + result.mcpCount + result.commandsCount + result.subagentsCount + result.skillsCount + result.hooksCount;
+}
+
+// src/cli/commands/generate.ts
+function logFeatureResult(params) {
+  const { count, paths, featureName, isPreview, modePrefix } = params;
+  if (count > 0) {
+    if (isPreview) {
+      logger.info(`${modePrefix} Would write ${count} ${featureName}`);
+    } else {
+      logger.success(`Written ${count} ${featureName}`);
+    }
+    for (const p of paths) {
+      logger.info(`    ${p}`);
+    }
+  }
+}
+async function generateCommand(options) {
+  const config = await ConfigResolver.resolve(options);
+  logger.configure({
+    verbose: config.getVerbose(),
+    silent: config.getSilent()
+  });
+  const check = config.getCheck();
+  const isPreview = config.isPreviewMode();
+  const modePrefix = isPreview ? "[DRY RUN]" : "";
+  logger.debug("Generating files...");
+  if (!await checkRulesyncDirExists({ baseDir: process.cwd() })) {
+    logger.error("\u274C .rulesync directory not found. Run 'rulesync init' first.");
+    process.exit(1);
+  }
+  logger.debug(`Base directories: ${config.getBaseDirs().join(", ")}`);
+  const features = config.getFeatures();
+  if (features.includes("ignore")) {
+    logger.debug("Generating ignore files...");
+  }
+  if (features.includes("mcp")) {
+    logger.debug("Generating MCP files...");
+  }
+  if (features.includes("commands")) {
+    logger.debug("Generating command files...");
+  }
+  if (features.includes("subagents")) {
+    logger.debug("Generating subagent files...");
+  }
+  if (features.includes("skills")) {
+    logger.debug("Generating skill files...");
+  }
+  if (features.includes("hooks")) {
+    logger.debug("Generating hooks...");
+  }
+  if (features.includes("rules")) {
+    logger.debug("Generating rule files...");
+  }
+  const result = await generate({ config });
+  logFeatureResult({
+    count: result.ignoreCount,
+    paths: result.ignorePaths,
+    featureName: "ignore file(s)",
+    isPreview,
+    modePrefix
+  });
+  logFeatureResult({
+    count: result.mcpCount,
+    paths: result.mcpPaths,
+    featureName: "MCP configuration(s)",
+    isPreview,
+    modePrefix
+  });
+  logFeatureResult({
+    count: result.commandsCount,
+    paths: result.commandsPaths,
+    featureName: "command(s)",
+    isPreview,
+    modePrefix
+  });
+  logFeatureResult({
+    count: result.subagentsCount,
+    paths: result.subagentsPaths,
+    featureName: "subagent(s)",
+    isPreview,
+    modePrefix
+  });
+  logFeatureResult({
+    count: result.skillsCount,
+    paths: result.skillsPaths,
+    featureName: "skill(s)",
+    isPreview,
+    modePrefix
+  });
+  logFeatureResult({
+    count: result.hooksCount,
+    paths: result.hooksPaths,
+    featureName: "hooks file(s)",
+    isPreview,
+    modePrefix
+  });
+  logFeatureResult({
+    count: result.rulesCount,
+    paths: result.rulesPaths,
+    featureName: "rule(s)",
+    isPreview,
+    modePrefix
+  });
+  const totalGenerated = calculateTotalCount(result);
+  if (totalGenerated === 0) {
+    const enabledFeatures = features.join(", ");
+    logger.info(`\u2713 All files are up to date (${enabledFeatures})`);
+    return;
+  }
+  const parts = [];
+  if (result.rulesCount > 0) parts.push(`${result.rulesCount} rules`);
+  if (result.ignoreCount > 0) parts.push(`${result.ignoreCount} ignore files`);
+  if (result.mcpCount > 0) parts.push(`${result.mcpCount} MCP files`);
+  if (result.commandsCount > 0) parts.push(`${result.commandsCount} commands`);
+  if (result.subagentsCount > 0) parts.push(`${result.subagentsCount} subagents`);
+  if (result.skillsCount > 0) parts.push(`${result.skillsCount} skills`);
+  if (result.hooksCount > 0) parts.push(`${result.hooksCount} hooks`);
+  if (isPreview) {
+    logger.info(`${modePrefix} Would write ${totalGenerated} file(s) total (${parts.join(" + ")})`);
+  } else {
+    logger.success(`\u{1F389} All done! Written ${totalGenerated} file(s) total (${parts.join(" + ")})`);
+  }
+  if (check) {
+    if (result.hasDiff) {
+      logger.error("\u274C Files are not up to date. Run 'rulesync generate' to update.");
+      process.exit(1);
+    } else {
+      logger.success("\u2713 All files are up to date.");
+    }
+  }
+}
+
+// src/cli/commands/gitignore.ts
+var import_node_path112 = require("path");
+var RULESYNC_HEADER = "# Generated by Rulesync";
+var LEGACY_RULESYNC_HEADER = "# Generated by rulesync - AI tool configuration files";
+var RULESYNC_IGNORE_ENTRIES = [
+  // Rulesync curated (fetched) skills
+  ".rulesync/skills/.curated/",
+  // AGENTS.md
+  "**/AGENTS.md",
+  "**/.agents/",
+  // Augment
+  "**/.augmentignore",
+  "**/.augment/rules/",
+  "**/.augment-guidelines",
+  // Claude Code
+  "**/CLAUDE.md",
+  "**/CLAUDE.local.md",
+  "**/.claude/CLAUDE.md",
+  "**/.claude/CLAUDE.local.md",
+  "**/.claude/memories/",
+  "**/.claude/rules/",
+  "**/.claude/commands/",
+  "**/.claude/agents/",
+  "**/.claude/skills/",
+  "**/.claude/settings.local.json",
+  "**/.mcp.json",
+  // Cline
+  "**/.clinerules/",
+  "**/.clinerules/workflows/",
+  "**/.clineignore",
+  "**/.cline/mcp.json",
+  // Codex
+  "**/.codexignore",
+  "**/.codex/memories/",
+  "**/.codex/skills/",
+  "**/.codex/subagents/",
+  // Cursor
+  "**/.cursor/",
+  "**/.cursorignore",
+  // Factory Droid
+  "**/.factory/rules/",
+  "**/.factory/commands/",
+  "**/.factory/droids/",
+  "**/.factory/skills/",
+  "**/.factory/mcp.json",
+  "**/.factory/settings.json",
+  // Gemini
+  "**/GEMINI.md",
+  "**/.gemini/memories/",
+  "**/.gemini/commands/",
+  "**/.gemini/subagents/",
+  "**/.gemini/skills/",
+  "**/.geminiignore",
+  // GitHub Copilot
+  "**/.github/copilot-instructions.md",
+  "**/.github/instructions/",
+  "**/.github/prompts/",
+  "**/.github/agents/",
+  "**/.github/skills/",
+  "**/.vscode/mcp.json",
+  // Junie
+  "**/.junie/guidelines.md",
+  "**/.junie/mcp.json",
+  // Kilo Code
+  "**/.kilocode/rules/",
+  "**/.kilocode/skills/",
+  "**/.kilocode/workflows/",
+  "**/.kilocode/mcp.json",
+  "**/.kilocodeignore",
+  // Kiro
+  "**/.kiro/steering/",
+  "**/.kiro/prompts/",
+  "**/.kiro/skills/",
+  "**/.kiro/agents/",
+  "**/.kiro/settings/mcp.json",
+  "**/.aiignore",
+  // OpenCode
+  "**/.opencode/memories/",
+  "**/.opencode/command/",
+  "**/.opencode/agent/",
+  "**/.opencode/skill/",
+  "**/.opencode/plugins/",
+  // Qwen
+  "**/QWEN.md",
+  "**/.qwen/memories/",
+  // Replit
+  "**/replit.md",
+  // Roo
+  "**/.roo/rules/",
+  "**/.roo/skills/",
+  "**/.rooignore",
+  "**/.roo/mcp.json",
+  "**/.roo/subagents/",
+  // Warp
+  "**/.warp/",
+  "**/WARP.md",
+  // Others
+  ".rulesync/rules/*.local.md",
+  "rulesync.local.jsonc",
+  "!.rulesync/.aiignore"
+];
+var isRulesyncHeader = (line) => {
+  const trimmed = line.trim();
+  return trimmed === RULESYNC_HEADER || trimmed === LEGACY_RULESYNC_HEADER;
+};
+var isRulesyncEntry = (line) => {
+  const trimmed = line.trim();
+  if (trimmed === "" || isRulesyncHeader(line)) {
+    return false;
+  }
+  return RULESYNC_IGNORE_ENTRIES.includes(trimmed);
+};
+var removeExistingRulesyncEntries = (content) => {
+  const lines = content.split("\n");
+  const filteredLines = [];
+  let inRulesyncBlock = false;
+  let consecutiveEmptyLines = 0;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (isRulesyncHeader(line)) {
+      inRulesyncBlock = true;
+      continue;
+    }
+    if (inRulesyncBlock) {
+      if (trimmed === "") {
+        consecutiveEmptyLines++;
+        if (consecutiveEmptyLines >= 2) {
+          inRulesyncBlock = false;
+          consecutiveEmptyLines = 0;
+        }
+        continue;
+      }
+      if (isRulesyncEntry(line)) {
+        consecutiveEmptyLines = 0;
+        continue;
+      }
+      inRulesyncBlock = false;
+      consecutiveEmptyLines = 0;
+    }
+    if (isRulesyncEntry(line)) {
+      continue;
+    }
+    filteredLines.push(line);
+  }
+  let result = filteredLines.join("\n");
+  while (result.endsWith("\n\n")) {
+    result = result.slice(0, -1);
+  }
+  return result;
+};
+var gitignoreCommand = async () => {
+  const gitignorePath = (0, import_node_path112.join)(process.cwd(), ".gitignore");
+  let gitignoreContent = "";
+  if (await fileExists(gitignorePath)) {
+    gitignoreContent = await readFileContent(gitignorePath);
+  }
+  const cleanedContent = removeExistingRulesyncEntries(gitignoreContent);
+  const rulesyncBlock = [RULESYNC_HEADER, ...RULESYNC_IGNORE_ENTRIES].join("\n");
+  const newContent = cleanedContent.trim() ? `${cleanedContent.trimEnd()}
+
+${rulesyncBlock}
+` : `${rulesyncBlock}
+`;
+  if (gitignoreContent === newContent) {
+    logger.success(".gitignore is already up to date");
+    return;
+  }
+  await writeFileContent(gitignorePath, newContent);
+  logger.success("Updated .gitignore with rulesync entries:");
+  for (const entry of RULESYNC_IGNORE_ENTRIES) {
+    logger.info(`  ${entry}`);
+  }
+  logger.info("");
+  logger.info(
+    "\u{1F4A1} If you're using Google Antigravity, note that rules, workflows, and skills won't load if they're gitignored."
+  );
+  logger.info("   You can add the following to .git/info/exclude instead:");
+  logger.info("   **/.agent/rules/");
+  logger.info("   **/.agent/workflows/");
+  logger.info("   **/.agent/skills/");
+  logger.info("   For more details: https://github.com/dyoshikawa/rulesync/issues/981");
+};
+
 // src/lib/import.ts
 async function importFromTool(params) {
   const { config, tool } = params;
@@ -15045,37 +16297,2626 @@ async function importHooksCore(params) {
   return writtenCount;
 }
 
-// src/index.ts
-async function generate2(options = {}) {
-  const { silent = true, verbose = false, ...rest } = options;
-  logger.configure({ verbose, silent });
-  const config = await ConfigResolver.resolve({
-    ...rest,
-    verbose,
-    silent
+// src/cli/commands/import.ts
+async function importCommand(options) {
+  if (!options.targets) {
+    logger.error("No tools found in --targets");
+    process.exit(1);
+  }
+  if (options.targets.length > 1) {
+    logger.error("Only one tool can be imported at a time");
+    process.exit(1);
+  }
+  const config = await ConfigResolver.resolve(options);
+  logger.configure({
+    verbose: config.getVerbose(),
+    silent: config.getSilent()
   });
-  for (const baseDir of config.getBaseDirs()) {
-    if (!await checkRulesyncDirExists({ baseDir })) {
-      throw new Error(".rulesync directory not found. Run 'rulesync init' first.");
+  const tool = config.getTargets()[0];
+  logger.debug(`Importing files from ${tool}...`);
+  const result = await importFromTool({ config, tool });
+  const totalImported = calculateTotalCount(result);
+  if (totalImported === 0) {
+    const enabledFeatures = config.getFeatures().join(", ");
+    logger.warn(`No files imported for enabled features: ${enabledFeatures}`);
+    return;
+  }
+  const parts = [];
+  if (result.rulesCount > 0) parts.push(`${result.rulesCount} rules`);
+  if (result.ignoreCount > 0) parts.push(`${result.ignoreCount} ignore files`);
+  if (result.mcpCount > 0) parts.push(`${result.mcpCount} MCP files`);
+  if (result.commandsCount > 0) parts.push(`${result.commandsCount} commands`);
+  if (result.subagentsCount > 0) parts.push(`${result.subagentsCount} subagents`);
+  if (result.skillsCount > 0) parts.push(`${result.skillsCount} skills`);
+  if (result.hooksCount > 0) parts.push(`${result.hooksCount} hooks`);
+  logger.success(`Imported ${totalImported} file(s) total (${parts.join(" + ")})`);
+}
+
+// src/lib/init.ts
+var import_node_path113 = require("path");
+async function init() {
+  const sampleFiles = await createSampleFiles();
+  const configFile = await createConfigFile();
+  return {
+    configFile,
+    sampleFiles
+  };
+}
+async function createConfigFile() {
+  const path4 = RULESYNC_CONFIG_RELATIVE_FILE_PATH;
+  if (await fileExists(path4)) {
+    return { created: false, path: path4 };
+  }
+  await writeFileContent(
+    path4,
+    JSON.stringify(
+      {
+        targets: ["copilot", "cursor", "claudecode", "codexcli"],
+        features: ["rules", "ignore", "mcp", "commands", "subagents", "skills", "hooks"],
+        baseDirs: ["."],
+        delete: true,
+        verbose: false,
+        silent: false,
+        global: false,
+        simulateCommands: false,
+        simulateSubagents: false,
+        simulateSkills: false
+      },
+      null,
+      2
+    )
+  );
+  return { created: true, path: path4 };
+}
+async function createSampleFiles() {
+  const results = [];
+  const sampleRuleFile = {
+    filename: RULESYNC_OVERVIEW_FILE_NAME,
+    content: `---
+root: true
+targets: ["*"]
+description: "Project overview and general development guidelines"
+globs: ["**/*"]
+---
+
+# Project Overview
+
+## General Guidelines
+
+- Use TypeScript for all new code
+- Follow consistent naming conventions
+- Write self-documenting code with clear variable and function names
+- Prefer composition over inheritance
+- Use meaningful comments for complex business logic
+
+## Code Style
+
+- Use 2 spaces for indentation
+- Use semicolons
+- Use double quotes for strings
+- Use trailing commas in multi-line objects and arrays
+
+## Architecture Principles
+
+- Organize code by feature, not by file type
+- Keep related files close together
+- Use dependency injection for better testability
+- Implement proper error handling
+- Follow single responsibility principle
+`
+  };
+  const sampleMcpFile = {
+    filename: "mcp.json",
+    content: `{
+  "mcpServers": {
+    "serena": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--enable-web-dashboard",
+        "false",
+        "--project",
+        "."
+      ],
+      "env": {}
+    },
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {}
     }
   }
-  return generate({ config });
 }
-async function importFromTool2(options) {
-  const { target, silent = true, verbose = false, ...rest } = options;
-  logger.configure({ verbose, silent });
-  const config = await ConfigResolver.resolve({
-    ...rest,
-    targets: [target],
-    verbose,
-    silent
+`
+  };
+  const sampleCommandFile = {
+    filename: "review-pr.md",
+    content: `---
+description: 'Review a pull request'
+targets: ["*"]
+---
+
+target_pr = $ARGUMENTS
+
+If target_pr is not provided, use the PR of the current branch.
+
+Execute the following in parallel:
+
+1. Check code quality and style consistency
+2. Review test coverage
+3. Verify documentation updates
+4. Check for potential bugs or security issues
+
+Then provide a summary of findings and suggestions for improvement.
+`
+  };
+  const sampleSubagentFile = {
+    filename: "planner.md",
+    content: `---
+name: planner
+targets: ["*"]
+description: >-
+  This is the general-purpose planner. The user asks the agent to plan to
+  suggest a specification, implement a new feature, refactor the codebase, or
+  fix a bug. This agent can be called by the user explicitly only.
+claudecode:
+  model: inherit
+---
+
+You are the planner for any tasks.
+
+Based on the user's instruction, create a plan while analyzing the related files. Then, report the plan in detail. You can output files to @tmp/ if needed.
+
+Attention, again, you are just the planner, so though you can read any files and run any commands for analysis, please don't write any code.
+`
+  };
+  const sampleSkillFile = {
+    dirName: "project-context",
+    content: `---
+name: project-context
+description: "Summarize the project context and key constraints"
+targets: ["*"]
+---
+
+Summarize the project goals, core constraints, and relevant dependencies.
+Call out any architecture decisions, shared conventions, and validation steps.
+Keep the summary concise and ready to reuse in future tasks.`
+  };
+  const sampleIgnoreFile = {
+    content: `credentials/
+`
+  };
+  const sampleHooksFile = {
+    content: `{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "command": ".rulesync/hooks/format.sh"
+      }
+    ]
+  }
+}
+`
+  };
+  const rulePaths = RulesyncRule.getSettablePaths();
+  const mcpPaths = RulesyncMcp.getSettablePaths();
+  const commandPaths = RulesyncCommand.getSettablePaths();
+  const subagentPaths = RulesyncSubagent.getSettablePaths();
+  const skillPaths = RulesyncSkill.getSettablePaths();
+  const ignorePaths = RulesyncIgnore.getSettablePaths();
+  const hooksPaths = RulesyncHooks.getSettablePaths();
+  await ensureDir(rulePaths.recommended.relativeDirPath);
+  await ensureDir(mcpPaths.recommended.relativeDirPath);
+  await ensureDir(commandPaths.relativeDirPath);
+  await ensureDir(subagentPaths.relativeDirPath);
+  await ensureDir(skillPaths.relativeDirPath);
+  await ensureDir(ignorePaths.recommended.relativeDirPath);
+  const ruleFilepath = (0, import_node_path113.join)(rulePaths.recommended.relativeDirPath, sampleRuleFile.filename);
+  results.push(await writeIfNotExists(ruleFilepath, sampleRuleFile.content));
+  const mcpFilepath = (0, import_node_path113.join)(
+    mcpPaths.recommended.relativeDirPath,
+    mcpPaths.recommended.relativeFilePath
+  );
+  results.push(await writeIfNotExists(mcpFilepath, sampleMcpFile.content));
+  const commandFilepath = (0, import_node_path113.join)(commandPaths.relativeDirPath, sampleCommandFile.filename);
+  results.push(await writeIfNotExists(commandFilepath, sampleCommandFile.content));
+  const subagentFilepath = (0, import_node_path113.join)(subagentPaths.relativeDirPath, sampleSubagentFile.filename);
+  results.push(await writeIfNotExists(subagentFilepath, sampleSubagentFile.content));
+  const skillDirPath = (0, import_node_path113.join)(skillPaths.relativeDirPath, sampleSkillFile.dirName);
+  await ensureDir(skillDirPath);
+  const skillFilepath = (0, import_node_path113.join)(skillDirPath, SKILL_FILE_NAME);
+  results.push(await writeIfNotExists(skillFilepath, sampleSkillFile.content));
+  const ignoreFilepath = (0, import_node_path113.join)(
+    ignorePaths.recommended.relativeDirPath,
+    ignorePaths.recommended.relativeFilePath
+  );
+  results.push(await writeIfNotExists(ignoreFilepath, sampleIgnoreFile.content));
+  const hooksFilepath = (0, import_node_path113.join)(hooksPaths.relativeDirPath, hooksPaths.relativeFilePath);
+  results.push(await writeIfNotExists(hooksFilepath, sampleHooksFile.content));
+  return results;
+}
+async function writeIfNotExists(path4, content) {
+  if (await fileExists(path4)) {
+    return { created: false, path: path4 };
+  }
+  await writeFileContent(path4, content);
+  return { created: true, path: path4 };
+}
+
+// src/cli/commands/init.ts
+async function initCommand() {
+  logger.debug("Initializing rulesync...");
+  await ensureDir(RULESYNC_RELATIVE_DIR_PATH);
+  const result = await init();
+  for (const file of result.sampleFiles) {
+    if (file.created) {
+      logger.success(`Created ${file.path}`);
+    } else {
+      logger.info(`Skipped ${file.path} (already exists)`);
+    }
+  }
+  if (result.configFile.created) {
+    logger.success(`Created ${result.configFile.path}`);
+  } else {
+    logger.info(`Skipped ${result.configFile.path} (already exists)`);
+  }
+  logger.success("rulesync initialized successfully!");
+  logger.info("Next steps:");
+  logger.info(
+    `1. Edit ${RULESYNC_RELATIVE_DIR_PATH}/**/*.md, ${RULESYNC_RELATIVE_DIR_PATH}/skills/*/${SKILL_FILE_NAME}, ${RULESYNC_MCP_RELATIVE_FILE_PATH}, ${RULESYNC_HOOKS_RELATIVE_FILE_PATH} and ${RULESYNC_AIIGNORE_RELATIVE_FILE_PATH}`
+  );
+  logger.info("2. Run 'rulesync generate' to create configuration files");
+}
+
+// src/lib/sources.ts
+var import_promise2 = require("es-toolkit/promise");
+var import_node_path115 = require("path");
+
+// src/lib/sources-lock.ts
+var import_node_crypto = require("crypto");
+var import_node_path114 = require("path");
+var import_mini53 = require("zod/mini");
+var LOCKFILE_VERSION = 1;
+var LockedSkillSchema = import_mini53.z.object({
+  integrity: import_mini53.z.string()
+});
+var LockedSourceSchema = import_mini53.z.object({
+  requestedRef: (0, import_mini53.optional)(import_mini53.z.string()),
+  resolvedRef: import_mini53.z.string(),
+  resolvedAt: (0, import_mini53.optional)(import_mini53.z.string()),
+  skills: import_mini53.z.record(import_mini53.z.string(), LockedSkillSchema)
+});
+var SourcesLockSchema = import_mini53.z.object({
+  lockfileVersion: import_mini53.z.number(),
+  sources: import_mini53.z.record(import_mini53.z.string(), LockedSourceSchema)
+});
+var LegacyLockedSourceSchema = import_mini53.z.object({
+  resolvedRef: import_mini53.z.string(),
+  skills: import_mini53.z.array(import_mini53.z.string())
+});
+var LegacySourcesLockSchema = import_mini53.z.object({
+  sources: import_mini53.z.record(import_mini53.z.string(), LegacyLockedSourceSchema)
+});
+function migrateLegacyLock(legacy) {
+  const sources = {};
+  for (const [key, entry] of Object.entries(legacy.sources)) {
+    const skills = {};
+    for (const name of entry.skills) {
+      skills[name] = { integrity: "" };
+    }
+    sources[key] = {
+      resolvedRef: entry.resolvedRef,
+      skills
+    };
+  }
+  logger.info(
+    "Migrated legacy sources lockfile to version 1. Run 'rulesync install --update' to populate integrity hashes."
+  );
+  return { lockfileVersion: LOCKFILE_VERSION, sources };
+}
+function createEmptyLock() {
+  return { lockfileVersion: LOCKFILE_VERSION, sources: {} };
+}
+async function readLockFile(params) {
+  const lockPath = (0, import_node_path114.join)(params.baseDir, RULESYNC_SOURCES_LOCK_RELATIVE_FILE_PATH);
+  if (!await fileExists(lockPath)) {
+    logger.debug("No sources lockfile found, starting fresh.");
+    return createEmptyLock();
+  }
+  try {
+    const content = await readFileContent(lockPath);
+    const data = JSON.parse(content);
+    const result = SourcesLockSchema.safeParse(data);
+    if (result.success) {
+      return result.data;
+    }
+    const legacyResult = LegacySourcesLockSchema.safeParse(data);
+    if (legacyResult.success) {
+      return migrateLegacyLock(legacyResult.data);
+    }
+    logger.warn(
+      `Invalid sources lockfile format (${RULESYNC_SOURCES_LOCK_RELATIVE_FILE_PATH}). Starting fresh.`
+    );
+    return createEmptyLock();
+  } catch {
+    logger.warn(
+      `Failed to read sources lockfile (${RULESYNC_SOURCES_LOCK_RELATIVE_FILE_PATH}). Starting fresh.`
+    );
+    return createEmptyLock();
+  }
+}
+async function writeLockFile(params) {
+  const lockPath = (0, import_node_path114.join)(params.baseDir, RULESYNC_SOURCES_LOCK_RELATIVE_FILE_PATH);
+  const content = JSON.stringify(params.lock, null, 2) + "\n";
+  await writeFileContent(lockPath, content);
+  logger.debug(`Wrote sources lockfile to ${lockPath}`);
+}
+function computeSkillIntegrity(files) {
+  const hash = (0, import_node_crypto.createHash)("sha256");
+  const sorted = files.toSorted((a, b) => a.path.localeCompare(b.path));
+  for (const file of sorted) {
+    hash.update(file.path);
+    hash.update("\0");
+    hash.update(file.content);
+    hash.update("\0");
+  }
+  return `sha256-${hash.digest("hex")}`;
+}
+function normalizeSourceKey(source) {
+  let key = source;
+  for (const prefix of [
+    "https://www.github.com/",
+    "https://github.com/",
+    "http://www.github.com/",
+    "http://github.com/"
+  ]) {
+    if (key.toLowerCase().startsWith(prefix)) {
+      key = key.substring(prefix.length);
+      break;
+    }
+  }
+  if (key.startsWith("github:")) {
+    key = key.substring("github:".length);
+  }
+  key = key.replace(/\/+$/, "");
+  key = key.replace(/\.git$/, "");
+  key = key.toLowerCase();
+  return key;
+}
+function getLockedSource(lock, sourceKey) {
+  const normalized = normalizeSourceKey(sourceKey);
+  for (const [key, value] of Object.entries(lock.sources)) {
+    if (normalizeSourceKey(key) === normalized) {
+      return value;
+    }
+  }
+  return void 0;
+}
+function setLockedSource(lock, sourceKey, entry) {
+  const normalized = normalizeSourceKey(sourceKey);
+  const filteredSources = {};
+  for (const [key, value] of Object.entries(lock.sources)) {
+    if (normalizeSourceKey(key) !== normalized) {
+      filteredSources[key] = value;
+    }
+  }
+  return {
+    lockfileVersion: lock.lockfileVersion,
+    sources: {
+      ...filteredSources,
+      [normalized]: entry
+    }
+  };
+}
+function getLockedSkillNames(entry) {
+  return Object.keys(entry.skills);
+}
+
+// src/lib/sources.ts
+async function resolveAndFetchSources(params) {
+  const { sources, baseDir, options = {} } = params;
+  if (sources.length === 0) {
+    return { fetchedSkillCount: 0, sourcesProcessed: 0 };
+  }
+  if (options.skipSources) {
+    logger.info("Skipping source fetching.");
+    return { fetchedSkillCount: 0, sourcesProcessed: 0 };
+  }
+  let lock = options.updateSources ? createEmptyLock() : await readLockFile({ baseDir });
+  if (options.frozen) {
+    const missingKeys = [];
+    for (const source of sources) {
+      const locked = getLockedSource(lock, source.source);
+      if (!locked) {
+        missingKeys.push(source.source);
+      }
+    }
+    if (missingKeys.length > 0) {
+      throw new Error(
+        `Frozen install failed: lockfile is missing entries for: ${missingKeys.join(", ")}. Run 'rulesync install' to update the lockfile.`
+      );
+    }
+  }
+  const originalLockJson = JSON.stringify(lock);
+  const token = GitHubClient.resolveToken(options.token);
+  const client = new GitHubClient({ token });
+  const localSkillNames = await getLocalSkillDirNames(baseDir);
+  let totalSkillCount = 0;
+  const allFetchedSkillNames = /* @__PURE__ */ new Set();
+  for (const sourceEntry of sources) {
+    try {
+      const { skillCount, fetchedSkillNames, updatedLock } = await fetchSource({
+        sourceEntry,
+        client,
+        baseDir,
+        lock,
+        localSkillNames,
+        alreadyFetchedSkillNames: allFetchedSkillNames,
+        updateSources: options.updateSources ?? false
+      });
+      lock = updatedLock;
+      totalSkillCount += skillCount;
+      for (const name of fetchedSkillNames) {
+        allFetchedSkillNames.add(name);
+      }
+    } catch (error) {
+      if (error instanceof GitHubClientError) {
+        logGitHubAuthHints(error);
+      } else {
+        logger.error(`Failed to fetch source "${sourceEntry.source}": ${formatError(error)}`);
+      }
+    }
+  }
+  const sourceKeys = new Set(sources.map((s) => normalizeSourceKey(s.source)));
+  const prunedSources = {};
+  for (const [key, value] of Object.entries(lock.sources)) {
+    if (sourceKeys.has(normalizeSourceKey(key))) {
+      prunedSources[key] = value;
+    } else {
+      logger.debug(`Pruned stale lockfile entry: ${key}`);
+    }
+  }
+  lock = { lockfileVersion: lock.lockfileVersion, sources: prunedSources };
+  if (!options.frozen && JSON.stringify(lock) !== originalLockJson) {
+    await writeLockFile({ baseDir, lock });
+  } else {
+    logger.debug("Lockfile unchanged, skipping write.");
+  }
+  return { fetchedSkillCount: totalSkillCount, sourcesProcessed: sources.length };
+}
+async function checkLockedSkillsExist(curatedDir, skillNames) {
+  if (skillNames.length === 0) return true;
+  for (const name of skillNames) {
+    if (!await directoryExists((0, import_node_path115.join)(curatedDir, name))) {
+      return false;
+    }
+  }
+  return true;
+}
+async function fetchSource(params) {
+  const { sourceEntry, client, baseDir, localSkillNames, alreadyFetchedSkillNames, updateSources } = params;
+  let { lock } = params;
+  const parsed = parseSource(sourceEntry.source);
+  if (parsed.provider === "gitlab") {
+    throw new Error("GitLab sources are not yet supported.");
+  }
+  const sourceKey = sourceEntry.source;
+  const locked = getLockedSource(lock, sourceKey);
+  const lockedSkillNames = locked ? getLockedSkillNames(locked) : [];
+  let ref;
+  let resolvedSha;
+  let requestedRef;
+  if (locked && !updateSources) {
+    ref = locked.resolvedRef;
+    resolvedSha = locked.resolvedRef;
+    requestedRef = locked.requestedRef;
+    logger.debug(`Using locked ref for ${sourceKey}: ${resolvedSha}`);
+  } else {
+    requestedRef = parsed.ref ?? await client.getDefaultBranch(parsed.owner, parsed.repo);
+    resolvedSha = await client.resolveRefToSha(parsed.owner, parsed.repo, requestedRef);
+    ref = resolvedSha;
+    logger.debug(`Resolved ${sourceKey} ref "${requestedRef}" to SHA: ${resolvedSha}`);
+  }
+  const curatedDir = (0, import_node_path115.join)(baseDir, RULESYNC_CURATED_SKILLS_RELATIVE_DIR_PATH);
+  if (locked && resolvedSha === locked.resolvedRef && !updateSources) {
+    const allExist = await checkLockedSkillsExist(curatedDir, lockedSkillNames);
+    if (allExist) {
+      logger.debug(`SHA unchanged for ${sourceKey}, skipping re-fetch.`);
+      return {
+        skillCount: 0,
+        fetchedSkillNames: lockedSkillNames,
+        updatedLock: lock
+      };
+    }
+  }
+  const skillFilter = sourceEntry.skills ?? ["*"];
+  const isWildcard = skillFilter.length === 1 && skillFilter[0] === "*";
+  const skillsBasePath = parsed.path ?? "skills";
+  let remoteSkillDirs;
+  try {
+    const entries = await client.listDirectory(parsed.owner, parsed.repo, skillsBasePath, ref);
+    remoteSkillDirs = entries.filter((e) => e.type === "dir").map((e) => ({ name: e.name, path: e.path }));
+  } catch (error) {
+    if (error instanceof GitHubClientError && error.statusCode === 404) {
+      logger.warn(`No skills/ directory found in ${sourceKey}. Skipping.`);
+      return { skillCount: 0, fetchedSkillNames: [], updatedLock: lock };
+    }
+    throw error;
+  }
+  const filteredDirs = isWildcard ? remoteSkillDirs : remoteSkillDirs.filter((d) => skillFilter.includes(d.name));
+  const semaphore = new import_promise2.Semaphore(FETCH_CONCURRENCY_LIMIT);
+  const fetchedSkills = {};
+  if (locked) {
+    const resolvedCuratedDir = (0, import_node_path115.resolve)(curatedDir);
+    for (const prevSkill of lockedSkillNames) {
+      const prevDir = (0, import_node_path115.join)(curatedDir, prevSkill);
+      if (!(0, import_node_path115.resolve)(prevDir).startsWith(resolvedCuratedDir + import_node_path115.sep)) {
+        logger.warn(
+          `Skipping removal of "${prevSkill}": resolved path is outside the curated directory.`
+        );
+        continue;
+      }
+      if (await directoryExists(prevDir)) {
+        await removeDirectory(prevDir);
+      }
+    }
+  }
+  for (const skillDir of filteredDirs) {
+    if (skillDir.name.includes("..") || skillDir.name.includes("/") || skillDir.name.includes("\\")) {
+      logger.warn(
+        `Skipping skill with invalid name "${skillDir.name}" from ${sourceKey}: contains path traversal characters.`
+      );
+      continue;
+    }
+    if (localSkillNames.has(skillDir.name)) {
+      logger.debug(
+        `Skipping remote skill "${skillDir.name}" from ${sourceKey}: local skill takes precedence.`
+      );
+      continue;
+    }
+    if (alreadyFetchedSkillNames.has(skillDir.name)) {
+      logger.warn(
+        `Skipping duplicate skill "${skillDir.name}" from ${sourceKey}: already fetched from another source.`
+      );
+      continue;
+    }
+    const allFiles = await listDirectoryRecursive({
+      client,
+      owner: parsed.owner,
+      repo: parsed.repo,
+      path: skillDir.path,
+      ref,
+      semaphore
+    });
+    const files = allFiles.filter((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        logger.warn(
+          `Skipping file "${file.path}" (${(file.size / 1024 / 1024).toFixed(2)}MB exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit).`
+        );
+        return false;
+      }
+      return true;
+    });
+    const skillFiles = [];
+    for (const file of files) {
+      const relativeToSkill = file.path.substring(skillDir.path.length + 1);
+      const localFilePath = (0, import_node_path115.join)(curatedDir, skillDir.name, relativeToSkill);
+      checkPathTraversal({
+        relativePath: relativeToSkill,
+        intendedRootDir: (0, import_node_path115.join)(curatedDir, skillDir.name)
+      });
+      const content = await withSemaphore(
+        semaphore,
+        () => client.getFileContent(parsed.owner, parsed.repo, file.path, ref)
+      );
+      await writeFileContent(localFilePath, content);
+      skillFiles.push({ path: relativeToSkill, content });
+    }
+    const integrity = computeSkillIntegrity(skillFiles);
+    const lockedSkillEntry = locked?.skills[skillDir.name];
+    if (lockedSkillEntry && lockedSkillEntry.integrity && lockedSkillEntry.integrity !== integrity && resolvedSha === locked?.resolvedRef) {
+      logger.warn(
+        `Integrity mismatch for skill "${skillDir.name}" from ${sourceKey}: expected "${lockedSkillEntry.integrity}", got "${integrity}". Content may have been tampered with.`
+      );
+    }
+    fetchedSkills[skillDir.name] = { integrity };
+    logger.debug(`Fetched skill "${skillDir.name}" from ${sourceKey}`);
+  }
+  const fetchedNames = Object.keys(fetchedSkills);
+  const mergedSkills = { ...fetchedSkills };
+  if (locked) {
+    for (const [skillName, skillEntry] of Object.entries(locked.skills)) {
+      if (!(skillName in mergedSkills)) {
+        mergedSkills[skillName] = skillEntry;
+      }
+    }
+  }
+  lock = setLockedSource(lock, sourceKey, {
+    requestedRef,
+    resolvedRef: resolvedSha,
+    resolvedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    skills: mergedSkills
   });
-  return importFromTool({ config, tool: target });
+  logger.info(
+    `Fetched ${fetchedNames.length} skill(s) from ${sourceKey}: ${fetchedNames.join(", ") || "(none)"}`
+  );
+  return {
+    skillCount: fetchedNames.length,
+    fetchedSkillNames: fetchedNames,
+    updatedLock: lock
+  };
 }
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
-  ALL_FEATURES,
-  ALL_TOOL_TARGETS,
-  generate,
-  importFromTool
+
+// src/cli/commands/install.ts
+async function installCommand(options) {
+  logger.configure({
+    verbose: options.verbose ?? false,
+    silent: options.silent ?? false
+  });
+  const config = await ConfigResolver.resolve({
+    configPath: options.configPath,
+    verbose: options.verbose,
+    silent: options.silent
+  });
+  const sources = config.getSources();
+  if (sources.length === 0) {
+    logger.warn("No sources defined in configuration. Nothing to install.");
+    return;
+  }
+  logger.debug(`Installing skills from ${sources.length} source(s)...`);
+  const result = await resolveAndFetchSources({
+    sources,
+    baseDir: process.cwd(),
+    options: {
+      updateSources: options.update,
+      frozen: options.frozen,
+      token: options.token
+    }
+  });
+  if (result.fetchedSkillCount > 0) {
+    logger.success(
+      `Installed ${result.fetchedSkillCount} skill(s) from ${result.sourcesProcessed} source(s).`
+    );
+  } else {
+    logger.success(`All skills up to date (${result.sourcesProcessed} source(s) checked).`);
+  }
+}
+
+// src/cli/commands/mcp.ts
+var import_fastmcp = require("fastmcp");
+
+// src/mcp/tools.ts
+var import_mini62 = require("zod/mini");
+
+// src/mcp/commands.ts
+var import_node_path116 = require("path");
+var import_mini54 = require("zod/mini");
+var maxCommandSizeBytes = 1024 * 1024;
+var maxCommandsCount = 1e3;
+async function listCommands() {
+  const commandsDir = (0, import_node_path116.join)(process.cwd(), RULESYNC_COMMANDS_RELATIVE_DIR_PATH);
+  try {
+    const files = await listDirectoryFiles(commandsDir);
+    const mdFiles = files.filter((file) => file.endsWith(".md"));
+    const commands = await Promise.all(
+      mdFiles.map(async (file) => {
+        try {
+          const command = await RulesyncCommand.fromFile({
+            relativeFilePath: file
+          });
+          const frontmatter = command.getFrontmatter();
+          return {
+            relativePathFromCwd: (0, import_node_path116.join)(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, file),
+            frontmatter
+          };
+        } catch (error) {
+          logger.error(`Failed to read command file ${file}: ${formatError(error)}`);
+          return null;
+        }
+      })
+    );
+    return commands.filter((command) => command !== null);
+  } catch (error) {
+    logger.error(
+      `Failed to read commands directory (${RULESYNC_COMMANDS_RELATIVE_DIR_PATH}): ${formatError(error)}`
+    );
+    return [];
+  }
+}
+async function getCommand({ relativePathFromCwd }) {
+  checkPathTraversal({
+    relativePath: relativePathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const filename = (0, import_node_path116.basename)(relativePathFromCwd);
+  try {
+    const command = await RulesyncCommand.fromFile({
+      relativeFilePath: filename
+    });
+    return {
+      relativePathFromCwd: (0, import_node_path116.join)(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, filename),
+      frontmatter: command.getFrontmatter(),
+      body: command.getBody()
+    };
+  } catch (error) {
+    throw new Error(`Failed to read command file ${relativePathFromCwd}: ${formatError(error)}`, {
+      cause: error
+    });
+  }
+}
+async function putCommand({
+  relativePathFromCwd,
+  frontmatter,
+  body
+}) {
+  checkPathTraversal({
+    relativePath: relativePathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const filename = (0, import_node_path116.basename)(relativePathFromCwd);
+  const estimatedSize = JSON.stringify(frontmatter).length + body.length;
+  if (estimatedSize > maxCommandSizeBytes) {
+    throw new Error(
+      `Command size ${estimatedSize} bytes exceeds maximum ${maxCommandSizeBytes} bytes (1MB) for ${relativePathFromCwd}`
+    );
+  }
+  try {
+    const existingCommands = await listCommands();
+    const isUpdate = existingCommands.some(
+      (command2) => command2.relativePathFromCwd === (0, import_node_path116.join)(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, filename)
+    );
+    if (!isUpdate && existingCommands.length >= maxCommandsCount) {
+      throw new Error(
+        `Maximum number of commands (${maxCommandsCount}) reached in ${RULESYNC_COMMANDS_RELATIVE_DIR_PATH}`
+      );
+    }
+    const fileContent = stringifyFrontmatter(body, frontmatter);
+    const command = new RulesyncCommand({
+      baseDir: process.cwd(),
+      relativeDirPath: RULESYNC_COMMANDS_RELATIVE_DIR_PATH,
+      relativeFilePath: filename,
+      frontmatter,
+      body,
+      fileContent,
+      validate: true
+    });
+    const commandsDir = (0, import_node_path116.join)(process.cwd(), RULESYNC_COMMANDS_RELATIVE_DIR_PATH);
+    await ensureDir(commandsDir);
+    await writeFileContent(command.getFilePath(), command.getFileContent());
+    return {
+      relativePathFromCwd: (0, import_node_path116.join)(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, filename),
+      frontmatter: command.getFrontmatter(),
+      body: command.getBody()
+    };
+  } catch (error) {
+    throw new Error(`Failed to write command file ${relativePathFromCwd}: ${formatError(error)}`, {
+      cause: error
+    });
+  }
+}
+async function deleteCommand({ relativePathFromCwd }) {
+  checkPathTraversal({
+    relativePath: relativePathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const filename = (0, import_node_path116.basename)(relativePathFromCwd);
+  const fullPath = (0, import_node_path116.join)(process.cwd(), RULESYNC_COMMANDS_RELATIVE_DIR_PATH, filename);
+  try {
+    await removeFile(fullPath);
+    return {
+      relativePathFromCwd: (0, import_node_path116.join)(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, filename)
+    };
+  } catch (error) {
+    throw new Error(`Failed to delete command file ${relativePathFromCwd}: ${formatError(error)}`, {
+      cause: error
+    });
+  }
+}
+var commandToolSchemas = {
+  listCommands: import_mini54.z.object({}),
+  getCommand: import_mini54.z.object({
+    relativePathFromCwd: import_mini54.z.string()
+  }),
+  putCommand: import_mini54.z.object({
+    relativePathFromCwd: import_mini54.z.string(),
+    frontmatter: RulesyncCommandFrontmatterSchema,
+    body: import_mini54.z.string()
+  }),
+  deleteCommand: import_mini54.z.object({
+    relativePathFromCwd: import_mini54.z.string()
+  })
+};
+var commandTools = {
+  listCommands: {
+    name: "listCommands",
+    description: `List all commands from ${(0, import_node_path116.join)(RULESYNC_COMMANDS_RELATIVE_DIR_PATH, "*.md")} with their frontmatter.`,
+    parameters: commandToolSchemas.listCommands,
+    execute: async () => {
+      const commands = await listCommands();
+      const output = { commands };
+      return JSON.stringify(output, null, 2);
+    }
+  },
+  getCommand: {
+    name: "getCommand",
+    description: "Get detailed information about a specific command. relativePathFromCwd parameter is required.",
+    parameters: commandToolSchemas.getCommand,
+    execute: async (args) => {
+      const result = await getCommand({ relativePathFromCwd: args.relativePathFromCwd });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  putCommand: {
+    name: "putCommand",
+    description: "Create or update a command (upsert operation). relativePathFromCwd, frontmatter, and body parameters are required.",
+    parameters: commandToolSchemas.putCommand,
+    execute: async (args) => {
+      const result = await putCommand({
+        relativePathFromCwd: args.relativePathFromCwd,
+        frontmatter: args.frontmatter,
+        body: args.body
+      });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  deleteCommand: {
+    name: "deleteCommand",
+    description: "Delete a command file. relativePathFromCwd parameter is required.",
+    parameters: commandToolSchemas.deleteCommand,
+    execute: async (args) => {
+      const result = await deleteCommand({ relativePathFromCwd: args.relativePathFromCwd });
+      return JSON.stringify(result, null, 2);
+    }
+  }
+};
+
+// src/mcp/generate.ts
+var import_mini55 = require("zod/mini");
+var generateOptionsSchema = import_mini55.z.object({
+  targets: import_mini55.z.optional(import_mini55.z.array(import_mini55.z.string())),
+  features: import_mini55.z.optional(import_mini55.z.array(import_mini55.z.string())),
+  delete: import_mini55.z.optional(import_mini55.z.boolean()),
+  global: import_mini55.z.optional(import_mini55.z.boolean()),
+  simulateCommands: import_mini55.z.optional(import_mini55.z.boolean()),
+  simulateSubagents: import_mini55.z.optional(import_mini55.z.boolean()),
+  simulateSkills: import_mini55.z.optional(import_mini55.z.boolean())
+});
+async function executeGenerate(options = {}) {
+  try {
+    const exists = await checkRulesyncDirExists({ baseDir: process.cwd() });
+    if (!exists) {
+      return {
+        success: false,
+        error: ".rulesync directory does not exist. Please run 'rulesync init' first or create the directory manually."
+      };
+    }
+    const config = await ConfigResolver.resolve({
+      // eslint-disable-next-line no-type-assertion/no-type-assertion
+      targets: options.targets,
+      // eslint-disable-next-line no-type-assertion/no-type-assertion
+      features: options.features,
+      delete: options.delete,
+      global: options.global,
+      simulateCommands: options.simulateCommands,
+      simulateSubagents: options.simulateSubagents,
+      simulateSkills: options.simulateSkills,
+      // Always use default baseDirs (process.cwd()) and configPath
+      // verbose and silent are meaningless in MCP context
+      verbose: false,
+      silent: true
+    });
+    const generateResult = await generate({ config });
+    return buildSuccessResponse({ generateResult, config });
+  } catch (error) {
+    return {
+      success: false,
+      error: formatError(error)
+    };
+  }
+}
+function buildSuccessResponse(params) {
+  const { generateResult, config } = params;
+  const totalCount = calculateTotalCount(generateResult);
+  return {
+    success: true,
+    result: {
+      rulesCount: generateResult.rulesCount,
+      ignoreCount: generateResult.ignoreCount,
+      mcpCount: generateResult.mcpCount,
+      commandsCount: generateResult.commandsCount,
+      subagentsCount: generateResult.subagentsCount,
+      skillsCount: generateResult.skillsCount,
+      hooksCount: generateResult.hooksCount,
+      totalCount
+    },
+    config: {
+      targets: config.getTargets(),
+      features: config.getFeatures(),
+      global: config.getGlobal(),
+      delete: config.getDelete(),
+      simulateCommands: config.getSimulateCommands(),
+      simulateSubagents: config.getSimulateSubagents(),
+      simulateSkills: config.getSimulateSkills()
+    }
+  };
+}
+var generateToolSchemas = {
+  executeGenerate: generateOptionsSchema
+};
+var generateTools = {
+  executeGenerate: {
+    name: "executeGenerate",
+    description: "Execute the rulesync generate command to create output files for AI tools. Uses rulesync.jsonc settings by default, but options can override them.",
+    parameters: generateToolSchemas.executeGenerate,
+    execute: async (options = {}) => {
+      const result = await executeGenerate(options);
+      return JSON.stringify(result, null, 2);
+    }
+  }
+};
+
+// src/mcp/ignore.ts
+var import_node_path117 = require("path");
+var import_mini56 = require("zod/mini");
+var maxIgnoreFileSizeBytes = 100 * 1024;
+async function getIgnoreFile() {
+  const ignoreFilePath = (0, import_node_path117.join)(process.cwd(), RULESYNC_AIIGNORE_RELATIVE_FILE_PATH);
+  try {
+    const content = await readFileContent(ignoreFilePath);
+    return {
+      relativePathFromCwd: RULESYNC_AIIGNORE_RELATIVE_FILE_PATH,
+      content
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to read ignore file (${RULESYNC_AIIGNORE_RELATIVE_FILE_PATH}): ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+async function putIgnoreFile({ content }) {
+  const ignoreFilePath = (0, import_node_path117.join)(process.cwd(), RULESYNC_AIIGNORE_RELATIVE_FILE_PATH);
+  const contentSizeBytes = Buffer.byteLength(content, "utf8");
+  if (contentSizeBytes > maxIgnoreFileSizeBytes) {
+    throw new Error(
+      `Ignore file size ${contentSizeBytes} bytes exceeds maximum ${maxIgnoreFileSizeBytes} bytes (100KB) for ${RULESYNC_AIIGNORE_RELATIVE_FILE_PATH}`
+    );
+  }
+  try {
+    await ensureDir(process.cwd());
+    await writeFileContent(ignoreFilePath, content);
+    return {
+      relativePathFromCwd: RULESYNC_AIIGNORE_RELATIVE_FILE_PATH,
+      content
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to write ignore file (${RULESYNC_AIIGNORE_RELATIVE_FILE_PATH}): ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+async function deleteIgnoreFile() {
+  const aiignorePath = (0, import_node_path117.join)(process.cwd(), RULESYNC_AIIGNORE_RELATIVE_FILE_PATH);
+  const legacyIgnorePath = (0, import_node_path117.join)(process.cwd(), RULESYNC_IGNORE_RELATIVE_FILE_PATH);
+  try {
+    await Promise.all([removeFile(aiignorePath), removeFile(legacyIgnorePath)]);
+    return {
+      // Keep the historical return shape — point to the recommended file path
+      // for backward compatibility.
+      relativePathFromCwd: RULESYNC_AIIGNORE_RELATIVE_FILE_PATH
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to delete ignore files (${RULESYNC_AIIGNORE_RELATIVE_FILE_PATH}, ${RULESYNC_IGNORE_RELATIVE_FILE_PATH}): ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+var ignoreToolSchemas = {
+  getIgnoreFile: import_mini56.z.object({}),
+  putIgnoreFile: import_mini56.z.object({
+    content: import_mini56.z.string()
+  }),
+  deleteIgnoreFile: import_mini56.z.object({})
+};
+var ignoreTools = {
+  getIgnoreFile: {
+    name: "getIgnoreFile",
+    description: "Get the content of the .rulesyncignore file from the project root.",
+    parameters: ignoreToolSchemas.getIgnoreFile,
+    execute: async () => {
+      const result = await getIgnoreFile();
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  putIgnoreFile: {
+    name: "putIgnoreFile",
+    description: "Create or update the .rulesync/.aiignore file (upsert operation). content parameter is required.",
+    parameters: ignoreToolSchemas.putIgnoreFile,
+    execute: async (args) => {
+      const result = await putIgnoreFile({ content: args.content });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  deleteIgnoreFile: {
+    name: "deleteIgnoreFile",
+    description: "Delete the .rulesyncignore and .rulesync/.aiignore files.",
+    parameters: ignoreToolSchemas.deleteIgnoreFile,
+    execute: async () => {
+      const result = await deleteIgnoreFile();
+      return JSON.stringify(result, null, 2);
+    }
+  }
+};
+
+// src/mcp/import.ts
+var import_mini57 = require("zod/mini");
+var importOptionsSchema = import_mini57.z.object({
+  target: import_mini57.z.string(),
+  features: import_mini57.z.optional(import_mini57.z.array(import_mini57.z.string())),
+  global: import_mini57.z.optional(import_mini57.z.boolean())
+});
+async function executeImport(options) {
+  try {
+    if (!options.target) {
+      return {
+        success: false,
+        error: "target is required. Please specify a tool to import from."
+      };
+    }
+    const config = await ConfigResolver.resolve({
+      // eslint-disable-next-line no-type-assertion/no-type-assertion
+      targets: [options.target],
+      // eslint-disable-next-line no-type-assertion/no-type-assertion
+      features: options.features,
+      global: options.global,
+      // Always use default baseDirs (process.cwd()) and configPath
+      // verbose and silent are meaningless in MCP context
+      verbose: false,
+      silent: true
+    });
+    const tool = config.getTargets()[0];
+    const importResult = await importFromTool({ config, tool });
+    return buildSuccessResponse2({ importResult, config, tool });
+  } catch (error) {
+    return {
+      success: false,
+      error: formatError(error)
+    };
+  }
+}
+function buildSuccessResponse2(params) {
+  const { importResult, config, tool } = params;
+  const totalCount = calculateTotalCount(importResult);
+  return {
+    success: true,
+    result: {
+      rulesCount: importResult.rulesCount,
+      ignoreCount: importResult.ignoreCount,
+      mcpCount: importResult.mcpCount,
+      commandsCount: importResult.commandsCount,
+      subagentsCount: importResult.subagentsCount,
+      skillsCount: importResult.skillsCount,
+      hooksCount: importResult.hooksCount,
+      totalCount
+    },
+    config: {
+      target: tool,
+      features: config.getFeatures(),
+      global: config.getGlobal()
+    }
+  };
+}
+var importToolSchemas = {
+  executeImport: importOptionsSchema
+};
+var importTools = {
+  executeImport: {
+    name: "executeImport",
+    description: "Execute the rulesync import command to import configuration files from an AI tool into .rulesync directory. Requires exactly one target tool to import from.",
+    parameters: importToolSchemas.executeImport,
+    execute: async (options) => {
+      const result = await executeImport(options);
+      return JSON.stringify(result, null, 2);
+    }
+  }
+};
+
+// src/mcp/mcp.ts
+var import_node_path118 = require("path");
+var import_mini58 = require("zod/mini");
+var maxMcpSizeBytes = 1024 * 1024;
+async function getMcpFile() {
+  try {
+    const rulesyncMcp = await RulesyncMcp.fromFile({
+      validate: true
+    });
+    const relativePathFromCwd = (0, import_node_path118.join)(
+      rulesyncMcp.getRelativeDirPath(),
+      rulesyncMcp.getRelativeFilePath()
+    );
+    return {
+      relativePathFromCwd,
+      content: rulesyncMcp.getFileContent()
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to read MCP file (${RULESYNC_MCP_RELATIVE_FILE_PATH}): ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+async function putMcpFile({ content }) {
+  if (content.length > maxMcpSizeBytes) {
+    throw new Error(
+      `MCP file size ${content.length} bytes exceeds maximum ${maxMcpSizeBytes} bytes (1MB) for ${RULESYNC_MCP_RELATIVE_FILE_PATH}`
+    );
+  }
+  try {
+    JSON.parse(content);
+  } catch (error) {
+    throw new Error(
+      `Invalid JSON format in MCP file (${RULESYNC_MCP_RELATIVE_FILE_PATH}): ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+  try {
+    const baseDir = process.cwd();
+    const paths = RulesyncMcp.getSettablePaths();
+    const relativeDirPath = paths.recommended.relativeDirPath;
+    const relativeFilePath = paths.recommended.relativeFilePath;
+    const fullPath = (0, import_node_path118.join)(baseDir, relativeDirPath, relativeFilePath);
+    const rulesyncMcp = new RulesyncMcp({
+      baseDir,
+      relativeDirPath,
+      relativeFilePath,
+      fileContent: content,
+      validate: true
+    });
+    await ensureDir((0, import_node_path118.join)(baseDir, relativeDirPath));
+    await writeFileContent(fullPath, content);
+    const relativePathFromCwd = (0, import_node_path118.join)(relativeDirPath, relativeFilePath);
+    return {
+      relativePathFromCwd,
+      content: rulesyncMcp.getFileContent()
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to write MCP file (${RULESYNC_MCP_RELATIVE_FILE_PATH}): ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+async function deleteMcpFile() {
+  try {
+    const baseDir = process.cwd();
+    const paths = RulesyncMcp.getSettablePaths();
+    const recommendedPath = (0, import_node_path118.join)(
+      baseDir,
+      paths.recommended.relativeDirPath,
+      paths.recommended.relativeFilePath
+    );
+    const legacyPath = (0, import_node_path118.join)(baseDir, paths.legacy.relativeDirPath, paths.legacy.relativeFilePath);
+    await removeFile(recommendedPath);
+    await removeFile(legacyPath);
+    const relativePathFromCwd = (0, import_node_path118.join)(
+      paths.recommended.relativeDirPath,
+      paths.recommended.relativeFilePath
+    );
+    return {
+      relativePathFromCwd
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to delete MCP file (${RULESYNC_MCP_RELATIVE_FILE_PATH}): ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+var mcpToolSchemas = {
+  getMcpFile: import_mini58.z.object({}),
+  putMcpFile: import_mini58.z.object({
+    content: import_mini58.z.string()
+  }),
+  deleteMcpFile: import_mini58.z.object({})
+};
+var mcpTools = {
+  getMcpFile: {
+    name: "getMcpFile",
+    description: `Get the MCP configuration file (${RULESYNC_MCP_RELATIVE_FILE_PATH}).`,
+    parameters: mcpToolSchemas.getMcpFile,
+    execute: async () => {
+      const result = await getMcpFile();
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  putMcpFile: {
+    name: "putMcpFile",
+    description: "Create or update the MCP configuration file (upsert operation). content parameter is required and must be valid JSON.",
+    parameters: mcpToolSchemas.putMcpFile,
+    execute: async (args) => {
+      const result = await putMcpFile({ content: args.content });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  deleteMcpFile: {
+    name: "deleteMcpFile",
+    description: "Delete the MCP configuration file.",
+    parameters: mcpToolSchemas.deleteMcpFile,
+    execute: async () => {
+      const result = await deleteMcpFile();
+      return JSON.stringify(result, null, 2);
+    }
+  }
+};
+
+// src/mcp/rules.ts
+var import_node_path119 = require("path");
+var import_mini59 = require("zod/mini");
+var maxRuleSizeBytes = 1024 * 1024;
+var maxRulesCount = 1e3;
+async function listRules() {
+  const rulesDir = (0, import_node_path119.join)(process.cwd(), RULESYNC_RULES_RELATIVE_DIR_PATH);
+  try {
+    const files = await listDirectoryFiles(rulesDir);
+    const mdFiles = files.filter((file) => file.endsWith(".md"));
+    const rules = await Promise.all(
+      mdFiles.map(async (file) => {
+        try {
+          const rule = await RulesyncRule.fromFile({
+            relativeFilePath: file,
+            validate: true
+          });
+          const frontmatter = rule.getFrontmatter();
+          return {
+            relativePathFromCwd: (0, import_node_path119.join)(RULESYNC_RULES_RELATIVE_DIR_PATH, file),
+            frontmatter
+          };
+        } catch (error) {
+          logger.error(`Failed to read rule file ${file}: ${formatError(error)}`);
+          return null;
+        }
+      })
+    );
+    return rules.filter((rule) => rule !== null);
+  } catch (error) {
+    logger.error(
+      `Failed to read rules directory (${RULESYNC_RULES_RELATIVE_DIR_PATH}): ${formatError(error)}`
+    );
+    return [];
+  }
+}
+async function getRule({ relativePathFromCwd }) {
+  checkPathTraversal({
+    relativePath: relativePathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const filename = (0, import_node_path119.basename)(relativePathFromCwd);
+  try {
+    const rule = await RulesyncRule.fromFile({
+      relativeFilePath: filename,
+      validate: true
+    });
+    return {
+      relativePathFromCwd: (0, import_node_path119.join)(RULESYNC_RULES_RELATIVE_DIR_PATH, filename),
+      frontmatter: rule.getFrontmatter(),
+      body: rule.getBody()
+    };
+  } catch (error) {
+    throw new Error(`Failed to read rule file ${relativePathFromCwd}: ${formatError(error)}`, {
+      cause: error
+    });
+  }
+}
+async function putRule({
+  relativePathFromCwd,
+  frontmatter,
+  body
+}) {
+  checkPathTraversal({
+    relativePath: relativePathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const filename = (0, import_node_path119.basename)(relativePathFromCwd);
+  const estimatedSize = JSON.stringify(frontmatter).length + body.length;
+  if (estimatedSize > maxRuleSizeBytes) {
+    throw new Error(
+      `Rule size ${estimatedSize} bytes exceeds maximum ${maxRuleSizeBytes} bytes (1MB) for ${relativePathFromCwd}`
+    );
+  }
+  try {
+    const existingRules = await listRules();
+    const isUpdate = existingRules.some(
+      (rule2) => rule2.relativePathFromCwd === (0, import_node_path119.join)(RULESYNC_RULES_RELATIVE_DIR_PATH, filename)
+    );
+    if (!isUpdate && existingRules.length >= maxRulesCount) {
+      throw new Error(
+        `Maximum number of rules (${maxRulesCount}) reached in ${RULESYNC_RULES_RELATIVE_DIR_PATH}`
+      );
+    }
+    const rule = new RulesyncRule({
+      baseDir: process.cwd(),
+      relativeDirPath: RULESYNC_RULES_RELATIVE_DIR_PATH,
+      relativeFilePath: filename,
+      frontmatter,
+      body,
+      validate: true
+    });
+    const rulesDir = (0, import_node_path119.join)(process.cwd(), RULESYNC_RULES_RELATIVE_DIR_PATH);
+    await ensureDir(rulesDir);
+    await writeFileContent(rule.getFilePath(), rule.getFileContent());
+    return {
+      relativePathFromCwd: (0, import_node_path119.join)(RULESYNC_RULES_RELATIVE_DIR_PATH, filename),
+      frontmatter: rule.getFrontmatter(),
+      body: rule.getBody()
+    };
+  } catch (error) {
+    throw new Error(`Failed to write rule file ${relativePathFromCwd}: ${formatError(error)}`, {
+      cause: error
+    });
+  }
+}
+async function deleteRule({ relativePathFromCwd }) {
+  checkPathTraversal({
+    relativePath: relativePathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const filename = (0, import_node_path119.basename)(relativePathFromCwd);
+  const fullPath = (0, import_node_path119.join)(process.cwd(), RULESYNC_RULES_RELATIVE_DIR_PATH, filename);
+  try {
+    await removeFile(fullPath);
+    return {
+      relativePathFromCwd: (0, import_node_path119.join)(RULESYNC_RULES_RELATIVE_DIR_PATH, filename)
+    };
+  } catch (error) {
+    throw new Error(`Failed to delete rule file ${relativePathFromCwd}: ${formatError(error)}`, {
+      cause: error
+    });
+  }
+}
+var ruleToolSchemas = {
+  listRules: import_mini59.z.object({}),
+  getRule: import_mini59.z.object({
+    relativePathFromCwd: import_mini59.z.string()
+  }),
+  putRule: import_mini59.z.object({
+    relativePathFromCwd: import_mini59.z.string(),
+    frontmatter: RulesyncRuleFrontmatterSchema,
+    body: import_mini59.z.string()
+  }),
+  deleteRule: import_mini59.z.object({
+    relativePathFromCwd: import_mini59.z.string()
+  })
+};
+var ruleTools = {
+  listRules: {
+    name: "listRules",
+    description: `List all rules from ${(0, import_node_path119.join)(RULESYNC_RULES_RELATIVE_DIR_PATH, "*.md")} with their frontmatter.`,
+    parameters: ruleToolSchemas.listRules,
+    execute: async () => {
+      const rules = await listRules();
+      const output = { rules };
+      return JSON.stringify(output, null, 2);
+    }
+  },
+  getRule: {
+    name: "getRule",
+    description: "Get detailed information about a specific rule. relativePathFromCwd parameter is required.",
+    parameters: ruleToolSchemas.getRule,
+    execute: async (args) => {
+      const result = await getRule({ relativePathFromCwd: args.relativePathFromCwd });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  putRule: {
+    name: "putRule",
+    description: "Create or update a rule (upsert operation). relativePathFromCwd, frontmatter, and body parameters are required.",
+    parameters: ruleToolSchemas.putRule,
+    execute: async (args) => {
+      const result = await putRule({
+        relativePathFromCwd: args.relativePathFromCwd,
+        frontmatter: args.frontmatter,
+        body: args.body
+      });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  deleteRule: {
+    name: "deleteRule",
+    description: "Delete a rule file. relativePathFromCwd parameter is required.",
+    parameters: ruleToolSchemas.deleteRule,
+    execute: async (args) => {
+      const result = await deleteRule({ relativePathFromCwd: args.relativePathFromCwd });
+      return JSON.stringify(result, null, 2);
+    }
+  }
+};
+
+// src/mcp/skills.ts
+var import_node_path120 = require("path");
+var import_mini60 = require("zod/mini");
+var maxSkillSizeBytes = 1024 * 1024;
+var maxSkillsCount = 1e3;
+function aiDirFileToMcpSkillFile(file) {
+  return {
+    name: file.relativeFilePathToDirPath,
+    body: file.fileBuffer.toString("utf-8")
+  };
+}
+function mcpSkillFileToAiDirFile(file) {
+  return {
+    relativeFilePathToDirPath: file.name,
+    fileBuffer: Buffer.from(file.body, "utf-8")
+  };
+}
+function extractDirName(relativeDirPathFromCwd) {
+  const dirName = (0, import_node_path120.basename)(relativeDirPathFromCwd);
+  if (!dirName) {
+    throw new Error(`Invalid path: ${relativeDirPathFromCwd}`);
+  }
+  return dirName;
+}
+async function listSkills() {
+  const skillsDir = (0, import_node_path120.join)(process.cwd(), RULESYNC_SKILLS_RELATIVE_DIR_PATH);
+  try {
+    const skillDirPaths = await findFilesByGlobs((0, import_node_path120.join)(skillsDir, "*"), { type: "dir" });
+    const skills = await Promise.all(
+      skillDirPaths.map(async (dirPath) => {
+        const dirName = (0, import_node_path120.basename)(dirPath);
+        if (!dirName) return null;
+        try {
+          const skill = await RulesyncSkill.fromDir({
+            dirName
+          });
+          const frontmatter = skill.getFrontmatter();
+          return {
+            relativeDirPathFromCwd: (0, import_node_path120.join)(RULESYNC_SKILLS_RELATIVE_DIR_PATH, dirName),
+            frontmatter
+          };
+        } catch (error) {
+          logger.error(`Failed to read skill directory ${dirName}: ${formatError(error)}`);
+          return null;
+        }
+      })
+    );
+    return skills.filter((skill) => skill !== null);
+  } catch (error) {
+    logger.error(
+      `Failed to read skills directory (${RULESYNC_SKILLS_RELATIVE_DIR_PATH}): ${formatError(error)}`
+    );
+    return [];
+  }
+}
+async function getSkill({ relativeDirPathFromCwd }) {
+  checkPathTraversal({
+    relativePath: relativeDirPathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const dirName = extractDirName(relativeDirPathFromCwd);
+  try {
+    const skill = await RulesyncSkill.fromDir({
+      dirName
+    });
+    return {
+      relativeDirPathFromCwd: (0, import_node_path120.join)(RULESYNC_SKILLS_RELATIVE_DIR_PATH, dirName),
+      frontmatter: skill.getFrontmatter(),
+      body: skill.getBody(),
+      otherFiles: skill.getOtherFiles().map(aiDirFileToMcpSkillFile)
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to read skill directory ${relativeDirPathFromCwd}: ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+async function putSkill({
+  relativeDirPathFromCwd,
+  frontmatter,
+  body,
+  otherFiles = []
+}) {
+  checkPathTraversal({
+    relativePath: relativeDirPathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const dirName = extractDirName(relativeDirPathFromCwd);
+  const estimatedSize = JSON.stringify(frontmatter).length + body.length + otherFiles.reduce((acc, file) => acc + file.name.length + file.body.length, 0);
+  if (estimatedSize > maxSkillSizeBytes) {
+    throw new Error(
+      `Skill size ${estimatedSize} bytes exceeds maximum ${maxSkillSizeBytes} bytes (1MB) for ${relativeDirPathFromCwd}`
+    );
+  }
+  try {
+    const existingSkills = await listSkills();
+    const isUpdate = existingSkills.some(
+      (skill2) => skill2.relativeDirPathFromCwd === (0, import_node_path120.join)(RULESYNC_SKILLS_RELATIVE_DIR_PATH, dirName)
+    );
+    if (!isUpdate && existingSkills.length >= maxSkillsCount) {
+      throw new Error(
+        `Maximum number of skills (${maxSkillsCount}) reached in ${RULESYNC_SKILLS_RELATIVE_DIR_PATH}`
+      );
+    }
+    const aiDirFiles = otherFiles.map(mcpSkillFileToAiDirFile);
+    const skill = new RulesyncSkill({
+      baseDir: process.cwd(),
+      relativeDirPath: RULESYNC_SKILLS_RELATIVE_DIR_PATH,
+      dirName,
+      frontmatter,
+      body,
+      otherFiles: aiDirFiles,
+      validate: true
+    });
+    const skillDirPath = (0, import_node_path120.join)(process.cwd(), RULESYNC_SKILLS_RELATIVE_DIR_PATH, dirName);
+    await ensureDir(skillDirPath);
+    const skillFilePath = (0, import_node_path120.join)(skillDirPath, SKILL_FILE_NAME);
+    const skillFileContent = stringifyFrontmatter(body, frontmatter);
+    await writeFileContent(skillFilePath, skillFileContent);
+    for (const file of otherFiles) {
+      checkPathTraversal({
+        relativePath: file.name,
+        intendedRootDir: skillDirPath
+      });
+      const filePath = (0, import_node_path120.join)(skillDirPath, file.name);
+      const fileDir = (0, import_node_path120.join)(skillDirPath, (0, import_node_path120.dirname)(file.name));
+      if (fileDir !== skillDirPath) {
+        await ensureDir(fileDir);
+      }
+      await writeFileContent(filePath, file.body);
+    }
+    return {
+      relativeDirPathFromCwd: (0, import_node_path120.join)(RULESYNC_SKILLS_RELATIVE_DIR_PATH, dirName),
+      frontmatter: skill.getFrontmatter(),
+      body: skill.getBody(),
+      otherFiles: skill.getOtherFiles().map(aiDirFileToMcpSkillFile)
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to write skill directory ${relativeDirPathFromCwd}: ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+async function deleteSkill({
+  relativeDirPathFromCwd
+}) {
+  checkPathTraversal({
+    relativePath: relativeDirPathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const dirName = extractDirName(relativeDirPathFromCwd);
+  const skillDirPath = (0, import_node_path120.join)(process.cwd(), RULESYNC_SKILLS_RELATIVE_DIR_PATH, dirName);
+  try {
+    if (await directoryExists(skillDirPath)) {
+      await removeDirectory(skillDirPath);
+    }
+    return {
+      relativeDirPathFromCwd: (0, import_node_path120.join)(RULESYNC_SKILLS_RELATIVE_DIR_PATH, dirName)
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to delete skill directory ${relativeDirPathFromCwd}: ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+var McpSkillFileSchema = import_mini60.z.object({
+  name: import_mini60.z.string(),
+  body: import_mini60.z.string()
+});
+var skillToolSchemas = {
+  listSkills: import_mini60.z.object({}),
+  getSkill: import_mini60.z.object({
+    relativeDirPathFromCwd: import_mini60.z.string()
+  }),
+  putSkill: import_mini60.z.object({
+    relativeDirPathFromCwd: import_mini60.z.string(),
+    frontmatter: RulesyncSkillFrontmatterSchema,
+    body: import_mini60.z.string(),
+    otherFiles: import_mini60.z.optional(import_mini60.z.array(McpSkillFileSchema))
+  }),
+  deleteSkill: import_mini60.z.object({
+    relativeDirPathFromCwd: import_mini60.z.string()
+  })
+};
+var skillTools = {
+  listSkills: {
+    name: "listSkills",
+    description: `List all skills from ${(0, import_node_path120.join)(RULESYNC_SKILLS_RELATIVE_DIR_PATH, "*", SKILL_FILE_NAME)} with their frontmatter.`,
+    parameters: skillToolSchemas.listSkills,
+    execute: async () => {
+      const skills = await listSkills();
+      const output = { skills };
+      return JSON.stringify(output, null, 2);
+    }
+  },
+  getSkill: {
+    name: "getSkill",
+    description: "Get detailed information about a specific skill including SKILL.md content and other files. relativeDirPathFromCwd parameter is required.",
+    parameters: skillToolSchemas.getSkill,
+    execute: async (args) => {
+      const result = await getSkill({ relativeDirPathFromCwd: args.relativeDirPathFromCwd });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  putSkill: {
+    name: "putSkill",
+    description: "Create or update a skill (upsert operation). relativeDirPathFromCwd, frontmatter, and body parameters are required. otherFiles is optional.",
+    parameters: skillToolSchemas.putSkill,
+    execute: async (args) => {
+      const result = await putSkill({
+        relativeDirPathFromCwd: args.relativeDirPathFromCwd,
+        frontmatter: args.frontmatter,
+        body: args.body,
+        otherFiles: args.otherFiles
+      });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  deleteSkill: {
+    name: "deleteSkill",
+    description: "Delete a skill directory and all its contents. relativeDirPathFromCwd parameter is required.",
+    parameters: skillToolSchemas.deleteSkill,
+    execute: async (args) => {
+      const result = await deleteSkill({ relativeDirPathFromCwd: args.relativeDirPathFromCwd });
+      return JSON.stringify(result, null, 2);
+    }
+  }
+};
+
+// src/mcp/subagents.ts
+var import_node_path121 = require("path");
+var import_mini61 = require("zod/mini");
+var maxSubagentSizeBytes = 1024 * 1024;
+var maxSubagentsCount = 1e3;
+async function listSubagents() {
+  const subagentsDir = (0, import_node_path121.join)(process.cwd(), RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH);
+  try {
+    const files = await listDirectoryFiles(subagentsDir);
+    const mdFiles = files.filter((file) => file.endsWith(".md"));
+    const subagents = await Promise.all(
+      mdFiles.map(async (file) => {
+        try {
+          const subagent = await RulesyncSubagent.fromFile({
+            relativeFilePath: file,
+            validate: true
+          });
+          const frontmatter = subagent.getFrontmatter();
+          return {
+            relativePathFromCwd: (0, import_node_path121.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, file),
+            frontmatter
+          };
+        } catch (error) {
+          logger.error(`Failed to read subagent file ${file}: ${formatError(error)}`);
+          return null;
+        }
+      })
+    );
+    return subagents.filter(
+      (subagent) => subagent !== null
+    );
+  } catch (error) {
+    logger.error(
+      `Failed to read subagents directory (${RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH}): ${formatError(error)}`
+    );
+    return [];
+  }
+}
+async function getSubagent({ relativePathFromCwd }) {
+  checkPathTraversal({
+    relativePath: relativePathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const filename = (0, import_node_path121.basename)(relativePathFromCwd);
+  try {
+    const subagent = await RulesyncSubagent.fromFile({
+      relativeFilePath: filename,
+      validate: true
+    });
+    return {
+      relativePathFromCwd: (0, import_node_path121.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, filename),
+      frontmatter: subagent.getFrontmatter(),
+      body: subagent.getBody()
+    };
+  } catch (error) {
+    throw new Error(`Failed to read subagent file ${relativePathFromCwd}: ${formatError(error)}`, {
+      cause: error
+    });
+  }
+}
+async function putSubagent({
+  relativePathFromCwd,
+  frontmatter,
+  body
+}) {
+  checkPathTraversal({
+    relativePath: relativePathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const filename = (0, import_node_path121.basename)(relativePathFromCwd);
+  const estimatedSize = JSON.stringify(frontmatter).length + body.length;
+  if (estimatedSize > maxSubagentSizeBytes) {
+    throw new Error(
+      `Subagent size ${estimatedSize} bytes exceeds maximum ${maxSubagentSizeBytes} bytes (1MB) for ${relativePathFromCwd}`
+    );
+  }
+  try {
+    const existingSubagents = await listSubagents();
+    const isUpdate = existingSubagents.some(
+      (subagent2) => subagent2.relativePathFromCwd === (0, import_node_path121.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, filename)
+    );
+    if (!isUpdate && existingSubagents.length >= maxSubagentsCount) {
+      throw new Error(
+        `Maximum number of subagents (${maxSubagentsCount}) reached in ${RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH}`
+      );
+    }
+    const subagent = new RulesyncSubagent({
+      baseDir: process.cwd(),
+      relativeDirPath: RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH,
+      relativeFilePath: filename,
+      frontmatter,
+      body,
+      validate: true
+    });
+    const subagentsDir = (0, import_node_path121.join)(process.cwd(), RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH);
+    await ensureDir(subagentsDir);
+    await writeFileContent(subagent.getFilePath(), subagent.getFileContent());
+    return {
+      relativePathFromCwd: (0, import_node_path121.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, filename),
+      frontmatter: subagent.getFrontmatter(),
+      body: subagent.getBody()
+    };
+  } catch (error) {
+    throw new Error(`Failed to write subagent file ${relativePathFromCwd}: ${formatError(error)}`, {
+      cause: error
+    });
+  }
+}
+async function deleteSubagent({ relativePathFromCwd }) {
+  checkPathTraversal({
+    relativePath: relativePathFromCwd,
+    intendedRootDir: process.cwd()
+  });
+  const filename = (0, import_node_path121.basename)(relativePathFromCwd);
+  const fullPath = (0, import_node_path121.join)(process.cwd(), RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, filename);
+  try {
+    await removeFile(fullPath);
+    return {
+      relativePathFromCwd: (0, import_node_path121.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, filename)
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to delete subagent file ${relativePathFromCwd}: ${formatError(error)}`,
+      {
+        cause: error
+      }
+    );
+  }
+}
+var subagentToolSchemas = {
+  listSubagents: import_mini61.z.object({}),
+  getSubagent: import_mini61.z.object({
+    relativePathFromCwd: import_mini61.z.string()
+  }),
+  putSubagent: import_mini61.z.object({
+    relativePathFromCwd: import_mini61.z.string(),
+    frontmatter: RulesyncSubagentFrontmatterSchema,
+    body: import_mini61.z.string()
+  }),
+  deleteSubagent: import_mini61.z.object({
+    relativePathFromCwd: import_mini61.z.string()
+  })
+};
+var subagentTools = {
+  listSubagents: {
+    name: "listSubagents",
+    description: `List all subagents from ${(0, import_node_path121.join)(RULESYNC_SUBAGENTS_RELATIVE_DIR_PATH, "*.md")} with their frontmatter.`,
+    parameters: subagentToolSchemas.listSubagents,
+    execute: async () => {
+      const subagents = await listSubagents();
+      const output = { subagents };
+      return JSON.stringify(output, null, 2);
+    }
+  },
+  getSubagent: {
+    name: "getSubagent",
+    description: "Get detailed information about a specific subagent. relativePathFromCwd parameter is required.",
+    parameters: subagentToolSchemas.getSubagent,
+    execute: async (args) => {
+      const result = await getSubagent({ relativePathFromCwd: args.relativePathFromCwd });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  putSubagent: {
+    name: "putSubagent",
+    description: "Create or update a subagent (upsert operation). relativePathFromCwd, frontmatter, and body parameters are required.",
+    parameters: subagentToolSchemas.putSubagent,
+    execute: async (args) => {
+      const result = await putSubagent({
+        relativePathFromCwd: args.relativePathFromCwd,
+        frontmatter: args.frontmatter,
+        body: args.body
+      });
+      return JSON.stringify(result, null, 2);
+    }
+  },
+  deleteSubagent: {
+    name: "deleteSubagent",
+    description: "Delete a subagent file. relativePathFromCwd parameter is required.",
+    parameters: subagentToolSchemas.deleteSubagent,
+    execute: async (args) => {
+      const result = await deleteSubagent({ relativePathFromCwd: args.relativePathFromCwd });
+      return JSON.stringify(result, null, 2);
+    }
+  }
+};
+
+// src/mcp/tools.ts
+var rulesyncFeatureSchema = import_mini62.z.enum([
+  "rule",
+  "command",
+  "subagent",
+  "skill",
+  "ignore",
+  "mcp",
+  "generate",
+  "import"
+]);
+var rulesyncOperationSchema = import_mini62.z.enum(["list", "get", "put", "delete", "run"]);
+var skillFileSchema = import_mini62.z.object({
+  name: import_mini62.z.string(),
+  body: import_mini62.z.string()
+});
+var rulesyncToolSchema = import_mini62.z.object({
+  feature: rulesyncFeatureSchema,
+  operation: rulesyncOperationSchema,
+  targetPathFromCwd: import_mini62.z.optional(import_mini62.z.string()),
+  frontmatter: import_mini62.z.optional(import_mini62.z.unknown()),
+  body: import_mini62.z.optional(import_mini62.z.string()),
+  otherFiles: import_mini62.z.optional(import_mini62.z.array(skillFileSchema)),
+  content: import_mini62.z.optional(import_mini62.z.string()),
+  generateOptions: import_mini62.z.optional(generateOptionsSchema),
+  importOptions: import_mini62.z.optional(importOptionsSchema)
+});
+var supportedOperationsByFeature = {
+  rule: ["list", "get", "put", "delete"],
+  command: ["list", "get", "put", "delete"],
+  subagent: ["list", "get", "put", "delete"],
+  skill: ["list", "get", "put", "delete"],
+  ignore: ["get", "put", "delete"],
+  mcp: ["get", "put", "delete"],
+  generate: ["run"],
+  import: ["run"]
+};
+function assertSupported({
+  feature,
+  operation
+}) {
+  const supportedOperations = supportedOperationsByFeature[feature];
+  if (!supportedOperations.includes(operation)) {
+    throw new Error(
+      `Operation ${operation} is not supported for feature ${feature}. Supported operations: ${supportedOperations.join(
+        ", "
+      )}`
+    );
+  }
+}
+function requireTargetPath({ targetPathFromCwd, feature, operation }) {
+  if (!targetPathFromCwd) {
+    throw new Error(`targetPathFromCwd is required for ${feature} ${operation} operation`);
+  }
+  return targetPathFromCwd;
+}
+function parseFrontmatter2({
+  feature,
+  frontmatter
+}) {
+  switch (feature) {
+    case "rule": {
+      return RulesyncRuleFrontmatterSchema.parse(frontmatter);
+    }
+    case "command": {
+      return RulesyncCommandFrontmatterSchema.parse(frontmatter);
+    }
+    case "subagent": {
+      return RulesyncSubagentFrontmatterSchema.parse(frontmatter);
+    }
+    case "skill": {
+      return RulesyncSkillFrontmatterSchema.parse(frontmatter);
+    }
+  }
+}
+function ensureBody({ body, feature, operation }) {
+  if (!body) {
+    throw new Error(`body is required for ${feature} ${operation} operation`);
+  }
+  return body;
+}
+var rulesyncTool = {
+  name: "rulesyncTool",
+  description: "Manage Rulesync files through a single MCP tool. Features: rule/command/subagent/skill support list/get/put/delete; ignore/mcp support get/put/delete only; generate supports run only; import supports run only. Parameters: list requires no targetPathFromCwd (lists all items); get/delete require targetPathFromCwd; put requires targetPathFromCwd, frontmatter, and body (or content for ignore/mcp); generate/run uses generateOptions to configure generation; import/run uses importOptions to configure import.",
+  parameters: rulesyncToolSchema,
+  execute: async (args) => {
+    const parsed = rulesyncToolSchema.parse(args);
+    assertSupported({ feature: parsed.feature, operation: parsed.operation });
+    switch (parsed.feature) {
+      case "rule": {
+        if (parsed.operation === "list") {
+          return ruleTools.listRules.execute();
+        }
+        if (parsed.operation === "get") {
+          return ruleTools.getRule.execute({ relativePathFromCwd: requireTargetPath(parsed) });
+        }
+        if (parsed.operation === "put") {
+          return ruleTools.putRule.execute({
+            relativePathFromCwd: requireTargetPath(parsed),
+            frontmatter: parseFrontmatter2({
+              feature: "rule",
+              frontmatter: parsed.frontmatter ?? {}
+            }),
+            body: ensureBody(parsed)
+          });
+        }
+        return ruleTools.deleteRule.execute({ relativePathFromCwd: requireTargetPath(parsed) });
+      }
+      case "command": {
+        if (parsed.operation === "list") {
+          return commandTools.listCommands.execute();
+        }
+        if (parsed.operation === "get") {
+          return commandTools.getCommand.execute({
+            relativePathFromCwd: requireTargetPath(parsed)
+          });
+        }
+        if (parsed.operation === "put") {
+          return commandTools.putCommand.execute({
+            relativePathFromCwd: requireTargetPath(parsed),
+            frontmatter: parseFrontmatter2({
+              feature: "command",
+              frontmatter: parsed.frontmatter ?? {}
+            }),
+            body: ensureBody(parsed)
+          });
+        }
+        return commandTools.deleteCommand.execute({
+          relativePathFromCwd: requireTargetPath(parsed)
+        });
+      }
+      case "subagent": {
+        if (parsed.operation === "list") {
+          return subagentTools.listSubagents.execute();
+        }
+        if (parsed.operation === "get") {
+          return subagentTools.getSubagent.execute({
+            relativePathFromCwd: requireTargetPath(parsed)
+          });
+        }
+        if (parsed.operation === "put") {
+          return subagentTools.putSubagent.execute({
+            relativePathFromCwd: requireTargetPath(parsed),
+            frontmatter: parseFrontmatter2({
+              feature: "subagent",
+              frontmatter: parsed.frontmatter ?? {}
+            }),
+            body: ensureBody(parsed)
+          });
+        }
+        return subagentTools.deleteSubagent.execute({
+          relativePathFromCwd: requireTargetPath(parsed)
+        });
+      }
+      case "skill": {
+        if (parsed.operation === "list") {
+          return skillTools.listSkills.execute();
+        }
+        if (parsed.operation === "get") {
+          return skillTools.getSkill.execute({ relativeDirPathFromCwd: requireTargetPath(parsed) });
+        }
+        if (parsed.operation === "put") {
+          return skillTools.putSkill.execute({
+            relativeDirPathFromCwd: requireTargetPath(parsed),
+            frontmatter: parseFrontmatter2({
+              feature: "skill",
+              frontmatter: parsed.frontmatter ?? {}
+            }),
+            body: ensureBody(parsed),
+            otherFiles: parsed.otherFiles ?? []
+          });
+        }
+        return skillTools.deleteSkill.execute({
+          relativeDirPathFromCwd: requireTargetPath(parsed)
+        });
+      }
+      case "ignore": {
+        if (parsed.operation === "get") {
+          return ignoreTools.getIgnoreFile.execute();
+        }
+        if (parsed.operation === "put") {
+          if (!parsed.content) {
+            throw new Error("content is required for ignore put operation");
+          }
+          return ignoreTools.putIgnoreFile.execute({ content: parsed.content });
+        }
+        return ignoreTools.deleteIgnoreFile.execute();
+      }
+      case "mcp": {
+        if (parsed.operation === "get") {
+          return mcpTools.getMcpFile.execute();
+        }
+        if (parsed.operation === "put") {
+          if (!parsed.content) {
+            throw new Error("content is required for mcp put operation");
+          }
+          return mcpTools.putMcpFile.execute({ content: parsed.content });
+        }
+        return mcpTools.deleteMcpFile.execute();
+      }
+      case "generate": {
+        return generateTools.executeGenerate.execute(parsed.generateOptions ?? {});
+      }
+      case "import": {
+        if (!parsed.importOptions) {
+          throw new Error("importOptions is required for import feature");
+        }
+        return importTools.executeImport.execute(parsed.importOptions);
+      }
+      default: {
+        throw new Error(`Unknown feature: ${parsed.feature}`);
+      }
+    }
+  }
+};
+
+// src/cli/commands/mcp.ts
+async function mcpCommand({ version }) {
+  const server = new import_fastmcp.FastMCP({
+    name: "Rulesync MCP Server",
+    // eslint-disable-next-line no-type-assertion/no-type-assertion
+    version,
+    instructions: "This server handles Rulesync files including rules, commands, MCP, ignore files, subagents and skills for any AI agents. It should be used when you need those files."
+  });
+  server.addTool(rulesyncTool);
+  logger.info("Rulesync MCP server started via stdio");
+  void server.start({
+    transportType: "stdio"
+  });
+}
+
+// src/lib/update.ts
+var crypto = __toESM(require("crypto"), 1);
+var fs = __toESM(require("fs"), 1);
+var os2 = __toESM(require("os"), 1);
+var path3 = __toESM(require("path"), 1);
+var import_node_stream = require("stream");
+var import_promises2 = require("stream/promises");
+var RULESYNC_REPO_OWNER = "dyoshikawa";
+var RULESYNC_REPO_NAME = "rulesync";
+var RELEASES_URL = `https://github.com/${RULESYNC_REPO_OWNER}/${RULESYNC_REPO_NAME}/releases`;
+var MAX_DOWNLOAD_SIZE = 500 * 1024 * 1024;
+var ALLOWED_DOWNLOAD_DOMAINS = [
+  "github.com",
+  "objects.githubusercontent.com",
+  "github-releases.githubusercontent.com",
+  "release-assets.githubusercontent.com"
+];
+var UpdatePermissionError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "UpdatePermissionError";
+  }
+};
+function detectExecutionEnvironment() {
+  const execPath = process.execPath;
+  const scriptPath = process.argv[1] ?? "";
+  const isRulesyncBinary = /rulesync(-[a-z0-9]+(-[a-z0-9]+)?)?(\.exe)?$/i.test(execPath);
+  if (isRulesyncBinary) {
+    if (execPath.includes("/homebrew/") || execPath.includes("/Cellar/")) {
+      return "homebrew";
+    }
+    return "single-binary";
+  }
+  if ((scriptPath.includes("/homebrew/") || scriptPath.includes("/Cellar/")) && scriptPath.includes("rulesync")) {
+    return "homebrew";
+  }
+  return "npm";
+}
+function getPlatformAssetName() {
+  const platform2 = os2.platform();
+  const arch2 = os2.arch();
+  const platformMap = {
+    darwin: "darwin",
+    linux: "linux",
+    win32: "windows"
+  };
+  const archMap = {
+    x64: "x64",
+    arm64: "arm64"
+  };
+  const platformName = platformMap[platform2];
+  const archName = archMap[arch2];
+  if (!platformName || !archName) {
+    return null;
+  }
+  const extension = platform2 === "win32" ? ".exe" : "";
+  return `rulesync-${platformName}-${archName}${extension}`;
+}
+function normalizeVersion(v) {
+  return v.replace(/^v/, "").replace(/-.*$/, "");
+}
+function compareVersions(a, b) {
+  const aParts = normalizeVersion(a).split(".").map(Number);
+  const bParts = normalizeVersion(b).split(".").map(Number);
+  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+    const aNum = aParts[i] ?? 0;
+    const bNum = bParts[i] ?? 0;
+    if (!Number.isFinite(aNum) || !Number.isFinite(bNum)) {
+      throw new Error(`Invalid version format: cannot compare "${a}" and "${b}"`);
+    }
+    if (aNum > bNum) return 1;
+    if (aNum < bNum) return -1;
+  }
+  return 0;
+}
+function validateDownloadUrl(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`Invalid download URL: ${url}`);
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error(`Download URL must use HTTPS: ${url}`);
+  }
+  const isAllowed = ALLOWED_DOWNLOAD_DOMAINS.some((domain) => parsed.hostname === domain);
+  if (!isAllowed) {
+    throw new Error(
+      `Download URL domain "${parsed.hostname}" is not in the allowed list: ${ALLOWED_DOWNLOAD_DOMAINS.join(", ")}`
+    );
+  }
+  if (parsed.hostname === "github.com") {
+    const expectedPrefix = `/${RULESYNC_REPO_OWNER}/${RULESYNC_REPO_NAME}/`;
+    if (!parsed.pathname.startsWith(expectedPrefix)) {
+      throw new Error(
+        `Download URL path must belong to ${RULESYNC_REPO_OWNER}/${RULESYNC_REPO_NAME}: ${url}`
+      );
+    }
+  }
+}
+async function checkForUpdate(currentVersion, token) {
+  const client = new GitHubClient({
+    token: GitHubClient.resolveToken(token)
+  });
+  const release = await client.getLatestRelease(RULESYNC_REPO_OWNER, RULESYNC_REPO_NAME);
+  const latestVersion = normalizeVersion(release.tag_name);
+  const normalizedCurrentVersion = normalizeVersion(currentVersion);
+  return {
+    currentVersion: normalizedCurrentVersion,
+    latestVersion,
+    hasUpdate: compareVersions(latestVersion, normalizedCurrentVersion) > 0,
+    release
+  };
+}
+function findAsset(release, assetName) {
+  return release.assets.find((asset) => asset.name === assetName) ?? null;
+}
+async function downloadFile(url, destPath) {
+  validateDownloadUrl(url);
+  const response = await fetch(url, {
+    redirect: "follow"
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url}: HTTP ${response.status}`);
+  }
+  if (response.url) {
+    validateDownloadUrl(response.url);
+  }
+  const contentLength = response.headers.get("content-length");
+  if (contentLength && Number(contentLength) > MAX_DOWNLOAD_SIZE) {
+    throw new Error(
+      `Download too large: ${contentLength} bytes exceeds limit of ${MAX_DOWNLOAD_SIZE} bytes`
+    );
+  }
+  if (!response.body) {
+    throw new Error("Response body is empty");
+  }
+  const fileStream = fs.createWriteStream(destPath);
+  let downloadedBytes = 0;
+  const bodyReader = import_node_stream.Readable.fromWeb(
+    // eslint-disable-next-line no-type-assertion/no-type-assertion
+    response.body
+  );
+  const sizeChecker = new import_node_stream.Transform({
+    transform(chunk, _encoding, callback) {
+      downloadedBytes += chunk.length;
+      if (downloadedBytes > MAX_DOWNLOAD_SIZE) {
+        callback(
+          new Error(
+            `Download too large: exceeded limit of ${MAX_DOWNLOAD_SIZE} bytes during streaming`
+          )
+        );
+        return;
+      }
+      callback(null, chunk);
+    }
+  });
+  await (0, import_promises2.pipeline)(bodyReader, sizeChecker, fileStream);
+}
+async function calculateSha256(filePath) {
+  const content = await fs.promises.readFile(filePath);
+  return crypto.createHash("sha256").update(content).digest("hex");
+}
+function parseSha256Sums(content) {
+  const result = /* @__PURE__ */ new Map();
+  for (const line of content.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const match = /^([a-f0-9]{64})\s+(.+)$/.exec(trimmed);
+    if (match && match[1] && match[2]) {
+      result.set(match[2].trim(), match[1]);
+    }
+  }
+  return result;
+}
+async function performBinaryUpdate(currentVersion, options = {}) {
+  const { force = false, token } = options;
+  const updateCheck = await checkForUpdate(currentVersion, token);
+  if (!updateCheck.hasUpdate && !force) {
+    return `Already at the latest version (${currentVersion})`;
+  }
+  const assetName = getPlatformAssetName();
+  if (!assetName) {
+    throw new Error(
+      `Unsupported platform: ${os2.platform()} ${os2.arch()}. Please download manually from ${RELEASES_URL}`
+    );
+  }
+  const binaryAsset = findAsset(updateCheck.release, assetName);
+  if (!binaryAsset) {
+    throw new Error(
+      `Binary for ${assetName} not found in release. Please download manually from ${RELEASES_URL}`
+    );
+  }
+  const checksumAsset = findAsset(updateCheck.release, "SHA256SUMS");
+  if (!checksumAsset) {
+    throw new Error(
+      `SHA256SUMS not found in release. Cannot verify download integrity. Please download manually from ${RELEASES_URL}`
+    );
+  }
+  const tempDir = await fs.promises.mkdtemp(path3.join(os2.tmpdir(), "rulesync-update-"));
+  let restoreFailed = false;
+  try {
+    if (os2.platform() !== "win32") {
+      await fs.promises.chmod(tempDir, 448);
+    }
+    const tempBinaryPath = path3.join(tempDir, assetName);
+    await downloadFile(binaryAsset.browser_download_url, tempBinaryPath);
+    const checksumsPath = path3.join(tempDir, "SHA256SUMS");
+    await downloadFile(checksumAsset.browser_download_url, checksumsPath);
+    const checksumsContent = await fs.promises.readFile(checksumsPath, "utf-8");
+    const checksums = parseSha256Sums(checksumsContent);
+    const expectedChecksum = checksums.get(assetName);
+    if (!expectedChecksum) {
+      throw new Error(
+        `Checksum entry for "${assetName}" not found in SHA256SUMS. Cannot verify download integrity.`
+      );
+    }
+    const actualChecksum = await calculateSha256(tempBinaryPath);
+    if (actualChecksum !== expectedChecksum) {
+      throw new Error(
+        `Checksum verification failed. Expected: ${expectedChecksum}, Got: ${actualChecksum}. The download may be corrupted.`
+      );
+    }
+    const currentExePath = await fs.promises.realpath(process.execPath);
+    const currentDir = path3.dirname(currentExePath);
+    const backupPath = path3.join(tempDir, "rulesync.backup");
+    try {
+      await fs.promises.copyFile(currentExePath, backupPath);
+    } catch (error) {
+      if (isPermissionError(error)) {
+        throw new UpdatePermissionError(
+          `Permission denied: Cannot read ${currentExePath}. Try running with sudo.`
+        );
+      }
+      throw error;
+    }
+    try {
+      const tempInPlace = path3.join(currentDir, `.rulesync-update-${crypto.randomUUID()}`);
+      try {
+        await fs.promises.copyFile(tempBinaryPath, tempInPlace);
+        if (os2.platform() !== "win32") {
+          await fs.promises.chmod(tempInPlace, 493);
+        }
+        await fs.promises.rename(tempInPlace, currentExePath);
+      } catch {
+        try {
+          await fs.promises.unlink(tempInPlace);
+        } catch {
+        }
+        await fs.promises.copyFile(tempBinaryPath, currentExePath);
+        if (os2.platform() !== "win32") {
+          await fs.promises.chmod(currentExePath, 493);
+        }
+      }
+      return `Successfully updated from ${currentVersion} to ${updateCheck.latestVersion}`;
+    } catch (error) {
+      try {
+        await fs.promises.copyFile(backupPath, currentExePath);
+      } catch {
+        restoreFailed = true;
+        throw new Error(
+          `Failed to replace binary and restore failed. Backup is preserved at: ${backupPath} (in ${tempDir}). Please manually copy it to ${currentExePath}. Original error: ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error }
+        );
+      }
+      if (isPermissionError(error)) {
+        throw new UpdatePermissionError(
+          `Permission denied: Cannot write to ${path3.dirname(currentExePath)}. Try running with sudo.`
+        );
+      }
+      throw error;
+    }
+  } finally {
+    if (!restoreFailed) {
+      try {
+        await fs.promises.rm(tempDir, { recursive: true, force: true });
+      } catch {
+      }
+    }
+  }
+}
+function isPermissionError(error) {
+  if (typeof error === "object" && error !== null && "code" in error) {
+    const record = error;
+    return record["code"] === "EACCES" || record["code"] === "EPERM";
+  }
+  return false;
+}
+function getNpmUpgradeInstructions() {
+  return `This rulesync installation was installed via npm/npx.
+
+To upgrade, run one of the following commands:
+
+  Global installation:
+    npm install -g rulesync@latest
+
+  Project dependency:
+    npm install rulesync@latest
+
+  Or use npx to always run the latest version:
+    npx rulesync@latest --version`;
+}
+function getHomebrewUpgradeInstructions() {
+  return `This rulesync installation was installed via Homebrew.
+
+To upgrade, run:
+  brew upgrade rulesync`;
+}
+
+// src/cli/commands/update.ts
+async function updateCommand(currentVersion, options) {
+  const { check = false, force = false, verbose = false, silent = false, token } = options;
+  logger.configure({ verbose, silent });
+  try {
+    const environment = detectExecutionEnvironment();
+    logger.debug(`Detected environment: ${environment}`);
+    if (environment === "npm") {
+      logger.info(getNpmUpgradeInstructions());
+      return;
+    }
+    if (environment === "homebrew") {
+      logger.info(getHomebrewUpgradeInstructions());
+      return;
+    }
+    if (check) {
+      logger.info("Checking for updates...");
+      const updateCheck = await checkForUpdate(currentVersion, token);
+      if (updateCheck.hasUpdate) {
+        logger.success(
+          `Update available: ${updateCheck.currentVersion} -> ${updateCheck.latestVersion}`
+        );
+      } else {
+        logger.info(`Already at the latest version (${updateCheck.currentVersion})`);
+      }
+      return;
+    }
+    logger.info("Checking for updates...");
+    const message = await performBinaryUpdate(currentVersion, { force, token });
+    logger.success(message);
+  } catch (error) {
+    if (error instanceof GitHubClientError) {
+      logGitHubAuthHints(error);
+    } else if (error instanceof UpdatePermissionError) {
+      logger.error(error.message);
+      logger.info("Tip: Run with elevated privileges (e.g., sudo rulesync update)");
+    } else {
+      logger.error(formatError(error));
+    }
+    process.exit(1);
+  }
+}
+
+// src/cli/index.ts
+var getVersion = () => "7.3.0";
+var main = async () => {
+  const program = new import_commander.Command();
+  const version = getVersion();
+  program.hook("postAction", () => {
+    if (ANNOUNCEMENT.length > 0) {
+      logger.info(ANNOUNCEMENT);
+    }
+  });
+  program.name("rulesync").description("Unified AI rules management CLI tool").version(version, "-v, --version", "Show version");
+  program.command("init").description("Initialize rulesync in current directory").action(initCommand);
+  program.command("gitignore").description("Add generated files to .gitignore").action(gitignoreCommand);
+  program.command("fetch <source>").description("Fetch files from a Git repository (GitHub/GitLab)").option(
+    "-t, --target <target>",
+    "Target format to interpret files as (e.g., 'rulesync', 'claudecode'). Default: rulesync"
+  ).option(
+    "-f, --features <features>",
+    `Comma-separated list of features to fetch (${ALL_FEATURES.join(",")}) or '*' for all`,
+    (value) => {
+      return value.split(",").map((f) => f.trim());
+    }
+  ).option("-r, --ref <ref>", "Branch, tag, or commit SHA to fetch from").option("-p, --path <path>", "Subdirectory path within the repository").option("-o, --output <dir>", "Output directory (default: .rulesync)").option(
+    "-c, --conflict <strategy>",
+    "Conflict resolution strategy: skip, overwrite (default: overwrite)"
+  ).option("--token <token>", "Git provider token for private repositories").option("-V, --verbose", "Verbose output").option("-s, --silent", "Suppress all output").action(async (source, options) => {
+    await fetchCommand({
+      source,
+      target: options.target,
+      features: options.features,
+      ref: options.ref,
+      path: options.path,
+      output: options.output,
+      conflict: options.conflict,
+      token: options.token,
+      verbose: options.verbose,
+      silent: options.silent
+    });
+  });
+  program.command("import").description("Import configurations from AI tools to rulesync format").option(
+    "-t, --targets <tool>",
+    "Tool to import from (e.g., 'copilot', 'cursor', 'cline')",
+    (value) => {
+      return value.split(",").map((t) => t.trim());
+    }
+  ).option(
+    "-f, --features <features>",
+    `Comma-separated list of features to import (${ALL_FEATURES.join(",")}) or '*' for all`,
+    (value) => {
+      return value.split(",").map((f) => f.trim());
+    }
+  ).option("-V, --verbose", "Verbose output").option("-s, --silent", "Suppress all output").option("-g, --global", "Import for global(user scope) configuration files").action(async (options) => {
+    try {
+      await importCommand({
+        targets: options.targets,
+        features: options.features,
+        verbose: options.verbose,
+        silent: options.silent,
+        configPath: options.config,
+        global: options.global
+      });
+    } catch (error) {
+      logger.error(formatError(error));
+      process.exit(1);
+    }
+  });
+  program.command("mcp").description("Start MCP server for rulesync").action(async () => {
+    try {
+      await mcpCommand({ version });
+    } catch (error) {
+      logger.error(formatError(error));
+      process.exit(1);
+    }
+  });
+  program.command("install").description("Install skills from declarative sources in rulesync.jsonc").option("--update", "Force re-resolve all source refs, ignoring lockfile").option(
+    "--frozen",
+    "Fail if lockfile is missing or out of sync (for CI); fetches missing skills using locked refs"
+  ).option("--token <token>", "GitHub token for private repos").option("-c, --config <path>", "Path to configuration file").option("-V, --verbose", "Verbose output").option("-s, --silent", "Suppress all output").action(async (options) => {
+    try {
+      await installCommand({
+        update: options.update,
+        frozen: options.frozen,
+        token: options.token,
+        configPath: options.config,
+        verbose: options.verbose,
+        silent: options.silent
+      });
+    } catch (error) {
+      logger.error(formatError(error));
+      process.exit(1);
+    }
+  });
+  program.command("generate").description("Generate configuration files for AI tools").option(
+    "-t, --targets <tools>",
+    "Comma-separated list of tools to generate for (e.g., 'copilot,cursor,cline' or '*' for all)",
+    (value) => {
+      return value.split(",").map((t) => t.trim());
+    }
+  ).option(
+    "-f, --features <features>",
+    `Comma-separated list of features to generate (${ALL_FEATURES.join(",")}) or '*' for all`,
+    (value) => {
+      return value.split(",").map((f) => f.trim());
+    }
+  ).option("--delete", "Delete all existing files in output directories before generating").option(
+    "-b, --base-dir <paths>",
+    "Base directories to generate files (comma-separated for multiple paths)"
+  ).option("-V, --verbose", "Verbose output").option("-s, --silent", "Suppress all output").option("-c, --config <path>", "Path to configuration file").option("-g, --global", "Generate for global(user scope) configuration files").option(
+    "--simulate-commands",
+    "Generate simulated commands. This feature is only available for copilot, cursor and codexcli."
+  ).option(
+    "--simulate-subagents",
+    "Generate simulated subagents. This feature is only available for copilot and codexcli."
+  ).option(
+    "--simulate-skills",
+    "Generate simulated skills. This feature is only available for copilot, cursor and codexcli."
+  ).option("--dry-run", "Dry run: show changes without writing files").option("--check", "Check if files are up to date (exits with code 1 if changes needed)").action(async (options) => {
+    try {
+      await generateCommand({
+        targets: options.targets,
+        features: options.features,
+        verbose: options.verbose,
+        silent: options.silent,
+        delete: options.delete,
+        baseDirs: options.baseDirs,
+        configPath: options.config,
+        global: options.global,
+        simulateCommands: options.simulateCommands,
+        simulateSubagents: options.simulateSubagents,
+        simulateSkills: options.simulateSkills,
+        dryRun: options.dryRun,
+        check: options.check
+      });
+    } catch (error) {
+      logger.error(formatError(error));
+      process.exit(1);
+    }
+  });
+  program.command("update").description("Update rulesync to the latest version").option("--check", "Check for updates without installing").option("--force", "Force update even if already at latest version").option("--token <token>", "GitHub token for API access").option("-V, --verbose", "Verbose output").option("-s, --silent", "Suppress all output").action(async (options) => {
+    await updateCommand(version, {
+      check: options.check,
+      force: options.force,
+      token: options.token,
+      verbose: options.verbose,
+      silent: options.silent
+    });
+  });
+  program.parse();
+};
+main().catch((error) => {
+  logger.error(formatError(error));
+  process.exit(1);
 });
